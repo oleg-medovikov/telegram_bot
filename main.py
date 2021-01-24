@@ -15,9 +15,25 @@ commands = """ \n
 3) статус фр \n
 4) ...
 """
-# =======================================
+#===================================================
+#============== Тут будут поток для расписаний =====
+def job():
+    for id in users_id:
+        bot.send_message(id, 'Я работаю!')
+
+schedule.every().day.at("10:30").do(job)
+
+def go():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+t = threading.Thread(target=go, name="тест")
+t.start()
 
 
+
+#===================================================
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
     if message.from_user.id in users_id:
