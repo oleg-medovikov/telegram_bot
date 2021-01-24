@@ -2,7 +2,7 @@ import telebot,schedule,time,threading,os
 # ========  мои модули 
 from check_robot import check_robot
 from reports import fr_deti,fr_status
-from loader import search_file,check_file,excel_to_csv,load_fr
+from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death
 from sending import send_all,send_me
 
 # ==========  настройки бота ============
@@ -12,11 +12,12 @@ bot = telebot.TeleBot(os.getenv('telegram_bot'))
 users_id=[int(x) for x in os.getenv('telegram_id').split(',')]
 
 commands = """ \n
-1) что в директории Robot? \n
-2) отчет по детям \n
-3) статус фр \n
+1) что в директории Robot?
+2) отчет по детям
+3) статус фр
 4) конвертировать фр в csv
 5) загрузить фр
+6) загрузить умерших
 """
 #===================================================
 #============== Тут будут поток для расписаний =====
@@ -55,4 +56,6 @@ def get_text_messages(message):
                 bot.send_message(message.from_user.id, 'Я не нашёл файл фр!')
         if message.text.lower() in ['загрузить фр','5']:
             load_fr()
+        if message.text.lower() in ['загрузить умерших','6']:
+            load_fr_death()
 bot.polling(none_stop=True)
