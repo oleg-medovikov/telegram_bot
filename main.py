@@ -2,6 +2,8 @@ import telebot,schedule,time,threading,os
 # ========  мои модули 
 from check_robot import check_robot
 from reports import fr_deti,fr_status
+from loader import search_file,check_file,excel_to_csv,load_fr
+from sending import send_all,send_me
 
 # ==========  настройки бота ============
 #  используются переменные среды Windows
@@ -13,15 +15,13 @@ commands = """ \n
 1) что в директории Robot? \n
 2) отчет по детям \n
 3) статус фр \n
-4) ...
+4) конвертировать фр в csv
+5) загрузить фр
 """
 #===================================================
 #============== Тут будут поток для расписаний =====
-def job():
-    for id in users_id:
-        bot.send_message(id, 'Я работаю!')
 
-schedule.every().day.at("10:30").do(job)
+schedule.every().day.at("03:15").do(load_fr)
 
 def go():
     while True:
@@ -47,6 +47,12 @@ def get_text_messages(message):
         if message.text.lower() in ['статус фр','3']:
             bot.send_message(message.from_user.id, 'Хорошо, сейчас проверю...')
             bot.send_document(message.from_user.id, open(fr_status(), 'rb'))
-
-
+        if message.text.lower() in ['конвертировать фр','4']:
+            bot.send_message(message.from_user.id, 'Пробую конвертнуть')
+            if search_file('fr')[0]:
+                bot.send_message(message.from_user.id, 'Готовый файл: \n' + excel_to_csv(search_file('fr')[2]))
+            else:
+                bot.send_message(message.from_user.id, 'Я не нашёл файл фр!')
+        if message.text.lower() in ['загрузить фр','5']:
+            load_fr()
 bot.polling(none_stop=True)
