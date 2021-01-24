@@ -2,7 +2,7 @@ import telebot,schedule,time,threading,os
 # ========  мои модули 
 from check_robot import check_robot
 from reports import fr_deti,fr_status
-from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death
+from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab
 from sending import send_all,send_me
 
 # ==========  настройки бота ============
@@ -18,11 +18,14 @@ commands = """ \n
 4) конвертировать фр в csv
 5) загрузить фр
 6) загрузить умерших
+7) загрузить лабораторию
 """
 #===================================================
 #============== Тут будут поток для расписаний =====
 
-schedule.every().day.at("03:15").do(load_fr)
+schedule.every().day.at("03:00").do(load_fr)
+schedule.every().day.at("03:35").do(load_fr_death)
+schedule.every().day.at("04:35").do(load_fr_lab)
 
 def go():
     while True:
@@ -58,4 +61,6 @@ def get_text_messages(message):
             load_fr()
         if message.text.lower() in ['загрузить умерших','6']:
             load_fr_death()
+        if message.text.lower() in ['загрузить лабораторию','7']:
+            load_fr_lab()
 bot.polling(none_stop=True)

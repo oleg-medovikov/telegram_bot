@@ -1,7 +1,7 @@
 #Работа с базами данных
 import pandas as pd
-import glob,warnings,datetime,os,xlrd,csv
-from sending import send_me
+import glob,warnings,datetime,os,xlrd,csv,openpyxl
+from sending import send_me,send_all
 from sqlalchemy import *
 from sqlalchemy.orm import sessionmaker
 
@@ -16,6 +16,8 @@ def search_file(category):
         pattern = path + r'\Федеральный регистр лиц, больных *[!ИАЦ].xlsx'
     if category == 'fr_death':
         pattern = path + r'\*Умершие пациенты*.xlsx'
+    if category == 'fr_lab':
+        pattern = path + r'\*Отчёт по лабораторным*.xlsx'
     file_excel = glob.glob(pattern)
     if len(file_excel):
         file_csv = glob.glob(pattern[:-4] + 'csv')
@@ -35,10 +37,16 @@ def check_file(file,category):
                 'Посмертный диагноз','ИВЛ','ОРИТ','МО прикрепления','Медицинский работник'
                 ]
     if category == 'fr_death':
-        names= [
+        names = [
                 '1', '2', '3', '4', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22',
                 '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42',
                 '43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53'
+                ]
+    if category == 'fr_lab':
+        names = [
+                'Субъект', 'УНРЗ', 'Мед. организация', 'Основной диагноз', 'Наименование лаборатории', 'Дата лабораторного теста',
+                'Тип лабораторного теста', 'Результат теста (положительный/ отрицательный)', 'Этиология пневмония',
+                'Дата первого лабораторного подтверждения COVID-19','Дата последнего лабораторного подтверждения COVID-19'
                 ]
     sum_colum = len(names)
     names_found = []
@@ -72,7 +80,7 @@ def check_file(file,category):
         return check,error_text,collum, head
     return check,error_text,collum, head
 
-def excel_to_csv(file_excel):
+def excel_to_csv_old(file_excel):
     file_csv = file_excel[:-4] + 'csv'
     sheet = xlrd.open_workbook(file_excel).sheet_by_index(0) 
     col = csv.writer(open(file_csv, 'w', newline=""),delimiter=";") 
@@ -80,6 +88,16 @@ def excel_to_csv(file_excel):
     for row in range(sheet.nrows): 
         col.writerow(sheet.row_values(row))
     return file_csv
+
+def excel_to_csv(file_excel):
+    file_csv = file_excel[:-4] + 'csv'
+    excel = openpyxl.load_workbook(file_excel)
+    sheet = excel.active 
+    col = csv.writer(open(file_csv, 'w', newline=""),delimiter=';')
+    for r in sheet.rows: 
+        col.writerow([cell.value for cell in r]) 
+    return file_csv
+
 
 
 def sql_execute(sql):
@@ -94,95 +112,145 @@ def load_fr():
         df  = df[df['Дата создания РЗ'] != '']
         del df ['Ведомственная принадлежность']
         del df ['Осложнение основного диагноза']
-        send_me('Файл в памяти, количество строк: ' + str(len(df)) )
+        send_all('Файл в памяти, количество строк: ' + str(len(df)) )
         sql_execute('TRUNCATE TABLE [dbo].[cv_input_fr]')
-        send_me('Очистил input_fr')
+        send_all('Очистил input_fr')
         df.to_sql('cv_input_fr',con,schema='dbo',if_exists='append',index=False)
-        send_me('Загрузил input_fr, запускаю процедуру')
+        send_all('Загрузил input_fr, запускаю процедуру')
         sql_execute('EXEC [dbo].[cv_Load_FedReg]')
-        send_me('Федеральный регистр успешно загружен')
+        send_all('Федеральный регистр успешно загружен')
         return 1
-    send_me('Я проснулся и хочу грузить фр!')
+    send_all('Я проснулся и хочу грузить фр!')
     search = search_file('fr')
     if search[0] and search[1]:
-        send_me('Вот нашёлся такой файлик:\n' + search[2])
-        send_me('Сейчас я его проверю...')
+        send_all('Вот нашёлся такой файлик:\n' + search[2].split('\\')[-1])
+        send_all('Сейчас я его проверю...')
         check = check_file(search[2],'fr')
         if check[0]:
-            send_me('Файл прошёл проверку, начинаю грузить в память')
+            send_all('Файл прошёл проверку, начинаю грузить в память')
             df = pd.read_csv(search[2],header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
             fr_to_sql(df)
         else:
-            send_me('Файл не прошёл проверку!')
-            send_me(check[1])
+            send_all('Файл не прошёл проверку!')
+            send_all(check[1])
             return 0
     else:
         if search[0]:
-            send_me('Нее... я не хочу работать с xlsx, щас конвертирую!')
+            send_all('Нее... я не хочу работать с xlsx, щас конвертирую!')
             file_csv = excel_to_csv(search[2]) 
-            send_me('Результат:\n' + file_csv)
+            send_all('Результат:\n' + file_csv.split('\\')[-1])
             check = check_file(file_csv,'fr')
             if check[0]:
-                send_me('Файл прошёл проверку, начинаю грузить в память')
+                send_all('Файл прошёл проверку, начинаю грузить в память')
                 df = pd.read_csv(file_csv,header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
                 fr_to_sql(df)
             else:
-                send_me('Файл не прошёл проверку!')
-                send_me(check[1])
+                send_all('Файл не прошёл проверку!')
+                send_all(check[1])
                 return 0
         else:
-            send_me('Но я не нашёл файла федерального регистра (((')
+            send_all('Но я не нашёл файла федерального регистра (((')
             return 0
     return 1
 
 def load_fr_death():
     def fr_death_to_sql(df):
-        send_me('Обрезаю слишком длинные строки')
+        send_all('Обрезаю слишком длинные строки')
         for column in df.columns:
             for i in range(len(df)):
                 df.loc[i,column]= str(df.at[i,column])[:255]
-        send_me('Убираю Nan из таблицы')
+        send_all('Убираю Nan из таблицы')
         for column in df.columns:
             df[column] = df[column].str.replace(r'nan','')
-        send_me('Отправляю в базу')
+        send_all('Отправляю в базу')
         df.to_sql('cv_input_fr_d_all_2',con,schema='dbo',if_exists='replace',index = False)
-        send_me('Запускаю процедуры')
+        send_all('Запускаю процедуры')
         sql_execute("""
                 EXEC   [dbo].[Insert_Table_cv_input_fr_d_all_2]
                 EXEC   [dbo].[cv_from_d_all_to_d_covid]
                 EXEC   [dbo].[cv_Load_FedReg_d_All]
                 EXEC   [dbo].[cv_Load_FedReg_d_covid]
                     """)
-        send_me('Успешно загружено')
+        send_all('Успешно загружено')
         return 1
-    send_me('Пришло время спокойных')
+    send_all('Пришло время спокойных')
     search = search_file('fr_death')
     if search[0] and search[1]:
-        send_me('Найден файл:\n' + search[2])
-        send_me('Сейчас мы его рассмотрим...')
+        send_all('Найден файл:\n' + search[2].split('\\')[-1])
+        send_all('Сейчас мы его рассмотрим...')
         check = check_file(search[2],'fr_death')
         if check[0]:
-            send_me('Похоже файл в порядке, попробую загрузить')
-            df = pd.read_csv(file_csv,header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
+            send_all('Похоже файл в порядке, попробую загрузить')
+            df = pd.read_csv(search[2],header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
             fr_death_to_sql(df)
         else:
-            send_me('Что-то с файлом')
-            send_me(str(check))
+            send_all('Что-то с файлом')
+            send_all(str(check))
             return 0
     else:
         if search[0]:
-            send_me('Давайте всё-таки работать с csv, конвертирую')
+            send_all('Давайте всё-таки работать с csv, конвертирую')
             file_csv = excel_to_csv(search[2]) 
-            send_me('Результат:\n' + file_csv)
+            send_all('Результат:\n' + file_csv.split('\\')[-1])
             check = check_file(file_csv,'fr_death')
             if check[0]:
-                send_me('Теперь можно и загрузить в память')
+                send_all('Теперь можно и загрузить в память')
                 df = pd.read_csv(file_csv,header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
                 fr_death_to_sql(df)
             else:
-                send_me('Файл не прошёл проверку!')
-                send_me(check[1])
+                send_all('Файл не прошёл проверку!')
+                send_all(check[1])
                 return 0
         else:
-            send_me('Не найден файл умерших')
+            send_all('Не найден файл умерших')
         return 0
+
+def load_fr_lab():
+    def fr_lab_to_sql(df):
+        send_all('Ну, тут надо переименовать колонки и можно грузить')
+        df.rename(columns = { 
+                'Субъект' : '1','УНРЗ': '2','Мед. организация' :'3','Основной диагноз':'4','Наименование лаборатории' :'5',
+                'Дата лабораторного теста':'6','Тип лабораторного теста':'7','Результат теста (положительный/ отрицательный)': '8',
+                'Этиология пневмония':'9','Дата первого лабораторного подтверждения COVID-19':'10','Дата последнего лабораторного подтверждения COVID-19':'11' 
+                             }, inplace = True)
+        df = df[df['5'] != '']
+        send_all('Всего строк в  лабе '+ str(len(df)))
+        df.to_sql('cv_input_fr_lab_2',con,schema='dbo',if_exists='append',index = False)
+        send_all('Остались процедуры в базе')
+        sql_execute("""
+                    EXEC   [dbo].[Insert_Table_cv_input_fr_lab_2]
+                    EXEC   [dbo].[cv_load_frlab]
+                    """)
+        return 1
+    send_all('Посмотрим на файлик лабораторных исследований')
+    search = search_file('fr_lab')
+    if search[0] and search[1]:
+        send_all('Найден файл:\n' + search[2].split('\\')[-1])
+        send_all('Сейчас мы его рассмотрим...')
+        check = check_file(search[2],'fr_lab')
+        if check[0]:
+            send_all('Неужели файл все-таки можно загрузить?')
+            df = pd.read_csv(search[2],header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
+            fr_lab_to_sql(df)
+        else:
+            send_all('Не, плохой файл!')
+            send_all(str(check))
+            return 0
+    else:
+        if search[0]:
+            send_all('Ну, это точно нужно перевести в csv!')
+            file_csv = excel_to_csv(search[2]) 
+            send_all('Результат:\n' + file_csv.split('\\')[-1])
+            check = check_file(file_csv,'fr_lab')
+            if check[0]:
+                send_all('Теперь можно и загрузить в память')
+                df = pd.read_csv(file_csv,header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
+                fr_lab_to_sql(df)
+            else:
+                send_all('Файл не прошёл проверку!')
+                send_all(check[1])
+                return 0
+        else:
+            send_all('Не найден файл лаборатории')
+        return 0
+
