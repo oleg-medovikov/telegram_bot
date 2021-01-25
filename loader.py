@@ -208,19 +208,19 @@ def load_fr_death():
 def load_fr_lab():
     def fr_lab_to_sql(df):
         send_all('Ну, тут надо переименовать колонки и можно грузить')
-        df.rename(columns = { 
-                'Субъект' : '1','УНРЗ': '2','Мед. организация' :'3','Основной диагноз':'4','Наименование лаборатории' :'5',
-                'Дата лабораторного теста':'6','Тип лабораторного теста':'7','Результат теста (положительный/ отрицательный)': '8',
-                'Этиология пневмония':'9','Дата первого лабораторного подтверждения COVID-19':'10','Дата последнего лабораторного подтверждения COVID-19':'11' 
-                             }, inplace = True)
-        df = df[df['5'] != '']
+        i = 1
+        for column in df.columns:
+            df.rename(columns = {column: str(i)}, inplace = True)
+            i+=1
+        df = df.dropna(subset=['1','2','3','4','5','6'])
         send_all('Всего строк в  лабе '+ str(len(df)))
-        df.to_sql('cv_input_fr_lab_2',con,schema='dbo',if_exists='append',index = False)
+        df.to_sql('cv_input_fr_lab_2',con,schema='dbo',if_exists='replace',index = False)
         send_all('Остались процедуры в базе')
         sql_execute("""
                     EXEC   [dbo].[Insert_Table_cv_input_fr_lab_2]
                     EXEC   [dbo].[cv_load_frlab]
                     """)
+        send_all('Лаборатория успешно загружена')
         return 1
     send_all('Посмотрим на файлик лабораторных исследований')
     search = search_file('fr_lab')
