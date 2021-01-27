@@ -2,7 +2,7 @@ import telebot,schedule,time,threading,os
 # ========  мои модули 
 from check_robot import check_robot
 from reports import fr_deti,fr_status
-from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab
+from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr
 from sending import send_all,send_me
 
 # ==========  настройки бота ============
@@ -15,7 +15,7 @@ commands = """ \n
 1) что в директории Robot?
 2) отчет по детям
 3) статус фр
-4) конвертировать фр в csv
+4) сложить фр в один файл
 5) загрузить фр
 6) загрузить умерших
 7) загрузить лабораторию
@@ -51,12 +51,9 @@ def get_text_messages(message):
         if message.text.lower() in ['статус фр','3']:
             bot.send_message(message.from_user.id, 'Хорошо, сейчас проверю...')
             bot.send_document(message.from_user.id, open(fr_status(), 'rb'))
-        if message.text.lower() in ['конвертировать фр','4']:
-            bot.send_message(message.from_user.id, 'Пробую конвертнуть')
-            if search_file('fr')[0]:
-                bot.send_message(message.from_user.id, 'Готовый файл: \n' + excel_to_csv(search_file('fr')[2]))
-            else:
-                bot.send_message(message.from_user.id, 'Я не нашёл файл фр!')
+        if message.text.lower() in ['сложить фр в один файл','4']:
+            bot.send_message(message.from_user.id, 'Вот ничего без меня не можете...')
+            bot.send_message(message.from_user.id, slojit_fr())
         if message.text.lower() in ['загрузить фр','5']:
             load_fr()
         if message.text.lower() in ['загрузить умерших','6']:

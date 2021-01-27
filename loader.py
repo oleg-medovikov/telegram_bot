@@ -1,9 +1,11 @@
 #Работа с базами данных
 import pandas as pd
-import glob,warnings,datetime,os,xlrd,csv,openpyxl
+import glob,warnings,datetime,os,xlrd,csv,openpyxl,shutil,threading
 from sending import send_me,send_all
 from sqlalchemy import *
 from sqlalchemy.orm import sessionmaker
+from openpyxl.utils.dataframe import dataframe_to_rows
+import win32com.client
 
 
 warnings.filterwarnings('ignore')
@@ -26,27 +28,20 @@ def search_file(category):
         else:
             return True, False, file_excel[0]
     else:
-        return False, False, None
+         return False, False, None
 
 def check_file(file,category):
     if category == 'fr':
         names = [
-                'п/н','Дата создания РЗ','УНРЗ','Дата изменения РЗ','СНИЛС','ФИО','Пол','Дата рождения','Диагноз',
-                'Диагноз установлен','Осложнение основного диагноза','Субъект РФ','Медицинская организация','Ведомственная принадлежность',
-                'Вид лечения','Дата исхода заболевания','Исход заболевания','Степень тяжести',
-                'Посмертный диагноз','ИВЛ','ОРИТ','МО прикрепления','Медицинский работник'
+'п/н','Дата создания РЗ','УНРЗ','Дата изменения РЗ','СНИЛС','ФИО','Пол','Дата рождения','Диагноз','Диагноз установлен','Осложнение основного диагноза','Субъект РФ','Медицинская организация','Ведомственная принадлежность','Вид лечения','Дата исхода заболевания','Исход заболевания','Степень тяжести','Посмертный диагноз','ИВЛ','ОРИТ','МО прикрепления','Медицинский работник'
                 ]
     if category == 'fr_death':
         names = [
-                '1', '2', '3', '4', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22',
-                '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42',
-                '43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53'
+    '1', '2', '3', '4', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22','23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42','43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53'
                 ]
     if category == 'fr_lab':
         names = [
-                'Субъект', 'УНРЗ', 'Мед. организация', 'Основной диагноз', 'Наименование лаборатории', 'Дата лабораторного теста',
-                'Тип лабораторного теста', 'Результат теста (положительный/ отрицательный)', 'Этиология пневмония',
-                'Дата первого лабораторного подтверждения COVID-19','Дата последнего лабораторного подтверждения COVID-19'
+'Субъект', 'УНРЗ', 'Мед. организация', 'Основной диагноз', 'Наименование лаборатории', 'Дата лабораторного теста','Тип лабораторного теста', 'Результат теста (положительный/ отрицательный)', 'Этиология пневмония','Дата первого лабораторного подтверждения COVID-19','Дата последнего лабораторного подтверждения COVID-19'
                 ]
     sum_colum = len(names)
     names_found = []
@@ -79,6 +74,81 @@ def check_file(file,category):
         error_text = ' Не найдена колонка ' + str(list(set(names) - set(names_found) ) ) + ';'
         return check,error_text,collum, head
     return check,error_text,collum, head
+
+
+def slojit_fr():
+    pathFolderFedRegParts = os.getenv('path_robot') +r'\_ФР_по_частям'
+    date = datetime.datetime.today().strftime("%Y_%m_%d")
+    nameSheetShablon = "Sheet1"
+    _list = []
+    list_numbers = ['раз', 'двас', 'трис']
+    i = 0
+    for excel in glob.glob(pathFolderFedRegParts + r'\Федеральный регистр*.xlsx'):
+        df = pd.read_excel(excel, sheet_name= nameSheetShablon, dtype = str, skiprows = 1, head= 1)
+        _list.append(df)
+        try:
+            send_all('прочтен файлик номер '+ list_numbers[i])
+            i+=1
+        except:
+            pass
+    svod = pd.DataFrame() 
+    svod = pd.concat(_list)
+
+    svod = svod[svod["Дата создания РЗ"].notnull()] 
+    svod["п/н"] = range(1, len(svod)+1)
+    
+    new_fedreg = pathFolderFedRegParts + r'\Федеральный регистр лиц, больных COVID-19 - ' + date + '.xlsx'
+    new_iach = pathFolderFedRegParts + r'\Федеральный регистр лиц, больных COVID-19 - ' + date + '_ИАЦ.xlsx'
+#    shutil.copyfile(pathFolderFedRegParts + r'\ФР.xlsx', new_fedreg)
+#    shutil.copyfile(pathFolderFedRegParts + r'\ФР_ИАЦ.xlsx', new_iach)
+#    wb= openpyxl.load_workbook(new_fedreg)
+#    ws = wb[nameSheetShablon]
+#    rows = dataframe_to_rows(svod, index=False, header=False)
+#    for r_idx, row in enumerate(rows, 1):
+#        for c_idx, value in enumerate(row, 1):
+#            ws.cell(row=r_idx, column=c_idx, value=value)
+#    wb.save(new_fedreg)
+#    svod = svod.drop(['СНИЛС', 'ФИО'], axis=1)
+#    wb= openpyxl.load_workbook(new_iach)
+#    ws = wb[nameSheetShablon]
+#    rows = dataframe_to_rows(svod, index=False, header=False)
+    def file_1(svod):
+        with pd.ExcelWriter(new_fedreg) as writer:
+            svod.to_excel(writer,index=False)
+
+    def file_2(svod):
+        df = svod
+        del df['СНИЛС']
+        del df['ФИО']
+        with pd.ExcelWriter(new_iach) as writer:
+            df.to_excel(writer,index=False)
+
+    t_d1 = threading.Thread(target=file_1(svod),name='one')
+    t_d2 = threading.Thread(target=file_2(svod),name='two')
+
+    t_d1.start()
+    t_d2.start()
+
+#    for r_idx, row in enumerate(rows, 3):
+#        for c_idx, value in enumerate(row, 1):
+#            ws.cell(row=r_idx, column=c_idx, value=value)
+#    wb.save(new_iach)
+
+    NumberForMG = len(svod[svod['Диагноз'].isin(['U07.1']) \
+                    & svod['Исход заболевания'].isnull() \
+                    & svod['Вид лечения'].isin(['Стационарное лечение'])])
+
+    NumberFor1 = len(svod[svod['Диагноз'].isin(['U07.1']) ])
+
+    NumberFor2 = len(svod[svod['Посмертный диагноз'].isin(['U07.1']) \
+                        & svod['Исход заболевания'].isin(['Смерть'])])
+
+    otvet = 'Вроде все получилось \n' + 'По цифрам\n' \
+            + 'На стационарном лечении: ' + str(NumberForMG) + '\n' \
+            + 'Всего заболело: ' + str(NumberFor1) +'\n' \
+            + 'Всего умерло: '+ str(NumberFor2)
+    return otvet
+
 
 def excel_to_csv_old(file_excel):
     file_csv = file_excel[:-4] + 'csv'
