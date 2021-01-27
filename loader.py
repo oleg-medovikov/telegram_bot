@@ -112,6 +112,10 @@ def slojit_fr():
 #    wb= openpyxl.load_workbook(new_iach)
 #    ws = wb[nameSheetShablon]
 #    rows = dataframe_to_rows(svod, index=False, header=False)
+    try:
+        del df['Unnamed: 24']
+    except:
+        pass
     def file_1(svod):
         with pd.ExcelWriter(new_fedreg) as writer:
             svod.to_excel(writer,index=False)
