@@ -2,7 +2,7 @@ import telebot,schedule,time,threading,os
 # ========  мои модули 
 from check_robot import check_robot
 from reports import fr_deti,fr_status
-from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr
+from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS
 from sending import send_all,send_me
 
 # ==========  настройки бота ============
@@ -19,23 +19,35 @@ commands = """ \n
 5) загрузить фр
 6) загрузить умерших
 7) загрузить лабораторию
+8) загрузить УМСРС
 """
 #===================================================
 #============== Тут будут поток для расписаний =====
 
-schedule.every().day.at("03:00").do(load_fr)
-schedule.every().day.at("03:35").do(load_fr_death)
-schedule.every().day.at("04:35").do(load_fr_lab)
+
+def load_1():
+    def cool():
+        if load_fr():
+            if load_fr_death():
+                if load_fr_lab():
+                    return 1
+    fr = threading.Thread(target=cool,name='Федеральный регистр')
+    fr.start()
+
+def load_2():
+    umsrs = threading.Thread(target=load_UMSRS,name='УМСРС')
+    umsrs.start()
 
 def go():
     while True:
         schedule.run_pending()
         time.sleep(1)
 
-t = threading.Thread(target=go, name="тест")
+schedule.every().day.at("03:00").do(load_1)
+schedule.every().day.at("06:00").do(load_2)
+
+t = threading.Thread(target=go, name="Расписание работ")
 t.start()
-
-
 
 #===================================================
 @bot.message_handler(content_types=['text'])
@@ -60,4 +72,6 @@ def get_text_messages(message):
             load_fr_death()
         if message.text.lower() in ['загрузить лабораторию','7']:
             load_fr_lab()
+        if message.text.lower() in ['загрузить УМСРС','8']:
+            load_UMSRS()
 bot.polling(none_stop=True)

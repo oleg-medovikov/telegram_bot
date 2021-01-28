@@ -20,20 +20,22 @@ def search_file(category):
         pattern = path + r'\*Умершие пациенты*.xlsx'
     if category == 'fr_lab':
         pattern = path + r'\*Отчёт по лабораторным*.xlsx'
+    if category == 'UMSRS':
+        pattern = path + r'\*УМСРС*.xlsx'
     file_excel = glob.glob(pattern)
-    if len(file_excel):
-        file_csv = glob.glob(pattern[:-4] + 'csv')
-        if len(file_csv):
-            return True, True, file_csv[0]
-        else:
-            return True, False, file_excel[0]
+    file_csv = glob.glob(pattern[:-4] + 'csv')
+    if len(file_csv):
+        return True, True, file_csv[0]
     else:
-         return False, False, None
+        if len(file_excel):
+            return True, False, file_excel[0]
+        else:
+            return False, False, None
 
 def check_file(file,category):
     if category == 'fr':
         names = [
-'п/н','Дата создания РЗ','УНРЗ','Дата изменения РЗ','СНИЛС','ФИО','Пол','Дата рождения','Диагноз','Диагноз установлен','Осложнение основного диагноза','Субъект РФ','Медицинская организация','Ведомственная принадлежность','Вид лечения','Дата исхода заболевания','Исход заболевания','Степень тяжести','Посмертный диагноз','ИВЛ','ОРИТ','МО прикрепления','Медицинский работник'
+    'п/н','Дата создания РЗ','УНРЗ','Дата изменения РЗ','СНИЛС','ФИО','Пол','Дата рождения','Диагноз','Диагноз установлен','Осложнение основного диагноза','Субъект РФ','Медицинская организация','Ведомственная принадлежность','Вид лечения','Дата исхода заболевания','Исход заболевания','Степень тяжести','Посмертный диагноз','ИВЛ','ОРИТ','МО прикрепления','Медицинский работник'
                 ]
     if category == 'fr_death':
         names = [
@@ -41,13 +43,17 @@ def check_file(file,category):
                 ]
     if category == 'fr_lab':
         names = [
-'Субъект', 'УНРЗ', 'Мед. организация', 'Основной диагноз', 'Наименование лаборатории', 'Дата лабораторного теста','Тип лабораторного теста', 'Результат теста (положительный/ отрицательный)', 'Этиология пневмония','Дата первого лабораторного подтверждения COVID-19','Дата последнего лабораторного подтверждения COVID-19'
+    'Субъект', 'УНРЗ', 'Мед. организация', 'Основной диагноз', 'Наименование лаборатории', 'Дата лабораторного теста','Тип лабораторного теста', 'Результат теста (положительный/ отрицательный)', 'Этиология пневмония','Дата первого лабораторного подтверждения COVID-19','Дата последнего лабораторного подтверждения COVID-19'
+                ]
+    if category == 'UMSRS':
+        names = [
+    '№ п/п', 'Номер свидетельства о смерти', 'Дата выдачи', 'Категория МС', 'Фамилия', 'Имя', 'Отчество', 'Пол', 'Дата рождения','Дата смерти', 'Возраст', 'Страна', 'Республика', 'Субъект', 'Область', 'Район', 'Город', 'Населенный пункт', 'Элемент планировочной структуры','Район СПБ', 'Улица', 'Дом', 'Корпус', 'Строение', 'Квартира', 'Страна смерти', 'Республика смерти','Субъект смерти', 'Область смерти','Район смерти', 'Город смерти', 'Населенный пункт смерти', 'Элемент планировочной структуры смерти', 'Район СПБ смерти', 'Улица смерти','Дом смерти', 'Корпус смерти', 'Строение смерти', 'Квартира смерти', 'Место смерти', 'Код МКБ-10 а', 'Болезнь или состояние, непосред приведшее к смерти','Код МКБ-10 б', 'Патол. состояние, кот. привело к указанной причине', 'Код МКБ-10 в', 'Первоначальная причина смерти', 'Код МКБ-10 г','Внешняя причина при травмах и отравлениях','Код II', 'Прочие важние состояния', 'Код МКБ-10 а(д)', 'Основное заболевание плода или ребенка','Код МКБ-10 б(д)', 'Другие заболевания плода или ребенка', 'Код МКБ-10 в(д)', 'Основное заболевание матери', 'Код МКБ-10 г(д)','Другие заболевания матери', 'Код МКБ-10 д(д)', 'Другие обстоятельства мертворождения', 'Установил причины смерти', 'Адрес МО','Краткое наименование', 'Основания установления причин смерти', 'Осмотр трупа', 'Записи в мед.док.', 'Предшествующего наблюдения','Всрытие', 'Статус МС', 'Взамен', 'Дубликат', 'Испорченное', 'Напечатано', 'в случае смерти результате ДТП'
                 ]
     sum_colum = len(names)
     names_found = []
     num_colum = 0
     try:
-        file =  pd.read_csv(file, delimiter=';', engine='python')
+        file =  pd.read_csv(file,header=None, delimiter=';', engine='python')
     except:
         return [False,'Файл не читается','',0]
     for head in range(len(file)):
@@ -72,9 +78,8 @@ def check_file(file,category):
     if len(names_found) < sum_colum:
         check = False
         error_text = ' Не найдена колонка ' + str(list(set(names) - set(names_found) ) ) + ';'
-        return check,error_text,collum, head
-    return check,error_text,collum, head
-
+        return check,error_text,collum, head - 1
+    return check,error_text,collum, head - 1
 
 def slojit_fr():
     pathFolderFedRegParts = os.getenv('path_robot') +r'\_ФР_по_частям'
@@ -119,7 +124,6 @@ def slojit_fr():
     def file_1(svod):
         with pd.ExcelWriter(new_fedreg) as writer:
             svod.to_excel(writer,index=False)
-
     def file_2(svod):
         df = svod
         del df['СНИЛС']
@@ -153,7 +157,6 @@ def slojit_fr():
             + 'Всего умерло: '+ str(NumberFor2)
     return otvet
 
-
 def excel_to_csv_old(file_excel):
     file_csv = file_excel[:-4] + 'csv'
     sheet = xlrd.open_workbook(file_excel).sheet_by_index(0) 
@@ -171,8 +174,6 @@ def excel_to_csv(file_excel):
     for r in sheet.rows: 
         col.writerow([cell.value for cell in r]) 
     return file_csv
-
-
 
 def sql_execute(sql):
     Session = sessionmaker(bind=con)
@@ -203,6 +204,7 @@ def load_fr():
         if check[0]:
             send_all('Файл прошёл проверку, начинаю грузить в память')
             df = pd.read_csv(search[2],header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
+            print(df.head(3))
             fr_to_sql(df)
         else:
             send_all('Файл не прошёл проверку!')
@@ -327,4 +329,46 @@ def load_fr_lab():
         else:
             send_all('Не найден файл лаборатории')
         return 0
+
+def load_UMSRS():
+    def UMSRS_to_sql(df):
+        df.to_sql('cv_input_umsrs_2',con,schema='dbo',if_exists='append',index = False)
+        send_all('Данные загружены в input_umsrs_2, запускаю процедурки')
+        sql_execute("""
+                    EXEC   [dbo].[Insert_Table_cv_input_umsrs_2]
+                    EXEC   [dbo].[cv_Load_UMSRS]
+                    """)
+        send_all('Успешно выполнено!')
+        return 1
+    send_all('А теперь будем грузить УМСРС')
+    search = search_file('UMSRS')
+    if search[0] and search[1]:
+        send_all('файл уже сконвертирован:\n' + search[2].split('\\')[-1])
+        send_all('Посмотрим что внутри...')
+        check = check_file(search[2],'UMSRS')
+        if check[0]:
+            send_all('Файл прошёл проверку, начинаю грузить в память')
+            df = pd.read_csv(search[2],header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
+            UMSRS_to_sql(df)
+        else:
+            send_all('Файл не прошёл проверку!')
+            send_all(check[1])
+            return 0
+    else:
+        if search[0]:
+            send_all('Нее... я не хочу работать с xlsx, щас конвертирую!')
+            file_csv = excel_to_csv(search[2]) 
+            send_all('Результат:\n' + file_csv.split('\\')[-1])
+            check = check_file(file_csv,'fr')
+            if check[0]:
+                send_all('Файл прошёл проверку, начинаю грузить в память')
+                df = pd.read_csv(file_csv,header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
+                UMSRS_to_sql(df)
+            else:
+                send_all('Файл не прошёл проверку!')
+                send_all(check[1])
+                return 0
+        else:
+            send_all('Но я не нашёл файла федерального регистра (((')
+            return 0
 
