@@ -12,6 +12,11 @@ warnings.filterwarnings('ignore')
 
 con = create_engine(os.getenv('sql_engine'),convert_unicode=False)
 
+def get_dir(name):
+    sql = f"SELECT Directory FROM [robo].[directions_for_bot] where NameDir = '{name}'"
+    df = pd.read_sql(sql,con)
+    return df.iloc[0,0] 
+
 def search_file(category):
     path = os.getenv('path_robot') + '\\' + datetime.datetime.now().strftime("%Y_%m_%d")
     if category == 'fr':
@@ -371,4 +376,12 @@ def load_UMSRS():
         else:
             send_all('Но я не нашёл файла федерального регистра (((')
             return 0
+
+def medical_personal_sick():
+    medPers = sql_execute('EXEC  med.p_StartMedicalPersonalSick')
+    date = datetime.datetime.today().strftime("%Y_%m_%d_%H_%M")
+    file = get_dir('med_sick') + r'\Заболевшие медики '+ date +'.xlsx'
+    with pd.ExcelWriter(file) as writer:
+        medPers.to_excel(writer,sheet_name='meducal',index=False)
+    
 

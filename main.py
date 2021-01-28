@@ -2,7 +2,7 @@ import telebot,schedule,time,threading,os
 # ========  мои модули 
 from check_robot import check_robot
 from reports import fr_deti,fr_status
-from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS
+from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
 from sending import send_all,send_me
 
 # ==========  настройки бота ============
@@ -20,6 +20,7 @@ commands = """ \n
 6) загрузить умерших
 7) загрузить лабораторию
 8) загрузить УМСРС
+9) Взять директорию
 """
 #===================================================
 #============== Тут будут поток для расписаний =====
@@ -38,6 +39,11 @@ def load_2():
     umsrs = threading.Thread(target=load_UMSRS,name='УМСРС')
     umsrs.start()
 
+def otchet_1():
+    med_sick = threading.Thread(target=medical_personal_sick,name='Заболевший мед персонал')
+    med_sick.start()
+
+
 def go():
     while True:
         schedule.run_pending()
@@ -45,18 +51,24 @@ def go():
 
 schedule.every().day.at("03:00").do(load_1)
 schedule.every().day.at("06:00").do(load_2)
+schedule.every().day.at("07:00").do(otchet_1)
 
 t = threading.Thread(target=go, name="Расписание работ")
 t.start()
 
 #===================================================
+def tread(func):
+    tr = threading.Thread(target=func)
+    tr.start
+
+
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
     if message.from_user.id in users_id:
         if message.text.lower() == 'привет':
             bot.send_message(message.from_user.id, 'Привет! Доступные команды:' + commands )
         if message.text.lower() in [ 'что в роботе' , '1']:
-            bot.send_message(message.from_user.id, check_robot())
+            bot.send_message(message.from_user.id, tread('check_robot') )
         if message.text.lower() in [ 'отчет по детям' , '2']:
             bot.send_message(message.from_user.id, 'Минутку, сейчас посчитаю...')
             bot.send_document(message.from_user.id, open(fr_deti(), 'rb'))
@@ -74,4 +86,6 @@ def get_text_messages(message):
             load_fr_lab()
         if message.text.lower() in ['загрузить УМСРС','8']:
             load_UMSRS()
+        if message.text.lower() in ['9']:
+            bot.send_message(message.from_user.id, get_dir('covid'))
 bot.polling(none_stop=True)
