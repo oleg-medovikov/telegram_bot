@@ -3,6 +3,7 @@ import telebot,schedule,time,threading,os
 from check_robot import check_robot
 from reports import fr_deti,fr_status
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
+from loader import medical_personal_sick
 from sending import send_all,send_me
 
 # ==========  настройки бота ============
@@ -21,6 +22,7 @@ commands = """ \n
 7) загрузить лабораторию
 8) загрузить УМСРС
 9) Взять директорию
+10) Заболевший мед персонал
 """
 #===================================================
 #============== Тут будут поток для расписаний =====
@@ -58,8 +60,7 @@ t.start()
 
 #===================================================
 def tread(func):
-    tr = threading.Thread(target=func)
-    tr.start
+    threading.Thread(target=func).start
 
 
 @bot.message_handler(content_types=['text'])
