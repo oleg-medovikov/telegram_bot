@@ -1,6 +1,6 @@
 #Работа с базами данных
 import pandas as pd
-import glob,warnings,datetime,os,xlrd,csv,openpyxl,shutil,threading
+import glob,warnings,datetime,os,xlrd,csv,openpyxl,shutil,threading,pyodbc
 from sending import send_me,send_all
 from sqlalchemy import *
 from sqlalchemy.orm import sessionmaker
@@ -11,6 +11,7 @@ import win32com.client
 warnings.filterwarnings('ignore')
 
 con = create_engine(os.getenv('sql_engine'),convert_unicode=False)
+conn = pyodbc.connect(os.getenv('sql_conn'))
 
 def get_dir(name):
     sql = f"SELECT Directory FROM [robo].[directions_for_bot] where NameDir = '{name}'"
@@ -359,7 +360,7 @@ def load_UMSRS():
         check = check_file(search[2],'UMSRS')
         if check[0]:
             send_all('Файл прошёл проверку, начинаю грузить в память')
-            df = pd.read_csv(search[2],header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
+            df = pd.read_csv(search[2],header = check[3], usecols = check[2], names = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
             UMSRS_to_sql(df)
             return 1
         else:
@@ -371,10 +372,10 @@ def load_UMSRS():
             send_all('Нее... я не хочу работать с xlsx, щас конвертирую!')
             file_csv = excel_to_csv(search[2]) 
             send_all('Результат:\n' + file_csv.split('\\')[-1])
-            check = check_file(file_csv,'fr')
+            check = check_file(file_csv,'UMSRS')
             if check[0]:
                 send_all('Файл прошёл проверку, начинаю грузить в память')
-                df = pd.read_csv(file_csv,header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
+                df = pd.read_csv(file_csv,header = check[3], usecols = check[2], names = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
                 UMSRS_to_sql(df)
                 return 1
             else:
@@ -386,10 +387,11 @@ def load_UMSRS():
             return 0 
 
 def medical_personal_sick():
-    medPers = sql_execute('EXEC  med.p_StartMedicalPersonalSick')
+    send_all('Начинаю считать заболевших сотрудников')
+    medPers = pd.read_sql('EXEC  med.p_StartMedicalPersonalSick',conn)
     date = datetime.datetime.today().strftime("%Y_%m_%d_%H_%M")
     file = get_dir('med_sick') + r'\Заболевшие медики '+ date +'.xlsx'
     with pd.ExcelWriter(file) as writer:
         medPers.to_excel(writer,sheet_name='meducal',index=False)
-
+    send_all("Все готово\n" + file)
 
