@@ -20,7 +20,7 @@ def get_dir(name):
 
 def check_table(name):
     sql=f"""
-    SELECT distinct case when (cast([datecreated] as date) =  cast(getdate() as date)) 
+    SELECT distinct case when (cast([datecreated] as date) =  cast(getdate() as date))
         then 1
         else 0
         end AS 'Check'
