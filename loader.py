@@ -18,6 +18,16 @@ def get_dir(name):
     df = pd.read_sql(sql,con)
     return df.iloc[0,0] 
 
+def check_table(name):
+    sql=f"""
+    SELECT distinct case when (cast([datecreated] as date) =  cast(getdate() as date)) 
+        then 1
+        else 0
+        end AS 'Check'
+            FROM [dbo].[cv_{table}]
+    """
+    return pd.read_sql(sql,conn).iat[0,0]
+
 def search_file(category):
     path = os.getenv('path_robot') + '\\' + datetime.datetime.now().strftime("%Y_%m_%d")
     if category == 'fr':
@@ -199,8 +209,12 @@ def load_fr():
         df.to_sql('cv_input_fr',con,schema='dbo',if_exists='append',index=False)
         send_all('Загрузил input_fr, запускаю процедуру')
         sql_execute('EXEC [dbo].[cv_Load_FedReg]')
-        send_all('Федеральный регистр успешно загружен')
-        return 1
+        if check_table('fedreg'):
+            send_all('Федеральный регистр успешно загружен')
+            return 1
+        else:
+            send_all('Произошла какая-то проблема с загрузкой фр')
+            return 0
     send_all('Я проснулся и хочу грузить фр!')
     search = search_file('fr')
     if search[0] and search[1]:
@@ -306,8 +320,12 @@ def load_fr_lab():
                     EXEC   [dbo].[Insert_Table_cv_input_fr_lab_2]
                     EXEC   [dbo].[cv_load_frlab]
                     """)
-        send_all('Лаборатория успешно загружена')
-        return 1
+        if check_table('fedreg_lab'):
+            send_all('Лаборатория успешно загружена')
+            return 1
+        else:
+            send_all('Какая-то проблема с загрузкой лаборатории')
+            return 0
     send_all('Посмотрим на файлик лабораторных исследований')
     search = search_file('fr_lab')
     if search[0] and search[1]:
@@ -350,8 +368,12 @@ def load_UMSRS():
                     EXEC   [dbo].[Insert_Table_cv_input_umsrs_2]
                     EXEC   [dbo].[cv_Load_UMSRS]
                     """)
-        send_all('Успешно выполнено!')
-        return 1
+        if check_table('umsrs'):
+            send_all('Успешно выполнено!')
+            return 1
+        else:
+            send_all('Какая-то проблема с загрузкой УМСРС')
+            return 0
     send_all('А теперь будем грузить УМСРС')
     search = search_file('UMSRS')
     if search[0] and search[1]:
