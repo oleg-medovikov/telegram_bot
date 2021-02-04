@@ -6,14 +6,14 @@ from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,loa
 from loader import medical_personal_sick
 from sending import send_all,send_me
 from presentation import generate_pptx
-
+from zamechania_mz import no_snils
 # ==========  настройки бота ============
 #  используются переменные среды Windows
 telebot.apihelper.proxy = {'https': os.getenv('http_proxy')}
 bot = telebot.TeleBot(os.getenv('telegram_bot'))
 users_id=[int(x) for x in os.getenv('telegram_id').split(',')]
 
-commands = """ \n
+commands = """
 1) что в директории Robot?
 2) отчет по детям
 3) статус фр
@@ -26,7 +26,12 @@ commands = """ \n
 10) Заболевший мед персонал
 11) Свод по 40 COVID 19
 12) Генерация презентации
+13) Замечания МинЗдрава
 """
+commands_min="""
+1. Нет СНИЛСа
+"""
+
 #===================================================
 #============== Тут будут поток для расписаний =====
 
@@ -107,5 +112,15 @@ def get_text_messages(message):
             file_pptx = generate_pptx('2021-01-29')
             bot.send_document(message.from_user.id, open(file_pptx, 'rb'))
             os.remove(file_pptx)
+        if message.text.lower() in ['13']:
+            bot.send_message(message.from_user.id, 'Что именно разложим?')
+            bot.send_message(message.from_user.id, commands_min)
+        if message.text.lower() in ['1.']:
+            if no_snils():
+                bot.send_message(message.from_user.id, 'Уже разложил')
+                file_stat = get_dir('temp') + '\\' + 'отчет по разложению Нет СНИЛСа.xlsx'
+                bot.send_document(message.from_user.id, open(file_stat, 'rb'))
+                os.remove(file_stat)
+
 
 bot.polling(none_stop=True)
