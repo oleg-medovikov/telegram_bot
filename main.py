@@ -6,7 +6,7 @@ from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,loa
 from loader import medical_personal_sick
 from sending import send_all,send_me
 from presentation import generate_pptx
-from zamechania_mz import no_snils
+from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level
 # ==========  настройки бота ============
 #  используются переменные среды Windows
 telebot.apihelper.proxy = {'https': os.getenv('http_proxy')}
@@ -30,6 +30,8 @@ commands = """
 """
 commands_min="""
 1. Нет СНИЛСа
+2. Без исхода 45 дней
+3. Нет амбулаторного этапа
 """
 
 #===================================================
@@ -121,6 +123,19 @@ def get_text_messages(message):
                 file_stat = get_dir('temp') + '\\' + 'отчет по разложению Нет СНИЛСа.xlsx'
                 bot.send_document(message.from_user.id, open(file_stat, 'rb'))
                 os.remove(file_stat)
+        if message.text.lower() in ['2.']:
+            if bez_izhoda():
+                bot.send_message(message.from_user.id, 'Уже разложил')
+                file_stat = get_dir('temp') + '\\' + 'отчет по разложению Без исхода 45 дней.xlsx'
+                bot.send_document(message.from_user.id, open(file_stat, 'rb'))
+                os.remove(file_stat)
+        if message.text.lower() in ['3.']:
+            if bez_ambulat_level():
+                bot.send_message(message.from_user.id, 'Уже разложил')
+                file_stat = get_dir('temp') + '\\' + 'отчет по разложению Нет амбулаторного этапа.xlsx'
+                bot.send_document(message.from_user.id, open(file_stat, 'rb'))
+                os.remove(file_stat)
+
 
 
 bot.polling(none_stop=True)
