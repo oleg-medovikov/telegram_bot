@@ -1,14 +1,15 @@
 import telebot,schedule,time,threading,os
-# ========  мои модули 
+# ======== мои модули 
 from procedure import check_robot,svod_40_COVID_19
 from reports import fr_deti,fr_status
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
 from loader import medical_personal_sick
 from sending import send_all,send_me
 from presentation import generate_pptx
-from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level
-# ==========  настройки бота ============
-#  используются переменные среды Windows
+from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia
+# ========== настройки бота ============
+
+# используются переменные среды Windows
 telebot.apihelper.proxy = {'https': os.getenv('http_proxy')}
 bot = telebot.TeleBot(os.getenv('telegram_bot'))
 users_id=[int(x) for x in os.getenv('telegram_id').split(',')]
@@ -32,6 +33,8 @@ commands_min="""
 1. Нет СНИЛСа
 2. Без исхода 45 дней
 3. Нет амбулаторного этапа
+4. Нет данных ОМС
+5. неверный вид лечения
 """
 
 #===================================================
@@ -133,6 +136,18 @@ def get_text_messages(message):
             if bez_ambulat_level():
                 bot.send_message(message.from_user.id, 'Уже разложил')
                 file_stat = get_dir('temp') + '\\' + 'отчет по разложению Нет амбулаторного этапа.xlsx'
+                bot.send_document(message.from_user.id, open(file_stat, 'rb'))
+                os.remove(file_stat)
+        if message.text.lower() in ['4.']:
+            if bez_ambulat_level():
+                bot.send_message(message.from_user.id, 'Уже разложил')
+                file_stat = get_dir('temp') + '\\' + 'отчет по разложению Нет данных ОМС.xlsx'
+                bot.send_document(message.from_user.id, open(file_stat, 'rb'))
+                os.remove(file_stat)
+        if message.text.lower() in ['5.']:
+            if neveren_vid_lechenia():
+                bot.send_message(message.from_user.id, 'Уже разложил')
+                file_stat = get_dir('temp') + '\\' + 'отчет по разложению неверный вид лечения.xlsx'
                 bot.send_document(message.from_user.id, open(file_stat, 'rb'))
                 os.remove(file_stat)
 
