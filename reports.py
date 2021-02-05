@@ -16,8 +16,8 @@ def fr_deti():
     return file
 
 
-def fr_status():
-    df = pd.read_sql('SELECT * FROM robo.fr_status',conn)
+def fr_status(tetxsql):
+    df = pd.read_sql(tetxsql,conn)
     table_html = get_dir('temp') + r'\table.html'
     table_png = get_dir('temp') + r'\table.png'
     df.to_html(table_html)
