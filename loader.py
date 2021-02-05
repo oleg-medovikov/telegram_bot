@@ -418,6 +418,13 @@ def medical_personal_sick():
     send_all("Все готово\n" + file)
     
 def load_report_vp_and_cv():
+	def check_data_table(name):
+		sql=f"""
+			IF (EXISTS (SELECT * FROM {name})) 
+		    		SELECT 1 
+			ELSE 
+		    		SELECT 0 """
+		return pd.read_sql(sql,conn).iat[0,0]
 	send_all('Продготовка к отчету Мониторинг ВП и COVID')
 	#собираем список файлов из папки
 	files = glob.glob(directory + r'\из_почты\[!~$]*.xls*') 
@@ -455,8 +462,22 @@ def load_report_vp_and_cv():
 			# вывод картинки с теми кто не сдал отчет
 			otvet_vp('SELECT * FROM mon_vp.v_DebtorsReport') 
 		else:
-			send_all('Тут я должен был бы выгрузить отчет,  но я пока этого не умею делать.. учусь.')
-            #otvet_vp('SELECT * FROM mon_vp.v_GrandReport')
+			send_all('Тут я должен был бы выгрузить отчет.. работаю над этим..')			
+			df1 = df.loc[df.typeMO==1].sort_values(["numSort"]).drop('typeMO',1).drop('numSort',1)
+			wb= openpyxl.load_workbook(shablon + r'\Шаблон.xlsx')
+			ws = wb['Данные']
+			ws.cell(row=1, column=2, value=(datetime.datetime.now() + timedelta(days=1)).strftime("%d.%m.%Y")) 
+			rows = dataframe_to_rows(df1,index=False, header=False)
+			for r_idx, row in enumerate(rows,8):  
+			    for c_idx, value in enumerate(row, 1):
+				ws.cell(row=r_idx, column=c_idx, value=value)
+			df2 = df.loc[df.typeMO==2].sort_values(["numSort"]).drop('typeMO',1).drop('numSort',1)
+			rows = dataframe_to_rows(df2,index=False, header=False)
+			for r_idx, row in enumerate(rows,72):  
+			    for c_idx, value in enumerate(row, 1):
+				ws.cell(row=r_idx, column=c_idx, value=value)
+			wb.save( shablon + r'\\СводОбщий_' + (datetime.datetime.now() + timedelta(days=1)).strftime("%d %m %Y") +'.xlsx') 
+			send_all('Формирование отчета осуществлено')
 
 # обработка данных в нутри файлов		
 def load_file_mo(file):
