@@ -28,6 +28,7 @@ commands = """
 11) Свод по 40 COVID 19
 12) Генерация презентации
 13) Замечания МинЗдрава
+14) Отчет по Мониторингу ВП и COVID
 """
 commands_min="""
 1. Нет СНИЛСа
@@ -150,6 +151,8 @@ def get_text_messages(message):
                 file_stat = get_dir('temp') + '\\' + 'отчет по разложению неверный вид лечения.xlsx'
                 bot.send_document(message.from_user.id, open(file_stat, 'rb'))
                 os.remove(file_stat)
+        if message.text.lower() in ['Отчет по Мониторингу ВП и COVID','14']:
+            load_report_vp_and_cv()
 
 
 
