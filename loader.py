@@ -416,4 +416,62 @@ def medical_personal_sick():
     with pd.ExcelWriter(file) as writer:
         medPers.to_excel(writer,sheet_name='meducal',index=False)
     send_all("Все готово\n" + file)
+    
+def load_report_vp_and_cv():
+	send_all('Продготовка к отчету Мониторинг ВП и COVID')
+	#собираем список файлов из папки
+	files = glob.glob(directory + r'\из_почты\[!~$]*.xls*') 
+	path = directory + r'\\' + datetime.datetime.now().strftime("%Y%m%d")
+	if os.path.exists(path):
+		send_all("Директория для складирования файлов от МО %s уже существует" % path)
+	else:
+		try:
+			os.mkdir(path)
+		except OSError:
+			send_all("Создать директория для складирования файлов от МО %s не удалось" % path)
+		else:
+			send_all("Успешно создана директория %s для сохранения файлов от МО" % path)	
+		for file in files:
+			try:
+				load_file_mo(file)
+			except:
+				send_all(Не обработался следующий файл file)	
+		df = pd.concat(list_)
+		# переименовка столбцов		
+		df = df.set_axis(['vp_03_Power_Count_Departments','vp_04_Power_Count_Allocated_All','vp_05_Power_Count_Allocated','vp_06_Power_Count_Reanimation_All','vp_07_Power_Count_Reanimation','vp_08_Hospital_All','vp_09_Hospital_Day','vp_10_Hospital_Hard_All','vp_11_Hospital_Hard_Reaniamation','vp_12_Hospital_Hard_Ivl','vp_13_ReceivedAll','vp_14_ReceivedDay','vp_15_DischargedAll','vp_16_DischargedDay','vp_17_DiedAll','vp_18_DiedDay','cv_19_Power_Count_Departments','cv_20_Power_Count_Allocated_All','cv_21_Power_Count_Allocated','cv_22_Power_Count_Reanimation_All','cv_23_Power_Count_Reanimation','cv_24_Hospital_All','cv_25_Hospital_Day','cv_26_Hospital_Hard_All','cv_27_Hospital_Hard_Reaniamation','cv_28_Hospital_Hard_Ivl','cv_29_ReceivedAll','cv_30_ReceivedDay','cv_31_DischargedAll','cv_32_DischargedDay','cv_33_DiedAll','cv_34_DiedDay','nameMO'], axis=1, inplace=False)
+		send_all(Собрал свод из прочитанных файлов. Сейчас начну заливать в базу)		
+		try:
+			df.to_sql(
+				'HistoryFileMO',
+				conn,
+				schema='mon_vp',
+				index = False,
+				if_exists='append'
+				)
+		except:
+			send_all('Залить в базу не получилось')
+		send_all('Заливка в БД прошла успешно. Сейчас что-нибудь буду выводить...')
+		if check_data_table('mon_vp.v_DebtorsReport'):
+			# вывод картинки с теми кто не сдал отчет
+			otvet_vp('SELECT * FROM mon_vp.v_DebtorsReport') 
+		else:
+			send_all('Тут я должен был бы выгрузить отчет,  но я пока этого не умею делать.. учусь.')
+            #otvet_vp('SELECT * FROM mon_vp.v_GrandReport')
 
+# обработка данных в нутри файлов		
+def load_file_mo(file):
+	# открываем файл и пересохраняем его
+    xcl = win32com.client.Dispatch("Excel.Application")
+    wb = xcl.Workbooks.Open(file)
+    xcl.DisplayAlerts = False
+    wb.SaveAs(file)          
+    xcl.Quit()
+    # получаем данные из файлов  
+    nameMO = pd.read_excel(file, sheet_name= 'Титул', header =3, usecols='H', nrows = 1).iloc[0,0]
+    dff = pd.read_excel(file, sheet_name= 'Данные1', header =6, usecols='C:AH', nrows = 1)
+    dff = dff.fillna(0)
+    dff['nameMO'] = nameMO
+    list_.append(dff)
+    # перемещаем файл в обработанные
+    os.replace(file, path + r'\\' + os.path.basename(file))   
+    
