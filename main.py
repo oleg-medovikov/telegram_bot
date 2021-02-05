@@ -88,7 +88,7 @@ def get_text_messages(message):
             bot.send_document(message.from_user.id, open(fr_deti(), 'rb'))
         if message.text.lower() in ['статус фр','3']:
             bot.send_message(message.from_user.id, 'Хорошо, сейчас проверю...')
-            bot.send_document(message.from_user.id, open(fr_status(), 'rb'))
+            bot.send_document(message.from_user.id, open(fr_status('SELECT * FROM robo.fr_status'), 'rb'))
         if message.text.lower() in ['сложить фр в один файл','4']:
             bot.send_message(message.from_user.id, 'Вот ничего без меня не можете...')
             bot.send_message(message.from_user.id, slojit_fr())
