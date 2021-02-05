@@ -24,7 +24,7 @@ def check_table(name):
         then 1
         else 0
         end AS 'Check'
-            FROM [dbo].[cv_{table}]
+            FROM [dbo].[cv_{name}]
     """
     return pd.read_sql(sql,conn).iat[0,0]
 

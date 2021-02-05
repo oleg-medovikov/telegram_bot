@@ -66,3 +66,7 @@ def no_snils():
     put_excel_for_mo(df,'Нет СНИЛСа')
     return 1
 
+#def no_lab_confirm():
+#    df = pd.read_sql()
+
+
