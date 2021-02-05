@@ -1,12 +1,12 @@
 import telebot,schedule,time,threading,os
 # ======== мои модули 
-from procedure import check_robot,svod_40_COVID_19
+from procedure import check_robot,svod_40_COVID_19,sort_death_mg
 from reports import fr_deti,fr_status
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
 from loader import medical_personal_sick
 from sending import send_all,send_me
 from presentation import generate_pptx
-from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia
+from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad
 # ========== настройки бота ============
 
 # используются переменные среды Windows
@@ -28,6 +28,7 @@ commands = """
 11) Свод по 40 COVID 19
 12) Генерация презентации
 13) Замечания МинЗдрава
+14) Сортировка умерших по возрастам
 """
 commands_min="""
 1. Нет СНИЛСа
@@ -35,6 +36,9 @@ commands_min="""
 3. Нет амбулаторного этапа
 4. Нет данных ОМС
 5. неверный вид лечения
+6. Нет лабораторного подтверждения
+7. Нет диагноза COVID
+8. Нет ПАД
 """
 
 #===================================================
@@ -120,6 +124,9 @@ def get_text_messages(message):
         if message.text.lower() in ['13']:
             bot.send_message(message.from_user.id, 'Что именно разложим?')
             bot.send_message(message.from_user.id, commands_min)
+        if message.text.lower() in ['14']:
+            bot.send_message(message.from_user.id, 'Давайте попробуем...')
+            bot.send_message(message.from_user.id, sort_death_mg())
         if message.text.lower() in ['1.']:
             if no_snils():
                 bot.send_message(message.from_user.id, 'Уже разложил')
@@ -150,6 +157,25 @@ def get_text_messages(message):
                 file_stat = get_dir('temp') + '\\' + 'отчет по разложению неверный вид лечения.xlsx'
                 bot.send_document(message.from_user.id, open(file_stat, 'rb'))
                 os.remove(file_stat)
+        if message.text.lower() in ['6.']:
+            if no_lab():
+                bot.send_message(message.from_user.id, 'Уже разложил')
+                file_stat = get_dir('temp') + '\\' + 'отчет по разложению нет лабораторного подтверждения.xlsx'
+                bot.send_document(message.from_user.id, open(file_stat, 'rb'))
+                os.remove(file_stat)
+        if message.text.lower() in ['7.']:
+            if net_diagnoz_covid():
+                bot.send_message(message.from_user.id, 'Уже разложил')
+                file_stat = get_dir('temp') + '\\' + 'отчет по разложению нет диагноза COVID.xlsx'
+                bot.send_document(message.from_user.id, open(file_stat, 'rb'))
+                os.remove(file_stat)
+        if message.text.lower() in ['8.']:
+            if net_pad():
+                bot.send_message(message.from_user.id, 'Уже разложил')
+                file_stat = get_dir('temp') + '\\' + 'отчет по разложению нет ПАЗ.xlsx'
+                bot.send_document(message.from_user.id, open(file_stat, 'rb'))
+                os.remove(file_stat)
+
 
 
 

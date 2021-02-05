@@ -93,6 +93,29 @@ select [УНРЗ],[ФИО],
         and [Вид лечения] = 'Стационарное лечение'
         and [Исход заболевания] = ''
 """
+sql_no_lab="""
+select fr.[Медицинская организация], fr.[УНРЗ],fr.[ФИО],fr.[Дата рождения],fr.Диагноз
+from ( select * from cv_fedreg where [Диагноз] ='U07.1') as fr
+    left join (select distinct УНРЗ from [dbo].[cv_fedreg_lab] where [Результат теста (положительный/ отрицательный)] = 1 ) as lab
+        on (fr.УНРЗ = lab.УНРЗ)
+            where lab.УНРЗ is null
+"""
+
+sql_net_diagnoz_covid="""
+select fr.[Медицинская организация], fr.[УНРЗ],fr.[ФИО],fr.[Дата рождения],fr.Диагноз
+from ( select * from cv_fedreg where [Диагноз] not in ('U07.1','Z22.8') ) as fr
+    inner join (select distinct УНРЗ from [dbo].[cv_fedreg_lab] where [Результат теста (положительный/ отрицательный)] = 1 ) as lab
+        on (fr.УНРЗ = lab.УНРЗ)
+"""
+
+sql_net_pad="""
+select [Медицинская организация],  [УНРЗ], [ФИО], [Дата рождения], [Диагноз], [Исход заболевания]
+from cv_fedreg 
+    where [Исход заболевания] = 'Смерть'
+        and [ПАД Отказ от проведения вскрытия] != 'Да'
+        and [ПАД Наличие файла патологоанатомического заключения]  != 'Да'
+"""
+
 
 def get_path_mo(organization):
     sql = f"select top(1) directory from robo.directory where [Наименование в ФР] = '{organization}'"
@@ -140,7 +163,7 @@ def put_svod(df,name):
     df.index = range(1, len(df) + 1)
     df = df.applymap(str)
     df.fillna('пусто')
-    with pd.ExcelWriter(path + '\\' + name + '.xlsx') as writer:
+    with pd.ExcelWriter(path + '\\' + name ) as writer:
         df.to_excel(writer) 
 
 def no_snils(): 
@@ -168,8 +191,26 @@ def no_OMS():
     return 1
 
 def neveren_vid_lechenia():
-    df = pd.read_sql(sql_no_OMS,conn) 
+    df = pd.read_sql(sql_neveren_vid_lechenia,conn) 
     put_svod(df,'неверный вид лечения')
     put_excel_for_mo(df,'неверный вид лечения')
+    return 1
+
+def no_lab():
+    df = pd.read_sql(sql_no_lab,conn) 
+    put_svod(df,'нет лабораторного подтверждения')
+    put_excel_for_mo(df,'нет лабораторного подтверждения')
+    return 1
+
+def net_diagnoz_covid():
+    df = pd.read_sql(sql_net_diagnoz_covid,conn) 
+    put_svod(df,'нет диагноза COVID')
+    put_excel_for_mo(df,'нет диагноза COVID')
+    return 1
+
+def net_pad():
+    df = pd.read_sql(sql_net_pad,conn) 
+    put_svod(df,'нет ПАЗ')
+    put_excel_for_mo(df,'нет ПАЗ')
     return 1
 
