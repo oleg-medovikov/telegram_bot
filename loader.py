@@ -418,13 +418,6 @@ def medical_personal_sick():
     send_all("Все готово\n" + file)
     
 def load_report_vp_and_cv():
-	def check_data_table(name):
-		sql=f"""
-			IF (EXISTS (SELECT * FROM {name})) 
-		    		SELECT 1 
-			ELSE 
-		    		SELECT 0 """
-		return pd.read_sql(sql,conn).iat[0,0]
 	send_all('Продготовка к отчету Мониторинг ВП и COVID')
 	#собираем список файлов из папки
 	files = glob.glob(directory + r'\из_почты\[!~$]*.xls*') 
