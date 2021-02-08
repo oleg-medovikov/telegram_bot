@@ -101,7 +101,7 @@ def sort_death_mg():
     return 'Сгенерирован файл' + file.split('\\')[-1]
 
 def svod_40_COVID_19():
-    path = get_dir('40_covid_19') + r'\*.xls'
+    path = get_dir('40_covid_19') + r'\[!~]*.xls'
     list_=[]
     usecolumns = 'A,B,C,D,F,G,I,J,L,M,O,P,R,S,U,V,X,Y,AA,AB,AC,AD,AF,AG,AI,AJ,AK'
     date_otch = None
@@ -143,8 +143,8 @@ def svod_40_COVID_19():
             potreb.loc[k,'Name'] = df.iat[i,2]
             potreb.loc[k,'Vsego_day_v1'] = df.iat[i,21]
             potreb.loc[k,'Vsego_day_v2'] = df.iat[i,23]
-            potreb.loc[k,'Ostatok_v1'] = int(df.iat[i,4]) - int(df.iat[i,20]) - int(df.iat[i,24])
-            potreb.loc[k,'Ostatok_v2'] = int(df.iat[i,4]) - int(df.iat[i,22])
+            potreb.loc[k,'Ostatok_v1'] = df.iat[i,4] - df.iat[i,20] - df.iat[i,24]
+            potreb.loc[k,'Ostatok_v2'] = df.iat[i,4] - df.iat[i,22]
             potreb.loc[k,'Potrebnost_v1'] = df.iat[i,21]
             potreb.loc[k,'Potrebnost_v2'] = df.iat[i,23]
 
