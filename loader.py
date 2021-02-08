@@ -167,10 +167,16 @@ def slojit_fr():
     NumberFor2 = len(svod[svod['Посмертный диагноз'].isin(['U07.1']) \
                         & svod['Исход заболевания'].isin(['Смерть'])])
 
+    date = [str(datetime.datetime.today().date())]
+    part = svod[svod['Исход заболевания'].isin(['Выздоровление']) & svod['Диагноз'].isin(['U07.1']) ]
+    part.loc[part['Дата изменения РЗ'].isnull(), 'Дата изменения РЗ' ] = part.loc[part['Дата изменения РЗ'].isnull(),'Дата создания РЗ']
+    NumberFor3 = len(part) - len(part[~part['Дата изменения РЗ'].isin(date) ] )
+
     otvet = 'Вроде все получилось \n' + 'По цифрам\n' \
             + 'На стационарном лечении: ' + str(NumberForMG) + '\n' \
             + 'Всего заболело: ' + str(NumberFor1) +'\n' \
-            + 'Всего умерло: '+ str(NumberFor2)
+            + 'Всего умерло: '+ str(NumberFor2) + '\n' \
+            + 'Всего выздоровело: '+ str(NumberFor3)
     return otvet
 
 def excel_to_csv_old(file_excel):
