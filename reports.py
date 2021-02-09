@@ -1,8 +1,22 @@
 import os,pyodbc,subprocess
 import pandas as pd
-from loader import get_dir,sql_execute
+from sqlalchemy import *
 
 conn = pyodbc.connect(os.getenv('sql_conn'))
+con = create_engine(os.getenv('sql_engine'),convert_unicode=False)
+
+def get_dir(name):
+    sql = f"SELECT Directory FROM [robo].[directions_for_bot] where NameDir = '{name}'"
+    df = pd.read_sql(sql,con)
+    return df.iloc[0,0] 
+
+def sql_execute(sql):
+    Session = sessionmaker(bind=con)
+    session = Session()
+    session.execute(sql)
+    session.commit()
+    session.close()
+
 
 def fr_deti():
     sql_week = 'exec [dbo].[Proc_Report_Children_by_week]'
@@ -16,8 +30,8 @@ def fr_deti():
     return file
 
 
-def fr_status():
-    df = pd.read_sql('SELECT * FROM robo.fr_status',conn)
+def short_report(textsql):
+    df = pd.read_sql(textsql,conn)
     table_html = get_dir('temp') + r'\table.html'
     table_png = get_dir('temp') + r'\table.png'
     df.to_html(table_html)

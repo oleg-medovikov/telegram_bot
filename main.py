@@ -1,12 +1,13 @@
 import telebot,schedule,time,threading,os
 # ======== мои модули 
 from procedure import check_robot,svod_40_COVID_19,sort_death_mg
-from reports import fr_deti,fr_status
+from reports import fr_deti,short_report
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
-from loader import medical_personal_sick
+from loader import medical_personal_sick,load_report_vp_and_cv
 from sending import send_all,send_me
 from presentation import generate_pptx
 from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad
+import concurrent.futures
 # ========== настройки бота ============
 
 # используются переменные среды Windows
@@ -23,7 +24,7 @@ commands = """
 6) загрузить умерших
 7) загрузить лабораторию
 8) загрузить УМСРС
-9) Взять директорию
+9) Мониторинг ВП и ковид
 10) Заболевший мед персонал
 11) Свод по 40 COVID 19
 12) Генерация презентации
@@ -40,27 +41,44 @@ commands_min="""
 7. Нет диагноза COVID
 8. Нет ПАД
 """
+# =============== Процедурка создания потоков ====
+def create_tred(func,arg):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(func,arg)
+        try:
+            return_value = future.result()
+            return True, return_value
+        except:
+            return False, 'Ошибка при выполнении функции: ' +  str(future.exception())
 
 #===================================================
+
 #============== Тут будут поток для расписаний =====
 
 
 def load_1():
-    def cool():
-        if load_fr():
-            if load_fr_death():
-                if load_fr_lab():
-                    return 1
-    fr = threading.Thread(target=cool,name='Федеральный регистр')
-    fr.start()
+    result = create_tred(load_fr,None)
+    if result[0]:
+        result = create_tred(load_fr_death,None)
+        if result[0]:
+            result = create_tred(load_fr_lab,None)
+            if not result[0]:
+                send_me(result[1])
+        else:
+            send_me(result[1])
+    else:
+        send_me(result[1])
+
 
 def load_2():
-    umsrs = threading.Thread(target=load_UMSRS,name='УМСРС')
-    umsrs.start()
+    result = create_tred(load_UMSRS,None)
+    if not result[0]:
+        send_me(result[1])
 
 def otchet_1():
-    med_sick = threading.Thread(target=medical_personal_sick,name='Заболевший мед персонал')
-    med_sick.start()
+    result = create_tred(medical_personal_sick,None)
+    if not result[0]:
+        send_me(result[1])
 
 
 def go():
@@ -76,15 +94,14 @@ t = threading.Thread(target=go, name="Расписание работ")
 t.start()
 
 #===================================================
-def tread(func):
-    threading.Thread(target=func).start 
-
 
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
     if message.from_user.id in users_id:
+#========= приветсвие =====================
         if message.text.lower() == 'привет':
             bot.send_message(message.from_user.id, 'Привет! Доступные команды:' + commands )
+#========== Простые репорты ===============
         if message.text.lower() in [ 'что в роботе' , '1']:
             bot.send_message(message.from_user.id, check_robot() )
         if message.text.lower() in [ 'отчет по детям' , '2']:
@@ -92,41 +109,75 @@ def get_text_messages(message):
             bot.send_document(message.from_user.id, open(fr_deti(), 'rb'))
         if message.text.lower() in ['статус фр','3']:
             bot.send_message(message.from_user.id, 'Хорошо, сейчас проверю...')
-            bot.send_document(message.from_user.id, open(fr_status(), 'rb'))
+            result = create_tred(short_report,'Select * from robo.fr_status')
+            if result[0]:
+                bot.send_document(message.from_user.id, open(result[1], 'rb'))
+            else:
+                bot.send_message(message.from_user.id, result[1])
+# ========= Загрузка в базу данных =======
         if message.text.lower() in ['сложить фр в один файл','4']:
             bot.send_message(message.from_user.id, 'Вот ничего без меня не можете...')
             bot.send_message(message.from_user.id, slojit_fr())
         if message.text.lower() in ['загрузить фр','5']:
-            load_fr()
+            result = create_tred(load_fr,None)
+            if not result[0]:
+                bot.send_message(message.from_user.id, result[1])
         if message.text.lower() in ['загрузить умерших','6']:
-            load_fr_death()
+            result = create_tred(load_fr_death,None)
+            if not result[0]:
+                bot.send_message(message.from_user.id, result[1])
         if message.text.lower() in ['загрузить лабораторию','7']:
-            load_fr_lab()
+            result = create_tred(load_fr_lab,None)
+            if not result[0]:
+                bot.send_message(message.from_user.id, result[1])
         if message.text.lower() in ['загрузить УМСРС','8']:
-            load_UMSRS()
-        if message.text.lower() in ['9']:
-            bot.send_message(message.from_user.id, get_dir('covid'))
-        if message.text.lower() in ['10']:
-            bot.send_message(message.from_user.id, tread(medical_personal_sick()))
-        if message.text.lower() in ['11']:
-            bot.send_message(message.from_user.id, 'Минутку, сейчас соберу...')
-            svod_file = svod_40_COVID_19()
-            if svod_file is not None:
-                bot.send_document(message.from_user.id, open(svod_file, 'rb'))
-                os.remove(svod_file)
+            result = create_tred(load_UMSRS,None)
+            if not result[0]:
+                bot.send_message(message.from_user.id, result[1])
+# ========= Мониторинг Внебольничной пневмонии и ковида
+        if message.text.lower() in ['9','Мониторинг ВП']:
+            result = create_tred(load_report_vp_and_cv,None)
+            if result[0]:
+                if result[1][-3:] == 'png':
+                    bot.send_message(message.from_user.id, 'Не найдены файлы должников')
+                    bot.send_document(message.from_user.id, open(result[1], 'rb'))
+                else:
+                    bot.send_message(message.from_user.id, 'Создан файл' + '\n' + result[1].split('\\')[-1])
             else:
-                bot.send_message(message.from_user.id, ' Что я буду сводить?! Папка пустая!')
-        if message.text.lower() in ['12']:
+                bot.send_message(message.from_user.id, result[1])
+        if message.text.lower() in ['10', 'Заболевший мед персонал']:
+            result = create_tred(medical_personal_sick,None)
+            if result[0]:
+                pass
+            else:
+                bot.send_message(message.from_user.id, result[1])
+        if message.text.lower() in ['11','Свод по 40 COVID 19']:
+            bot.send_message(message.from_user.id, 'Минутку, сейчас соберу...')
+            result = create_tred(svod_40_COVID_19,None)
+            if result[0]:
+                bot.send_document(message.from_user.id, open(result[1], 'rb'))
+                os.remove(result[1])
+            else:
+                bot.send_message(message.from_user.id, result[1])
+        if message.text.lower() in ['12','Генерация презентации']:
             bot.send_message(message.from_user.id, 'Да это же просто! Щас...')
-            file_pptx = generate_pptx('2021-01-29')
-            bot.send_document(message.from_user.id, open(file_pptx, 'rb'))
-            os.remove(file_pptx)
-        if message.text.lower() in ['13']:
+            result = create_tred(generate_pptx,'2021-01-29')
+            if result[0]:
+                bot.send_document(message.from_user.id, open(result[1], 'rb'))
+                os.remove(result[1])
+            else:
+                bot.send_message(message.from_user.id, result[1])
+        if message.text.lower() in ['13','замечания минздрава']:
             bot.send_message(message.from_user.id, 'Что именно разложим?')
             bot.send_message(message.from_user.id, commands_min)
-        if message.text.lower() in ['14']:
+        if message.text.lower() in ['14','Сортировка умерших по возрастам']:
             bot.send_message(message.from_user.id, 'Давайте попробуем...')
-            bot.send_message(message.from_user.id, sort_death_mg())
+            result = create_tred(sort_death_mg,None)
+            if result[0]:
+                bot.send_message(message.from_user.id, result[1])
+            else:
+                bot.send_message(message.from_user.id, result[1])
+        # ============== Замечания минздрава =====================
         if message.text.lower() in ['1.']:
             if no_snils():
                 bot.send_message(message.from_user.id, 'Уже разложил')

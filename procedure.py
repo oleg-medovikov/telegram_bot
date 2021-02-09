@@ -11,6 +11,9 @@ conn=pyodbc.connect(os.getenv('sql_conn'))
 
 cursor = conn.cursor()
 
+class my_exception(Exception):
+    pass
+
 def check_robot():
     date = datetime.datetime.today().strftime("%Y_%m_%d")
     path =os.getenv('path_robot') +'\\'+ date + '\\' +'*'
@@ -19,7 +22,7 @@ def check_robot():
         spisok += '\n' + file.split('\\')[-1]
     return spisok
 
-def sort_death_mg():
+def sort_death_mg(a):
     def search_mo(street,house):
         for mo in mo_org:
             if mo.Street == street:
@@ -100,7 +103,7 @@ def sort_death_mg():
     wb.save(file)
     return 'Сгенерирован файл' + file.split('\\')[-1]
 
-def svod_40_COVID_19():
+def svod_40_COVID_19(a):
     path = get_dir('40_covid_19') + r'\[!~]*.xls'
     list_=[]
     usecolumns = 'A,B,C,D,F,G,I,J,L,M,O,P,R,S,U,V,X,Y,AA,AB,AC,AD,AF,AG,AI,AJ,AK'
@@ -172,4 +175,4 @@ def svod_40_COVID_19():
 #        wb.save( shablon_path  + '\\' + new_name) 
         return(shablon_path  + '\\' + new_name)
     else:
-        return None 
+        raise my_exception('Пустая папка!')

@@ -6,12 +6,15 @@ from sqlalchemy import *
 from sqlalchemy.orm import sessionmaker
 from openpyxl.utils.dataframe import dataframe_to_rows
 import win32com.client
-
+from reports import short_report
 
 warnings.filterwarnings('ignore')
 
 con = create_engine(os.getenv('sql_engine'),convert_unicode=False)
 conn = pyodbc.connect(os.getenv('sql_conn'))
+
+class my_except(Exception):
+    pass
 
 def get_dir(name):
     sql = f"SELECT Directory FROM [robo].[directions_for_bot] where NameDir = '{name}'"
@@ -20,7 +23,7 @@ def get_dir(name):
 
 def check_table(name):
     sql=f"""
-    SELECT distinct case when (cast([datecreated] as date) =  cast(getdate() as date))
+    SELECT distinct case when (cast([datecreated] as date) = cast(getdate() as date))
         then 1
         else 0
         end AS 'Check'
@@ -167,7 +170,8 @@ def slojit_fr():
     NumberFor2 = len(svod[svod['Посмертный диагноз'].isin(['U07.1']) \
                         & svod['Исход заболевания'].isin(['Смерть'])])
 
-    date = [str(datetime.datetime.today().date())]
+    day = pd.to_datetime(df['Дата изменения РЗ']).max().date()
+    date=[str(day)]
     part = svod[svod['Исход заболевания'].isin(['Выздоровление']) & svod['Диагноз'].isin(['U07.1']) ]
     part.loc[part['Дата изменения РЗ'].isnull(), 'Дата изменения РЗ' ] = part.loc[part['Дата изменения РЗ'].isnull(),'Дата создания РЗ']
     NumberFor3 = len(part) - len(part[~part['Дата изменения РЗ'].isin(date) ] )
@@ -176,7 +180,7 @@ def slojit_fr():
             + 'На стационарном лечении: ' + str(NumberForMG) + '\n' \
             + 'Всего заболело: ' + str(NumberFor1) +'\n' \
             + 'Всего умерло: '+ str(NumberFor2) + '\n' \
-            + 'Всего выздоровело: '+ str(NumberFor3)
+            + 'Всего выздоровело за ' + date[0] + ' : '+ str(NumberFor3)
     return otvet
 
 def excel_to_csv_old(file_excel):
@@ -204,7 +208,7 @@ def sql_execute(sql):
     session.commit()
     session.close()
 
-def load_fr():
+def load_fr(a):
     def fr_to_sql(df):
         df  = df[df['Дата создания РЗ'] != '']
         del df ['Ведомственная принадлежность']
@@ -257,7 +261,7 @@ def load_fr():
             return 0
     return 1
 
-def load_fr_death():
+def load_fr_death(a):
     def fr_death_to_sql(df):
         send_all('Обрезаю слишком длинные строки')
         for column in df.columns:
@@ -311,7 +315,7 @@ def load_fr_death():
             send_all('Не найден файл умерших')
         return 0
 
-def load_fr_lab():
+def load_fr_lab(a):
     def fr_lab_to_sql(df):
         send_all('Ну, тут надо переименовать колонки и можно грузить')
         i = 1
@@ -366,7 +370,7 @@ def load_fr_lab():
             send_all('Не найден файл лаборатории')
         return 0
 
-def load_UMSRS():
+def load_UMSRS(a):
     def UMSRS_to_sql(df):
         df.to_sql('cv_input_umsrs_2',con,schema='dbo',if_exists='append',index = False)
         send_all('Данные загружены в input_umsrs_2, запускаю процедурки')
@@ -414,7 +418,7 @@ def load_UMSRS():
             send_all('Но я не нашёл файла федерального регистра (((')
             return 0 
 
-def medical_personal_sick():
+def medical_personal_sick(a):
     send_all('Начинаю считать заболевших сотрудников')
     medPers = pd.read_sql('EXEC  med.p_StartMedicalPersonalSick',conn)
     date = datetime.datetime.today().strftime("%Y_%m_%d_%H_%M")
@@ -423,3 +427,113 @@ def medical_personal_sick():
         medPers.to_excel(writer,sheet_name='meducal',index=False)
     send_all("Все готово\n" + file)
 
+def load_report_vp_and_cv(a):
+    def open_save(file):
+        xcl = win32com.client.Dispatch("Excel.Application")
+        wb = xcl.Workbooks.Open(file)
+        xcl.DisplayAlerts = False
+        wb.SaveAs(file)
+        xcl.Quit()
+    def load_file_mo(file):
+        nameMO = pd.read_excel(file, sheet_name= 'Титул', header =3, usecols='H', nrows = 1).iloc[0,0]
+        df = pd.read_excel(file, sheet_name= 'Данные1', header =6, usecols='C:AH', nrows = 1)
+        df = df.fillna(0)
+        df['nameMO'] = nameMO
+        os.replace(file, path + r'\\' + os.path.basename(file))
+        return df
+    def check_data_table(name):
+        sql=f"""
+            IF (EXISTS (SELECT * FROM {name})) 
+                SELECT 1 ELSE SELECT 0 """
+        return pd.read_sql(sql,conn).iat[0,0]
+    send_all('Продготовка к отчету Мониторинг ВП и COVID')
+    files = glob.glob(get_dir('VP_CV') + r'\из_почты\[!~$]*.xls*')
+    if len(files) == 0:
+        raise my_except('Папка пустая!')
+    path = get_dir('VP_CV') + r'\\' + datetime.datetime.now().strftime("%Y%m%d")
+    if os.path.exists(path):
+        pass
+    else:
+        try:
+            os.mkdir(path)
+        except OSError:
+            raise my_except('не смог создать папку') 
+    list_=[]
+    excel = pd.DataFrame()
+    for file in files:
+        try:
+            excel = load_file_mo(file)
+        except:
+            open_save(file)
+            try:
+                excel = load_file_mo(file)
+            except:
+                send_all('не обработался следующий файл \n'+ file.split('\\')[-1])
+            else:
+                list_.append(excel)
+        else:
+            list_.append(excel)
+    if len(list_):
+        df = pd.concat(list_)
+    else:
+        raise my_except('Не один файл не обработался')
+    df = df.set_axis(['vp_03_Power_Count_Departments','vp_04_Power_Count_Allocated_All','vp_05_Power_Count_Allocated','vp_06_Power_Count_Reanimation_All','vp_07_Power_Count_Reanimation','vp_08_Hospital_All','vp_09_Hospital_Day','vp_10_Hospital_Hard_All','vp_11_Hospital_Hard_Reaniamation','vp_12_Hospital_Hard_Ivl','vp_13_ReceivedAll','vp_14_ReceivedDay','vp_15_DischargedAll','vp_16_DischargedDay','vp_17_DiedAll','vp_18_DiedDay','cv_19_Power_Count_Departments','cv_20_Power_Count_Allocated_All','cv_21_Power_Count_Allocated','cv_22_Power_Count_Reanimation_All','cv_23_Power_Count_Reanimation','cv_24_Hospital_All','cv_25_Hospital_Day','cv_26_Hospital_Hard_All','cv_27_Hospital_Hard_Reaniamation','cv_28_Hospital_Hard_Ivl','cv_29_ReceivedAll','cv_30_ReceivedDay','cv_31_DischargedAll','cv_32_DischargedDay','cv_33_DiedAll','cv_34_DiedDay','nameMO'], axis=1, inplace=False)
+    try:
+        df.to_sql('HistoryFileMO',con,schema='mon_vp',index = False,if_exists='append')
+    except:
+        raise my_except('не удалось загрузить в базу!')
+    if check_data_table('mon_vp.v_DebtorsReport'):
+        return short_report('SELECT * FROM mon_vp.v_DebtorsReport')
+    else:
+        #==========  тут мы грузим исходные данные в первую вкладку отчета
+        df = pd.read_sql('SELECT * FROM mon_vp.v_GrandReport' ,con)
+        df1 = df.loc[df.typeMO==1].sort_values(["numSort"]).drop('typeMO',1).drop('numSort',1)
+        df2 = df.loc[df.typeMO==2].sort_values(["numSort"]).drop('typeMO',1).drop('numSort',1)
+        shablon = get_dir('help') + r'\СводОбщий_' + (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%d %m %Y") +'.xlsx'
+        shutil.copyfile(get_dir('help') + r'\шаблон Мониторинг ВП.xlsx', shablon)
+
+        wb= openpyxl.load_workbook(shablon)
+        ws= wb['Данные']
+        ws.cell(row=1, column=2, value=(datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%d.%m.%Y"))
+
+        rows = dataframe_to_rows(df1,index=False, header=False)
+        for r_idx, row in enumerate(rows,9):
+            for c_idx, value in enumerate(row, 1):
+                ws.cell(row=r_idx, column=c_idx, value=value)
+
+        rows = dataframe_to_rows(df2,index=False, header=False)
+        for r_idx, row in enumerate(rows,73):
+            for c_idx, value in enumerate(row, 1):
+                ws.cell(row=r_idx, column=c_idx, value=value)
+
+        wb.save(shablon)
+
+        #  ========== сейчас мы загрузим и сохраним данные по проверкам
+
+        df=pd.read_sql("exec mon_vp.p_CheckMonitorVpAndCovid",con)
+        part_one = df.iloc[:,range(26)]
+        part_two = df.iloc[:,[0] + list(range(26,58,1)) ]
+
+        wb= openpyxl.load_workbook(shablon)
+        ws= wb['Проверка']
+
+        rows = dataframe_to_rows(part_one,index=False, header=False)
+        for r_idx, row in enumerate(rows,3):
+            for c_idx, value in enumerate(row, 1):
+                ws.cell(row=r_idx, column=c_idx, value=value)
+        wb.save(shablon)
+
+        wb= openpyxl.load_workbook(shablon)
+        ws= wb['Разница']
+
+        rows = dataframe_to_rows(part_two,index=False, header=False)
+        for r_idx, row in enumerate(rows,7):
+            for c_idx, value in enumerate(row, 1):
+                ws.cell(row=r_idx, column=c_idx, value=value)
+
+        wb.save(shablon)
+        try:
+            shutil.move(shablon, get_dir('VP_CV') + '\\' + shablon.split('\\')[-1])
+        except PermissionError:
+            raise my_except('Закройте файлик! Не могу скопировать')
+        return shablon
