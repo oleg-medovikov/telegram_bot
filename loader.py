@@ -499,7 +499,7 @@ def load_report_vp_and_cv(a):
         return short_report('SELECT * FROM mon_vp.v_DebtorsReport')
     else:
         #==========  тут мы грузим исходные данные в первую вкладку отчета
-        df = pd.read_sql('SELECT * FROM mon_vp.v_GrandReport' ,con)
+        df = pd.read_sql('SELECT * FROM mon_vp.v_GrandReport' ,conn)
         df1 = df.loc[df.typeMO==1].sort_values(["numSort"]).drop('typeMO',1).drop('numSort',1)
         df2 = df.loc[df.typeMO==2].sort_values(["numSort"]).drop('typeMO',1).drop('numSort',1)
         shablon = get_dir('help') + r'\СводОбщий_' + (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%d %m %Y") +'.xlsx'
@@ -523,7 +523,7 @@ def load_report_vp_and_cv(a):
 
         #  ========== сейчас мы загрузим и сохраним данные по проверкам
 
-        df=pd.read_sql("exec mon_vp.p_CheckMonitorVpAndCovid",con)
+        df=pd.read_sql("exec mon_vp.p_CheckMonitorVpAndCovid",conn)
         part_one = df.iloc[:,range(26)]
         part_two = df.iloc[:,[0] + list(range(26,58,1)) ]
 

@@ -32,6 +32,7 @@ commands = """
 14) Сортировка умерших по возрастам
 15) Список умерших граждан в ФР без МСС
 16) Отчет по динамике работы с ФР (в части приведения к данным УМСРС)
+17) Справка губернатору
 """
 commands_min="""
 1. Нет СНИЛСа
@@ -187,7 +188,10 @@ def get_text_messages(message):
             bot.send_message(message.from_user.id, 'Начинаю формировать данные по динамике')
             result = create_tred(dynamics,None)
             bot.send_message(message.from_user.id, result[1])
-
+        if message.text.lower() in ['17']:
+            bot.send_message(message.from_user.id, 'Начинаю собирать данные')
+            result = create_tred(dynamics,None)
+            bot.send_message(message.from_user.id, result[1])
 
 
         # ============== Замечания минздрава =====================
