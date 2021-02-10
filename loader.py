@@ -170,17 +170,17 @@ def slojit_fr():
     NumberFor2 = len(svod[svod['Посмертный диагноз'].isin(['U07.1']) \
                         & svod['Исход заболевания'].isin(['Смерть'])])
 
-    day = pd.to_datetime(df['Дата изменения РЗ']).max().date()
-    date=[str(day)]
-    part = svod[svod['Исход заболевания'].isin(['Выздоровление']) & svod['Диагноз'].isin(['U07.1']) ]
-    part.loc[part['Дата изменения РЗ'].isnull(), 'Дата изменения РЗ' ] = part.loc[part['Дата изменения РЗ'].isnull(),'Дата создания РЗ']
-    NumberFor3 = len(part) - len(part[~part['Дата изменения РЗ'].isin(date) ] )
+#    day = pd.to_datetime(svod['Дата изменения РЗ']).max().date()
+#    date=[str(day)]
+#    part = svod[svod['Исход заболевания'].isin(['Выздоровление']) & svod['Диагноз'].isin(['U07.1']) ]
+#    part.loc[part['Дата изменения РЗ'].isnull(), 'Дата изменения РЗ' ] = part.loc[part['Дата изменения РЗ'].isnull(),'Дата создания РЗ']
+#    NumberFor3 = len(part) - len(part[~part['Дата изменения РЗ'].isin(date) ] )
 
     otvet = 'Вроде все получилось \n' + 'По цифрам\n' \
             + 'На стационарном лечении: ' + str(NumberForMG) + '\n' \
             + 'Всего заболело: ' + str(NumberFor1) +'\n' \
-            + 'Всего умерло: '+ str(NumberFor2) + '\n' \
-            + 'Всего выздоровело за ' + date[0] + ' : '+ str(NumberFor3)
+            + 'Всего умерло: '+ str(NumberFor2) + '\n'
+#            + 'Всего выздоровело за ' + date[0] + ' : '+ str(NumberFor3)
     return otvet
 
 def excel_to_csv_old(file_excel):
@@ -213,6 +213,13 @@ def load_fr(a):
         df  = df[df['Дата создания РЗ'] != '']
         del df ['Ведомственная принадлежность']
         del df ['Осложнение основного диагноза']
+        # ==== Репорт о количестве выздоровевших =====
+        report = pd.DataFrame()
+        report.loc[0,'date_rows'] = pd.to_datetime(df['Дата создания РЗ']).max().date()
+        report.loc[0,'value_name'] = 'Всего выздоровело от COVID'
+        report.loc[0,'value_count'] = len(df[df['Исход заболевания'].isin(['Выздоровление']) & df['Диагноз'].isin(['U07.1'])])
+        report.to_sql('values',conn,schema='robo',index=False,if_exists='append')
+        # ============
         send_all('Файл в памяти, количество строк: ' + str(len(df)) )
         sql_execute('TRUNCATE TABLE [dbo].[cv_input_fr]')
         send_all('Очистил input_fr')
