@@ -1,7 +1,7 @@
 import telebot,schedule,time,threading,os
 # ======== мои модули 
 from procedure import check_robot,svod_40_COVID_19,sort_death_mg
-from reports import fr_deti,short_report
+from reports import fr_deti,short_report,dead_not_mss,dynamics
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
 from loader import medical_personal_sick,load_report_vp_and_cv
 from sending import send_all,send_me
@@ -30,6 +30,8 @@ commands = """
 12) Генерация презентации
 13) Замечания МинЗдрава
 14) Сортировка умерших по возрастам
+15) Список умерших граждан в ФР без МСС
+16) Отчет по динамике работы с ФР (в части приведения к данным УМСРС)
 """
 commands_min="""
 1. Нет СНИЛСа
@@ -177,6 +179,17 @@ def get_text_messages(message):
                 bot.send_message(message.from_user.id, result[1])
             else:
                 bot.send_message(message.from_user.id, result[1])
+        if message.text.lower() in ['15']:
+            bot.send_message(message.from_user.id, 'Начинаю формировать список по ФР умерших без МСС')
+            result = create_tred(dead_not_mss,None)
+            bot.send_message(message.from_user.id, result[1])
+        if message.text.lower() in ['16']:
+            bot.send_message(message.from_user.id, 'Начинаю формировать данные по динамике')
+            result = create_tred(dynamics,None)
+            bot.send_message(message.from_user.id, result[1])
+
+
+
         # ============== Замечания минздрава =====================
         if message.text.lower() in ['1.']:
             if no_snils():

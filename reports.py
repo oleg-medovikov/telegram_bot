@@ -1,4 +1,4 @@
-import os,pyodbc,subprocess
+import os,pyodbc,subprocess,datetime
 import pandas as pd
 from sqlalchemy import *
 
@@ -38,3 +38,18 @@ def short_report(textsql):
     subprocess.call('wkhtmltoimage.exe --encoding utf-8 -f png --width 0 ' +  table_html + ' ' + table_png, shell=True)
     return table_png
 
+def dead_not_mss(a):
+    frNotMss = pd.read_sql('EXEC dbo.p_FedRegNotMss',conn)
+    date = datetime.datetime.today().strftime("%Y_%m_%d_%H_%M")
+    file = get_dir('fr_not_mss') + r'\Список_без_МСС_'+ date +'.xlsx'
+    with pd.ExcelWriter(file) as writer:
+        frNotMss.to_excel(writer,sheet_name='notMSS',index=False)
+    return "Список готов\n" + file.split('\\')[-1]
+
+def dynamics(a):
+    frNotMss = pd.read_sql('EXEC dbo.275_M3',conn)
+    date = datetime.datetime.today().strftime("%Y_%m_%d_%H_%M")
+    file = get_dir('dynam') + r'\Динамика_'+ date +'.xlsx'
+    with pd.ExcelWriter(file) as writer:
+        frNotMss.to_excel(writer,sheet_name='notMSS',index=False)
+    return "Динамика готова\n" + file.split('\\')[-1]

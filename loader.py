@@ -170,7 +170,13 @@ def slojit_fr():
     NumberFor2 = len(svod[svod['Посмертный диагноз'].isin(['U07.1']) \
                         & svod['Исход заболевания'].isin(['Смерть'])])
 
-#    day = pd.to_datetime(svod['Дата изменения РЗ']).max().date()
+    day = pd.to_datetime(svod['Дата изменения РЗ'], format='%d.%m.%Y').max().date()
+    count_vizd_old = read_sql ("""SELECT [value_count] FROM [robo].[values]
+                where id = (select max(id) from [robo].[values] where [value_name] = 'Всего выздоровело от COVID' 
+                and date_rows = (select max(date_rows) from [robo].[values] ) )""",con).iat[0,0]
+    count_vizd_new = len(svod[svod['Исход заболевания'].isin(['Выздоровление']) & svod['Диагноз'].isin(['U07.1']) ])
+
+    NumberFor3 = count_vizd_new - count_vizd_old
 #    date=[str(day)]
 #    part = svod[svod['Исход заболевания'].isin(['Выздоровление']) & svod['Диагноз'].isin(['U07.1']) ]
 #    part.loc[part['Дата изменения РЗ'].isnull(), 'Дата изменения РЗ' ] = part.loc[part['Дата изменения РЗ'].isnull(),'Дата создания РЗ']
@@ -179,8 +185,8 @@ def slojit_fr():
     otvet = 'Вроде все получилось \n' + 'По цифрам\n' \
             + 'На стационарном лечении: ' + str(NumberForMG) + '\n' \
             + 'Всего заболело: ' + str(NumberFor1) +'\n' \
-            + 'Всего умерло: '+ str(NumberFor2) + '\n'
-#            + 'Всего выздоровело за ' + date[0] + ' : '+ str(NumberFor3)
+            + 'Всего умерло: '+ str(NumberFor2) + '\n' \
+            + 'Всего выздоровело за ' + str(day) + ' : '+ str(NumberFor3)
     return otvet
 
 def excel_to_csv_old(file_excel):
@@ -215,10 +221,10 @@ def load_fr(a):
         del df ['Осложнение основного диагноза']
         # ==== Репорт о количестве выздоровевших =====
         report = pd.DataFrame()
-        report.loc[0,'date_rows'] = pd.to_datetime(df['Дата создания РЗ']).max().date()
+        report.loc[0,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
         report.loc[0,'value_name'] = 'Всего выздоровело от COVID'
         report.loc[0,'value_count'] = len(df[df['Исход заболевания'].isin(['Выздоровление']) & df['Диагноз'].isin(['U07.1'])])
-        report.to_sql('values',conn,schema='robo',index=False,if_exists='append')
+        report.to_sql('values',con,schema='robo',index=False,if_exists='append')
         # ============
         send_all('Файл в памяти, количество строк: ' + str(len(df)) )
         sql_execute('TRUNCATE TABLE [dbo].[cv_input_fr]')
@@ -422,7 +428,7 @@ def load_UMSRS(a):
                 send_all(check[1])
                 return 0
         else:
-            send_all('Но я не нашёл файла федерального регистра (((')
+            send_all('Но я не нашёл файла УМСРС! (((')
             return 0 
 
 def medical_personal_sick(a):
