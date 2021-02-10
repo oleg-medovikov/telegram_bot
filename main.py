@@ -6,7 +6,7 @@ from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,loa
 from loader import medical_personal_sick,load_report_vp_and_cv
 from sending import send_all,send_me
 from presentation import generate_pptx
-from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad
+from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik
 import concurrent.futures
 # ========== настройки бота ============
 
@@ -43,6 +43,7 @@ commands_min="""
 6. Нет лабораторного подтверждения
 7. Нет диагноза COVID
 8. Нет ПАД
+9. Нет дневниковых записей
 """
 # =============== Процедурка создания потоков ====
 def create_tred(func,arg):
@@ -241,6 +242,12 @@ def get_text_messages(message):
             if net_pad():
                 bot.send_message(message.from_user.id, 'Уже разложил')
                 file_stat = get_dir('temp') + '\\' + 'отчет по разложению нет ПАЗ.xlsx'
+                bot.send_document(message.from_user.id, open(file_stat, 'rb'))
+                os.remove(file_stat)
+        if message.text.lower() in ['9.']:
+            if net_dnevnik():
+                bot.send_message(message.from_user.id, 'Уже разложил')
+                file_stat = get_dir('temp') + '\\' + 'отчет по разложению нет дневниковых записей.xlsx'
                 bot.send_document(message.from_user.id, open(file_stat, 'rb'))
                 os.remove(file_stat)
 

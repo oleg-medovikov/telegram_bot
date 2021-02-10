@@ -109,13 +109,16 @@ from ( select * from cv_fedreg where [Диагноз] not in ('U07.1','Z22.8') )
 """
 
 sql_net_pad="""
-select [Медицинская организация],  [УНРЗ], [ФИО], [Дата рождения], [Диагноз], [Исход заболевания]
+select [Медицинская организация], [УНРЗ], [ФИО], [Дата рождения], [Диагноз], [Исход заболевания]
 from cv_fedreg 
     where [Исход заболевания] = 'Смерть'
         and [ПАД Отказ от проведения вскрытия] != 'Да'
         and [ПАД Наличие файла патологоанатомического заключения]  != 'Да'
 """
-
+sql_net_dnevnik="""
+select [Медицинская организация],[УНРЗ], [ФИО], [Дата рождения], [Дата создания РЗ]
+    from cv_fedreg where [Степень тяжести] = ''
+"""
 
 def get_path_mo(organization):
     sql = f"select top(1) directory from robo.directory where [Наименование в ФР] = '{organization}'"
@@ -213,4 +216,9 @@ def net_pad():
     put_svod(df,'нет ПАЗ')
     put_excel_for_mo(df,'нет ПАЗ')
     return 1
+
+def net_dnevnik():
+    df = pd.read_sql(sql_net_dnevnik,conn)
+    put_svod(df,'нет дневниковых записей')
+    put_excel_for_mo(df,'нет дневниковых записей')
 
