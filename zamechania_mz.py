@@ -221,4 +221,4 @@ def net_dnevnik():
     df = pd.read_sql(sql_net_dnevnik,conn)
     put_svod(df,'нет дневниковых записей')
     put_excel_for_mo(df,'нет дневниковых записей')
-
+    return 1

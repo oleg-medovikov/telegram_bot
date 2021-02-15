@@ -100,7 +100,7 @@ def check_file(file,category):
         return check,error_text,collum, head - 1
     return check,error_text,collum, head - 1
 
-def slojit_fr():
+def slojit_fr(a):
     pathFolderFedRegParts = os.getenv('path_robot') +r'\_ФР_по_частям'
     date = datetime.datetime.today().strftime("%Y_%m_%d")
     nameSheetShablon = "Sheet1"
@@ -171,7 +171,7 @@ def slojit_fr():
                         & svod['Исход заболевания'].isin(['Смерть'])])
 
     day = pd.to_datetime(svod['Дата изменения РЗ'], format='%d.%m.%Y').max().date()
-    count_vizd_old = read_sql ("""SELECT [value_count] FROM [robo].[values]
+    count_vizd_old = pd.read_sql ("""SELECT [value_count] FROM [robo].[values]
                 where id = (select max(id) from [robo].[values] where [value_name] = 'Всего выздоровело от COVID' 
                 and date_rows = (select max(date_rows) from [robo].[values] ) )""",con).iat[0,0]
     count_vizd_new = len(svod[svod['Исход заболевания'].isin(['Выздоровление']) & svod['Диагноз'].isin(['U07.1']) ])

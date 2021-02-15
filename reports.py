@@ -18,7 +18,7 @@ def sql_execute(sql):
     session.commit()
     session.close()
 
-def fr_deti():
+def fr_deti(a):
     sql_week = 'exec [dbo].[Proc_Report_Children_by_week]'
     sql_month = 'exec [dbo].[Proc_Report_Children_by_month]'
     file = get_dir('temp') + r'\otchet_deti.xlsx'
@@ -90,10 +90,8 @@ def mg_from_guber(a):
             pass
         else:
             _list.append(df)
-
         svod=pd.DataFrame()
         svod=pd.concat(_list)
-
         wb= openpyxl.load_workbook(_path_svod_vp_cv)
         ws = wb[nameSheet]
         rows = dataframe_to_rows(svod, index=False, header=False)
@@ -106,9 +104,9 @@ def mg_from_guber(a):
     _name_file_svod = r'\09 стационары для Справки Губернатора'
     _path_folder_files_mo = _path_folder_report + r'\Беглов_09\*.xlsx'
 
-    _path_svod_all =  _path_folder_report + _name_file_svod + '_'+ datetime.datetime.now().strftime("%d.%m.%Y_%H_%M") + '.xlsx'
+    _path_svod_all   = _path_folder_report + _name_file_svod + '_'+ datetime.datetime.now().strftime("%d.%m.%Y_%H_%M") + '.xlsx'
     _path_svod_vp_cv = _path_folder_report + _name_file_svod + '_'+ datetime.datetime.now().strftime("%d.%m.%Y") + '.xlsx'
-    _path_old_svod = _path_folder_report + _name_file_svod + '_'+ (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%d.%m.%Y") + '.xlsx'
+    _path_old_svod   = _path_folder_report + _name_file_svod + '_'+ (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%d.%m.%Y") + '.xlsx'
 
     _list = []
     shutil.copyfile(_path_folder_report + _name_file_svod + '.xlsx', _path_svod_all)

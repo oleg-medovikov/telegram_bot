@@ -22,7 +22,8 @@ valume = [
     ,['11 группа замечаний: Количество дублированных  УНРЗ в одном МО (Амб.)', 'Количество дублей','Амбулаторная']
     ,['12 группа замечаний: Нет ПАД (Стац.)','Нет ПАД','Стационарная' ]
     ,['12 группа замечаний: Нет ПАД (Амб.)','Нет ПАД','Амбулаторная' ]
-    
+    ,['13 группа замечаний: Нет дневниковых записей','Нет дневниковых записей','Стационарная']
+    ,['13 группа замечаний: Нет дневниковых записей','Нет дневниковых записей','Амбулаторная']
 ]
 
 
@@ -36,7 +37,7 @@ def generate_pptx(date):
         SELECT [Медицинская организация]
               , [{type_error}] as 'eror1'
           FROM [COVID].[robo].[cv_Zamechania_fr]
-          where [дата отчета] = '{date_start}' 
+          where [дата отчета] = '{date_start_sql}' 
             and [Тип организации] = '{type_org}'  ) as d1
           full join (
         SELECT [Медицинская организация]
@@ -51,7 +52,6 @@ def generate_pptx(date):
         
         sum_err1 = df['eror1'].sum()
         sum_err2 = df['eror2'].sum()
-        
         title_only_slide_layout = prs.slide_layouts[5]
         slide = prs.slides.add_slide(title_only_slide_layout)
         shapes = slide.shapes
@@ -63,17 +63,17 @@ def generate_pptx(date):
         body_shape = shapes.placeholders[0]
         tf = body_shape.text_frame
         p = tf.add_paragraph()
-        p.text = 'Общее число замечаний на дату ' + date_start + ' было ' + str(sum_err1)
+        p.text = 'Общее число замечаний на дату ' + date_start + ' было ' + str(sum_err1).replace('.0','')
         p.font.color.rgb = RGBColor(20,20,20)
         p.font.size = Pt(18)
         
         p = tf.add_paragraph()
-        p.text = 'А на дату ' + date_end + ' cтало ' + str(sum_err2)
+        p.text = 'А на дату ' + date_end + ' cтало ' + str(sum_err2).replace('.0','')
         p.font.color.rgb = RGBColor(20,20,20)
         p.font.size = Pt(18)
         
         p = tf.add_paragraph()
-        p.text = 'Общая динамика: ' + str(sum_err2 - sum_err1)
+        p.text = 'Общая динамика: ' + str(sum_err2 - sum_err1).replace('.0','')
         p.font.color.rgb = RGBColor(20,20,20)
         p.font.size = Pt(18)
         
@@ -84,7 +84,11 @@ def generate_pptx(date):
         width = Inches(5)
         height = Inches(0.1)
 
-        table = shapes.add_table(rows, cols, left, top, width, height).table
+        shape = shapes.add_table(rows, cols, left, top, width, height)
+        table = shape.table
+        tbl = shape._element.graphic.graphicData.tbl
+        style_id = '{9DCAF9ED-07DC-4A11-8D7F-57B35C25682E}'
+        tbl[0][-1].text = style_id
 
         # set column widths
         table.columns[0].width = Inches(0.5)
@@ -103,15 +107,16 @@ def generate_pptx(date):
             table.cell(i+1, 0).text_frame.paragraphs[0].font.size = Pt(12)
             table.cell(i+1, 1).text = df.at[i,'Медицинская организация']
             table.cell(i+1, 1).text_frame.paragraphs[0].font.size = Pt(10) 
-            table.cell(i+1, 2).text = str(df.at[i,'eror1'])
+            table.cell(i+1, 2).text = str(df.at[i,'eror1']).replace('.0','')
             table.cell(i+1, 2).text_frame.paragraphs[0].font.size = Pt(12)
-            table.cell(i+1, 3).text = str(df.at[i,'eror2'])
+            table.cell(i+1, 3).text = str(df.at[i,'eror2']).replace('.0','')
             table.cell(i+1, 3).text_frame.paragraphs[0].font.size = Pt(12)
-            table.cell(i+1, 4).text = str(df.at[i,'Динамика'])
+            table.cell(i+1, 4).text = str(df.at[i,'Динамика']).replace('.0','')
             table.cell(i+1, 4).text_frame.paragraphs[0].font.size = Pt(12)
 
-    date_start = date
-    date_end = datetime.datetime.today().strftime("%Y-%m-%d")
+    date_start_sql = date
+    date_start = pd.to_datetime(date).strftime("%d.%m.%Y")
+    date_end = datetime.datetime.today().strftime("%d.%m.%Y")
     prs = Presentation()
     title_slide_layout = prs.slide_layouts[0]
     slide = prs.slides.add_slide(title_slide_layout)
@@ -119,7 +124,7 @@ def generate_pptx(date):
     subtitle = slide.placeholders[1]
     # Первый слайд
     title.text = "Замечания по ведению Федерального регистра лиц, больных COVID-19"
-    subtitle.text = "По состоянию на " + datetime.datetime.today().strftime("%Y-%m-%d")
+    subtitle.text = "По состоянию на " + datetime.datetime.today().strftime("%d.%m.%Y")
 
     try:
         os.remove(os.getenv('path_temp')+r'\test.pptx')
@@ -128,39 +133,55 @@ def generate_pptx(date):
     # Второй слайд
 
 
-    bullet_slide_layout = prs.slide_layouts[1]
+    bullet_slide_layout = prs.slide_layouts[5]
     slide = prs.slides.add_slide(bullet_slide_layout)
     shapes = slide.shapes
 
     title_shape = shapes.title
-    body_shape = shapes.placeholders[1]
+    body_shape = shapes.placeholders[0]
 
-    title_shape.text = 'Группы замечаний по ведению Регистра на '+ datetime.datetime.today().strftime("%Y-%m-%d")
+    title_shape.text = 'Группы замечаний по ведению Регистра на '+ datetime.datetime.today().strftime("%d.%m.%Y")
     tf = body_shape.text_frame
+    date_in_text = (datetime.datetime.now()-datetime.timedelta(45)).strftime("%d.%m.%Y")
 
-    def paragraf(text,r,g,b):
-        p = tf.add_paragraph()
-        p.text = text
-        p.font.color.rgb = RGBColor(r,g,b)
-        p.font.size = Pt(12)
+    text = f"""Срок создания регистровой записи (УНРЗ) не соответствует дате установки диагноза – более 7 дней между датами (МЗ оценивает регион) (Количество регистровых записей, внесенных с задержкой больше недели, за последний месяц)
+    Отсутствие информации о номере Полиса ОМС в разделе «Медицинское страхование»
+    Не заполнен Раздел «Результаты ежедневного наблюдения» (дневниковые записи) – по данным МЗ РФ
+    Поле «исход заболевания» заполнено «переведен в другую МО» без открытия следующего этапа лечения («зависшие» пациенты более 7 дней от даты перевода в др. МО)
+    Поле «исход заболевания» не заполнено с датой установки диагноза ранее {date_in_text} (длительность болезни более 45 дней)
+    Количество УНРЗ с заполненным полем «исход заболевания» «выздоровление» не соответствует оперативной отчетности поликлиник
+    Количество УНРЗ с пустым полем «исход заболевания» (находящиеся под медицинским наблюдением в амбулаторных условиях) не соответствует оперативной отчетности поликлиник
+    Поле «Вид лечения» ошибочно заполнено «стационарный» -  у пациентов, находящихся под медицинским наблюдением в амбулаторных условиях 
+    Количество УНРЗ с заполненным Разделом «Результаты ежедневного наблюдения» в части поля «ИВЛ» не соответствует оперативной отчетности стационаров
+    Количество УНРЗ пациентов, находящихся под медицинским наблюдением в стационарных условиях, не соответствует оперативной отчетности стационаров
+    Дублированные  УНРЗ в одном МО
+    Отсутствие прикрепленного файла патологоанатомического заключения"""
 
-    text = '1) Срок создания регистровой записи (УНРЗ) не соответствует дате установки диагноза – более 7 дней между датами (МЗ оценивает регион) (Количество регистровых записей, внесенных с задержкой больше недели, за последний месяц)'
-    paragraf(text,255,0,0)
-    text = """2) Отсутствие информации о номере Полиса ОМС в разделе «Медицинское страхование»
-    3) Не заполнен Раздел «Результаты ежедневного наблюдения» (дневниковые записи) – по данным МЗ РФ
-    4) Поле «исход заболевания» заполнено «переведен в другую МО» без открытия следующего этапа лечения («зависшие» пациенты более 7 дней от даты перевода в др. МО)
-    5) Поле «исход заболевания» не заполнено с датой установки диагноза ранее 15.12.2020  (длительность болезни более 45 дней)
-    6) Количество УНРЗ с заполненным полем «исход заболевания» «выздоровление» не соответствует оперативной отчетности поликлиник
-    7) Количество УНРЗ с пустым полем «исход заболевания» (находящиеся под медицинским наблюдением в амбулаторных условиях) не соответствует оперативной отчетности поликлиник
-    8) Поле «Вид лечения» ошибочно заполнено «стационарный» -  у пациентов, находящихся под медицинским наблюдением в амбулаторных условиях 
-    9) Количество УНРЗ с заполненным Разделом «Результаты ежедневного наблюдения» в части поля «ИВЛ» не соответствует оперативной отчетности стационаров
-    10) Количество УНРЗ пациентов, находящихся под медицинским наблюдением в стационарных условиях, не соответствует оперативной отчетности стационаров
-    11) Дублированные  УНРЗ в одном МО
-    12) Отсутствие прикрепленного файла патологоанатомического заключения
-    """
+    rows = 12
+    cols = 2 
+    left = Inches(0.5)
+    top = Inches(2)
+    width = Inches(8)
+    height = Inches(0.1)
 
+    shape = shapes.add_table(rows, cols, left, top, width, height)
+
+    tbl = shape._element.graphic.graphicData.tbl
+    table = shape.table
+
+    style_id = '{2D5ABB26-0587-4C30-8999-92F81FD0307C}'
+    tbl[0][-1].text = style_id
+
+    table.columns[0].width = Inches(0.5)
+    table.columns[1].width = Inches(8.0)
+
+    i = 0
     for t in text.split('\n'):
-        paragraf(t,0,0,0)
+        table.cell(i, 0).text = str(i+1) + ')' 
+        table.cell(i, 0).text_frame.paragraphs[0].font.size = Pt(12)
+        table.cell(i, 1).text = t
+        table.cell(i, 1).text_frame.paragraphs[0].font.size = Pt(11)
+        i+=1
         
     # Третий слайд
 

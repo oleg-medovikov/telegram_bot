@@ -14,7 +14,7 @@ cursor = conn.cursor()
 class my_exception(Exception):
     pass
 
-def check_robot():
+def check_robot(a):
     date = datetime.datetime.today().strftime("%Y_%m_%d")
     path =os.getenv('path_robot') +'\\'+ date + '\\' +'*'
     spisok = 'В директории Robot сейчас лежат файлы:'
