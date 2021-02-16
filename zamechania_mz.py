@@ -169,56 +169,56 @@ def put_svod(df,name):
     with pd.ExcelWriter(path + '\\' + name ) as writer:
         df.to_excel(writer) 
 
-def no_snils(): 
+def no_snils(a): 
     df = pd.read_sql(sql_no_snils,conn)
     put_svod(df,'Нет СНИЛСа')
     put_excel_for_mo(df,'Нет СНИЛСа')
-    return 1
+    return get_dir('temp') + '\\' + 'отчет по разложению Нет СНИЛСа.xlsx'
 
-def bez_izhoda():
+def bez_izhoda(a):
     df = pd.read_sql(sql_bez_izhoda,conn) 
     put_svod(df,'Без исхода 45 дней')
     put_excel_for_mo(df,'Без исхода 45 дней')
-    return 1
+    return get_dir('temp') + '\\' + 'отчет по разложению Без исхода 45 дней.xlsx'
 
-def bez_ambulat_level():
+def bez_ambulat_level(a):
     df = pd.read_sql(sql_bez_ambulat_level,conn) 
     put_svod(df,'Нет амбулаторного этапа')
     put_excel_for_mo(df,'Нет амбулаторного этапа')
-    return 1
+    return get_dir('temp') + '\\' + 'отчет по разложению Нет амбулаторного этапа.xlsx'
 
-def no_OMS():
+def no_OMS(a):
     df = pd.read_sql(sql_no_OMS,conn) 
     put_svod(df,'Нет данных ОМС')
     put_excel_for_mo(df,'Нет данных ОМС')
-    return 1
+    return get_dir('temp') + '\\' + 'отчет по разложению Нет данных ОМС.xlsx'
 
-def neveren_vid_lechenia():
+def neveren_vid_lechenia(a):
     df = pd.read_sql(sql_neveren_vid_lechenia,conn) 
     put_svod(df,'неверный вид лечения')
     put_excel_for_mo(df,'неверный вид лечения')
-    return 1
+    return get_dir('temp') + '\\' + 'отчет по разложению неверный вид лечения.xlsx'
 
-def no_lab():
+def no_lab(a):
     df = pd.read_sql(sql_no_lab,conn) 
     put_svod(df,'нет лабораторного подтверждения')
     put_excel_for_mo(df,'нет лабораторного подтверждения')
-    return 1
+    return get_dir('temp') + '\\' + 'отчет по разложению нет лабораторного подтверждения.xlsx'
 
-def net_diagnoz_covid():
+def net_diagnoz_covid(a):
     df = pd.read_sql(sql_net_diagnoz_covid,conn) 
     put_svod(df,'нет диагноза COVID')
     put_excel_for_mo(df,'нет диагноза COVID')
-    return 1
+    return get_dir('temp') + '\\' + 'отчет по разложению нет диагноза COVID.xlsx'
 
-def net_pad():
+def net_pad(a):
     df = pd.read_sql(sql_net_pad,conn) 
     put_svod(df,'нет ПАЗ')
     put_excel_for_mo(df,'нет ПАЗ')
-    return 1
+    return  get_dir('temp') + '\\' + 'отчет по разложению нет ПАЗ.xlsx'
 
-def net_dnevnik():
+def net_dnevnik(a):
     df = pd.read_sql(sql_net_dnevnik,conn)
     put_svod(df,'нет дневниковых записей')
     put_excel_for_mo(df,'нет дневниковых записей')
-    return 1
+    return get_dir('temp') + '\\' + 'отчет по разложению нет дневниковых записей.xlsx'

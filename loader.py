@@ -1,12 +1,14 @@
 #Работа с базами данных
 import pandas as pd
 import glob,warnings,datetime,os,xlrd,csv,openpyxl,shutil,threading,pyodbc
-from sending import send_me,send_all
+from sending import send_all,send_me,send_epid,send_admin
 from sqlalchemy import *
 from sqlalchemy.orm import sessionmaker
 from openpyxl.utils.dataframe import dataframe_to_rows
 import win32com.client
 from reports import short_report
+from multiprocessing import Process
+
 
 warnings.filterwarnings('ignore')
 
@@ -101,20 +103,34 @@ def check_file(file,category):
     return check,error_text,collum, head - 1
 
 def slojit_fr(a):
+    def read_part_df(excel,number):
+        df = pd.read_excel(excel, sheet_name= nameSheetShablon, dtype = str, skiprows = 1, head= 1)
+        _list.append(df)
+        send_all('прочтен файлик номер '+ list_numbers[number])
+    def file_1(svod):
+        with pd.ExcelWriter(new_fedreg) as writer:
+            svod.to_excel(writer,index=False)
+    def file_2(svod):
+        df = svod
+        del df['СНИЛС']
+        del df['ФИО']
+        with pd.ExcelWriter(new_iach) as writer:
+            df.to_excel(writer,index=False)
     pathFolderFedRegParts = os.getenv('path_robot') +r'\_ФР_по_частям'
     date = datetime.datetime.today().strftime("%Y_%m_%d")
     nameSheetShablon = "Sheet1"
     _list = []
+    jobs = []
     list_numbers = ['раз', 'двас', 'трис']
     i = 0
     for excel in glob.glob(pathFolderFedRegParts + r'\Федеральный регистр*.xlsx'):
-        df = pd.read_excel(excel, sheet_name= nameSheetShablon, dtype = str, skiprows = 1, head= 1)
-        _list.append(df)
-        try:
-            send_all('прочтен файлик номер '+ list_numbers[i])
-            i+=1
-        except:
-            pass
+        thread = threading.Thread(target=read_part_df(excel,i))
+        jobs.append(thread)
+        thread.start()
+        i+=1
+    for thread in jobs:
+        thread.join()
+
     svod = pd.DataFrame() 
     svod = pd.concat(_list)
 
@@ -140,21 +156,16 @@ def slojit_fr(a):
         del df['Unnamed: 24']
     except:
         pass
-    def file_1(svod):
-        with pd.ExcelWriter(new_fedreg) as writer:
-            svod.to_excel(writer,index=False)
-    def file_2(svod):
-        df = svod
-        del df['СНИЛС']
-        del df['ФИО']
-        with pd.ExcelWriter(new_iach) as writer:
-            df.to_excel(writer,index=False)
 
-    t_d1 = threading.Thread(target=file_1(svod),name='one')
-    t_d2 = threading.Thread(target=file_2(svod),name='two')
+    p_d1 = threading.Thread(target=file_1(svod))
+    p_d2 = threading.Thread(target=file_2(svod))
 
-    t_d1.start()
-    t_d2.start()
+    jobs.clear()
+    for thread in [p_d1,p_d2]:
+        jobs.append(thread)
+        thread.start()
+    for thread in jobs:
+        thread.join()
 
 #    for r_idx, row in enumerate(rows, 3):
 #        for c_idx, value in enumerate(row, 1):
@@ -546,7 +557,7 @@ def load_report_vp_and_cv(a):
 
         wb.save(shablon)
         try:
-            shutil.move(shablon, get_dir('VP_CV') + '\\' + shablon.split('\\')[-1])
+            shutil.copyfile(shablon, get_dir('VP_CV') + '\\' + shablon.split('\\')[-1])
         except PermissionError:
             raise my_except('Закройте файлик! Не могу скопировать')
         return shablon

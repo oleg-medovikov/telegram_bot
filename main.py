@@ -1,5 +1,6 @@
 import telebot,schedule,time,threading,os,random,pyodbc
 from dataclasses import dataclass
+import concurrent.futures
 
 # ======== мои модули 
 from procedure import check_robot,svod_40_COVID_19,sort_death_mg
@@ -9,7 +10,7 @@ from loader import medical_personal_sick,load_report_vp_and_cv
 from sending import send_all,send_me
 from presentation import generate_pptx
 from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik
-import concurrent.futures
+from regiz import regiz_decomposition 
 # ========== настройки бота ============
 
 # используются переменные среды Windows
@@ -33,11 +34,11 @@ def create_tred(func,arg):
 #============== Тут будут поток для расписаний =====
 
 def load_1():
-    result = create_tred(load_fr,None)
+    result = create_tred('load_fr',None)
     if result[0]:
-        result = create_tred(load_fr_death,None)
+        result = create_tred('load_fr_death',None)
         if result[0]:
-            result = create_tred(load_fr_lab,None)
+            result = create_tred('load_fr_lab',None)
             if not result[0]:
                 send_me(result[1])
         else:
@@ -46,12 +47,12 @@ def load_1():
         send_me(result[1])
 
 def load_2():
-    result = create_tred(load_UMSRS,None)
+    result = create_tred('load_UMSRS',None)
     if not result[0]:
         send_me(result[1])
 
 def otchet_1():
-    result = create_tred(medical_personal_sick,None)
+    result = create_tred('medical_personal_sick',None)
     if not result[0]:
         send_me(result[1])
 
@@ -77,7 +78,7 @@ class command:
     procedure_name : str
     procedure_arg  : str
     return_file    : bool
-    hellow_words   : list
+    hello_words   : list
     ids            : list
 
     def get_commands():
@@ -144,9 +145,15 @@ class user:
         for user in users:
             if user.groups == 'master':
                 return user.user_id
-
 command.get_commands()
 user.get_users()
+def get_group_user_id(group_name):
+    list_ = []
+    for user in users:
+        if user.groups == group_name:
+            list_.append(user_id)
+    return list_
+
 
 # ========= Маленькая процедурка для определения периода суток
 
@@ -164,13 +171,13 @@ def get_hello_start():
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
     if user.known(message.from_user.id):
-        if message.text.lower() in ['привет', 'ghbdtn','start','старт']:
+        if message.text.lower() in ['привет', 'ghbdtn','/start','старт']:
             bot.send_message(message.from_user.id, get_hello_start() + user.name(message.from_user.id))
             bot.send_message(message.from_user.id,command.hello_mess(message.from_user.id))
         else:
             if command.number(message.from_user.id,message.text.lower())[0]:
                 command_id = command.number(message.from_user.id,message.text.lower())[1]
-                bot.send_message(message.from_user.id,random.choice(commands[command_id].hellow_words))
+                bot.send_message(message.from_user.id,random.choice(commands[command_id].hello_words))
                 result = create_tred(commands[command_id].procedure_name,commands[command_id].procedure_arg)
                 if result[0]:
                     if commands[command_id].return_file:
