@@ -10,7 +10,8 @@ from loader import medical_personal_sick,load_report_vp_and_cv
 from sending import send_all,send_me
 from presentation import generate_pptx
 from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik
-from regiz import regiz_decomposition 
+from regiz import regiz_decomposition
+from send_ODLI import send_bundle_to_ODLI
 # ========== настройки бота ============
 
 # используются переменные среды Windows
@@ -78,7 +79,7 @@ class command:
     procedure_name : str
     procedure_arg  : str
     return_file    : bool
-    hello_words   : list
+    hello_words    : list
     ids            : list
 
     def get_commands():

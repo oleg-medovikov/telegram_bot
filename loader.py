@@ -1,6 +1,6 @@
 #Работа с базами данных
 import pandas as pd
-import glob,warnings,datetime,os,xlrd,csv,openpyxl,shutil,threading,pyodbc
+import glob,warnings,datetime,os,xlrd,csv,openpyxl,shutil,threading,pyodbc,time
 from sending import send_all,send_me,send_epid,send_admin
 from sqlalchemy import *
 from sqlalchemy.orm import sessionmaker
@@ -8,7 +8,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 import win32com.client
 from reports import short_report
 from multiprocessing import Process
-
+from multiprocessing.pool import ThreadPool
 
 warnings.filterwarnings('ignore')
 
@@ -64,7 +64,9 @@ def check_file(file,category):
                 ]
     if category == 'fr_lab':
         names = [
-    'Субъект', 'УНРЗ', 'Мед. организация', 'Основной диагноз', 'Наименование лаборатории', 'Дата лабораторного теста','Тип лабораторного теста', 'Результат теста (положительный/ отрицательный)', 'Этиология пневмония','Дата первого лабораторного подтверждения COVID-19','Дата последнего лабораторного подтверждения COVID-19'
+    'Субъект', 'УНРЗ', 'Мед. организация', 'Основной диагноз', 'Наименование лаборатории', 'Дата лабораторного теста','Тип лабораторного теста', """Результат теста
+(положительный/
+отрицательный)""", 'Этиология пневмония','Дата первого лабораторного подтверждения COVID-19','Дата последнего лабораторного подтверждения COVID-19'
                 ]
     if category == 'UMSRS':
         names = [
@@ -104,32 +106,31 @@ def check_file(file,category):
 
 def slojit_fr(a):
     def read_part_df(excel,number):
+        nameSheetShablon = "Sheet1"
         df = pd.read_excel(excel, sheet_name= nameSheetShablon, dtype = str, skiprows = 1, head= 1)
-        _list.append(df)
         send_all('прочтен файлик номер '+ list_numbers[number])
+        return df
     def file_1(svod):
         with pd.ExcelWriter(new_fedreg) as writer:
             svod.to_excel(writer,index=False)
+        return 1
     def file_2(svod):
         df = svod
         del df['СНИЛС']
         del df['ФИО']
         with pd.ExcelWriter(new_iach) as writer:
             df.to_excel(writer,index=False)
+        return 1
     pathFolderFedRegParts = os.getenv('path_robot') +r'\_ФР_по_частям'
     date = datetime.datetime.today().strftime("%Y_%m_%d")
-    nameSheetShablon = "Sheet1"
     _list = []
-    jobs = []
     list_numbers = ['раз', 'двас', 'трис']
+    pool = ThreadPool(processes=2)
     i = 0
     for excel in glob.glob(pathFolderFedRegParts + r'\Федеральный регистр*.xlsx'):
-        thread = threading.Thread(target=read_part_df(excel,i))
-        jobs.append(thread)
-        thread.start()
+        thread = pool.apply_async(read_part_df,(excel,i)).get()
+        _list.append(thread)
         i+=1
-    for thread in jobs:
-        thread.join()
 
     svod = pd.DataFrame() 
     svod = pd.concat(_list)
@@ -157,15 +158,9 @@ def slojit_fr(a):
     except:
         pass
 
-    p_d1 = threading.Thread(target=file_1(svod))
-    p_d2 = threading.Thread(target=file_2(svod))
-
-    jobs.clear()
-    for thread in [p_d1,p_d2]:
-        jobs.append(thread)
-        thread.start()
-    for thread in jobs:
-        thread.join()
+    pool = ThreadPool(processes=2)
+    pool.apply_async(file_1,(svod,)).get()
+    pool.apply_async(file_2,(svod,)).get()
 
 #    for r_idx, row in enumerate(rows, 3):
 #        for c_idx, value in enumerate(row, 1):
