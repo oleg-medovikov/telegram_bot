@@ -4,7 +4,7 @@
 # Оглавление
 <!--ts-->
 * [Общие слова](#Общие-слова)  
-* [Разбор основного файла main.py](#Разбор-основного-файла-main.py)
+* [Разбор основного файла main.py](#Файл-main)
    * [Class user](#Class-user)
    * [Class command](#Class-command)
    * [Процедура create_tred](#Процедура-create_tred)
@@ -36,7 +36,7 @@
  
  
 
- ## Разбор основного файла main.py
+ ## Файл main
  
  ### Class user
  
