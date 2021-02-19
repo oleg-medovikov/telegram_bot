@@ -8,7 +8,7 @@
     * [Class user](#Class-user)
     * [Class command](#Class-command)
     * [Процедура create_tred](#Процедура-create_tred)
-    * * [Процедура get_text_messages](#Процедура-get_text_messages)
+    * [Процедура get_text_messages](#Процедура-get_text_messages)
 * [Разбор модуля loader.py](#loader)
     * [Процедура получения директории](#процедура-get_dir) 
     * [Процедура проверки таблицы](#процедура-check_table)
