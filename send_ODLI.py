@@ -1,4 +1,4 @@
-import requests,json,os,pyodbc,base64,random
+import requests,json,os,pyodbc,base64,random,codecs
 from collections import namedtuple
 from pylatex import Document, PageStyle, Head, Foot, MiniPage, Package, Section, NewLine, HFill, \
                    StandAloneGraphic, MultiColumn, Tabu, LongTabu, LargeText, MediumText, TextColor, \
@@ -193,14 +193,8 @@ def generate_json_new(stroka,encoded_pdf):
                         "code": "A26.08.014.997", # код услуги поставил всем одинаковый
                         "version": "117"
                                 }]
-                        },
-                "system": "urn:oid:1.2.643.5.1.13.2.7.100.6",
-                "value": "123456",
-                "assigner":    {
-                    "reference": "Organization/" + stroka.Organization,
-                    "display": "Эпидномер"
-                                }
-                            }],
+                        }
+                    }],
             "category": {
                 "coding": [{
                     "system": "urn:oid:1.2.643.5.1.13.13.11.1117",
@@ -403,17 +397,19 @@ def send_bundle_to_ODLI(a):
         # Создаем джейсон
         json_bundle = generate_json_new(row,encoded_pdf)
         # на всякий случай сохраняю бандл в файлик
-        data=json.dumps(json_bundle,ensure_ascii=False)
-        with open(get_dir('odli_pdf') + r'\data.json', 'w',encoding='utf-8') as f:
-            json.dump(data,f,ensure_ascii=False)
+        data=json.dumps(json_bundle, ensure_ascii=False)
+        with open(get_dir('temp') + r'\data.json', 'w', encoding='utf8') as f:
+            f.write(data)
+            
         # отправка бандла на сервера
-        response = requests.post(url, data=data.encode('utf-8'), headers=headers, proxies=proxies)
+        #response = requests.post(url, data=data.encode('utf-8'), headers=headers, proxies=proxies)
         # чтение ответа
-        otvet = response.json()
+        #otvet = response.json()
         # отправляем id бандла, которое получили от сервера в базу
-        send_otvet_id(int(row.ID),otvet["id"])
+        #send_otvet_id(int(row.ID),otvet["id"])
         # так как это тест, то остановимся на 1 исследовании
-        return 'успешно отправлен бандл ' + otvet["id"]
+        #return 'успешно отправлен бандл ' + otvet["id"]
+        return get_dir('temp') + r'\data.json'
     return 'Было отправлено ' + len(db_lab) + ' бандлов'
 
 

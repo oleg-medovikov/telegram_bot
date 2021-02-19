@@ -3,10 +3,10 @@ from dataclasses import dataclass
 import concurrent.futures
 
 # ======== мои модули 
-from procedure import check_robot,svod_40_COVID_19,sort_death_mg
+from procedure import check_robot,svod_40_COVID_19,sort_death_mgi,medical_personal_sick,razlojit_death_week,sbor_death_week_files,sbor_death_week_svod
 from reports import fr_deti,short_report,dead_not_mss,dynamics,mg_from_guber
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
-from loader import medical_personal_sick,load_report_vp_and_cv
+from loader import load_report_vp_and_cv
 from sending import send_all,send_me
 from presentation import generate_pptx
 from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik

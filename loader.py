@@ -437,15 +437,6 @@ def load_UMSRS(a):
             send_all('Но я не нашёл файла УМСРС! (((')
             return 0 
 
-def medical_personal_sick(a):
-    send_all('Начинаю считать заболевших сотрудников')
-    medPers = pd.read_sql('EXEC  med.p_StartMedicalPersonalSick',conn)
-    date = datetime.datetime.today().strftime("%Y_%m_%d_%H_%M")
-    file = get_dir('med_sick') + r'\Заболевшие медики '+ date +'.xlsx'
-    with pd.ExcelWriter(file) as writer:
-        medPers.to_excel(writer,sheet_name='meducal',index=False)
-    send_all("Все готово\n" + file)
-
 def load_report_vp_and_cv(a):
     def open_save(file):
         xcl = win32com.client.Dispatch("Excel.Application")
