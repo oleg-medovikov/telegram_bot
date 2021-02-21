@@ -1,6 +1,6 @@
 #Работа с базами данных
 import pandas as pd
-import glob,warnings,datetime,os,xlrd,csv,openpyxl,shutil,threading,pyodbc,time
+import glob,warnings,datetime,os,xlrd,csv,openpyxl,shutil,threading,pyodbc,time,numpy
 from sending import send_all,send_me,send_epid,send_admin
 from sqlalchemy import *
 from sqlalchemy.orm import sessionmaker
@@ -183,16 +183,26 @@ def slojit_fr(a):
     count_vizd_new = len(svod[svod['Исход заболевания'].isin(['Выздоровление']) & svod['Диагноз'].isin(['U07.1']) ])
 
     NumberFor3 = count_vizd_new - count_vizd_old
-#    date=[str(day)]
-#    part = svod[svod['Исход заболевания'].isin(['Выздоровление']) & svod['Диагноз'].isin(['U07.1']) ]
-#    part.loc[part['Дата изменения РЗ'].isnull(), 'Дата изменения РЗ' ] = part.loc[part['Дата изменения РЗ'].isnull(),'Дата создания РЗ']
-#    NumberFor3 = len(part) - len(part[~part['Дата изменения РЗ'].isin(date) ] )
+    # расчет людей на стационарном лечении
+    svod['Возраст'] = (pd.to_datetime(svod['Диагноз установлен']) - pd.to_datetime(svod['Дата рождения'])) / numpy.timedelta64(1, 'Y')
+    NumberFor4 = len(svod.loc[(svod['Исход заболевания'].isnull()) \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
+            & (svod['Вид лечения'].isin(['Стационарное лечение']))])
+    NumberFor5 = len(svod.loc[(svod['Исход заболевания'].isnull()) & ( svod['Возраст'] > 60) \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
+            & (svod['Вид лечения'].isin(['Стационарное лечение']))])
+    NumberFor6 = len(svod.loc[(svod['Исход заболевания'].isnull()) & ( svod['Возраст'] > 70) \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
+            & (svod['Вид лечения'].isin(['Стационарное лечение']))])
 
     otvet = 'Вроде все получилось \n' + 'По цифрам\n' \
             + 'На стационарном лечении: ' + str(NumberForMG) + '\n' \
             + 'Всего заболело: ' + str(NumberFor1) +'\n' \
             + 'Всего умерло: '+ str(NumberFor2) + '\n' \
-            + 'Всего выздоровело за ' + str(day) + ' : '+ str(NumberFor3)
+            + 'Всего выздоровело за ' + str(day) + ' : '+ str(NumberFor3) + '\n'\
+            + 'Сейчас на стационаром лечении: ' + str(NumberFor4) + '\n' \
+            + 'Сейчас на стационаром лечении старше 60: ' + str(NumberFor5) + '\n' \
+            + 'Сейчас на стационаром лечении старше 70: ' + str(NumberFor6) 
     return otvet
 
 def excel_to_csv_old(file_excel):

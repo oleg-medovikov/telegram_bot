@@ -105,13 +105,12 @@ def sort_death_mg(a):
     return 'Сгенерирован файл' + file.split('\\')[-1]
 
 def medical_personal_sick(a):
-    send_all('Начинаю считать заболевших сотрудников')
     medPers = pd.read_sql('EXEC  med.p_StartMedicalPersonalSick',conn)
     date = datetime.datetime.today().strftime("%Y_%m_%d_%H_%M")
     file = get_dir('med_sick') + r'\Заболевшие медики '+ date +'.xlsx'
     with pd.ExcelWriter(file) as writer:
         medPers.to_excel(writer,sheet_name='meducal',index=False)
-    send_all("Все готово\n" + file)
+    return 'Создан файл по заболевшим сотрудникам'
 
 def svod_40_COVID_19(a):
     path = get_dir('40_covid_19') + r'\[!~]*.xls'
@@ -278,6 +277,7 @@ def sbor_death_week_svod(a):
     date_start = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-2,weekday=3)).date()
     date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=3)).date()
 
+    new_path = get_dir('death_week') + f'\с {date_start} по {date_end}'
     path= get_dir('death_week') + f'\с {date_start} по {date_end}\[!~]*[!свод].xlsx'
     df = pd.DataFrame()
     list_=[]
@@ -547,8 +547,10 @@ def sbor_death_week_svod(a):
     with pd.ExcelWriter(file_svod) as writer:
         svod.to_excel(writer,sheet_name='Свод по МО',index=False)
         sp.to_excel(writer,sheet_name='Проценты',index=False)
-
-    shutil.copyfile(file_svod,new_path + r'\свод.xlsx')
+    try:
+        shutil.copyfile(file_svod,new_path + r'\свод.xlsx')
+    except:
+        pass
     return file_svod
 
 
