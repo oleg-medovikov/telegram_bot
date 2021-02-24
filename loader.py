@@ -184,14 +184,14 @@ def slojit_fr(a):
 
     NumberFor3 = count_vizd_new - count_vizd_old
     # расчет людей на стационарном лечении
-    svod['Возраст'] = (pd.to_datetime(svod['Диагноз установлен']) - pd.to_datetime(svod['Дата рождения'])) / numpy.timedelta64(1, 'Y')
+    svod['Возраст'] = (pd.to_datetime(svod['Диагноз установлен'], format="%d.%m.%Y") - pd.to_datetime(svod['Дата рождения'], format="%d.%m.%Y")) / numpy.timedelta64(1, 'Y')
     NumberFor4 = len(svod.loc[(svod['Исход заболевания'].isnull()) \
             & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
             & (svod['Вид лечения'].isin(['Стационарное лечение']))])
-    NumberFor5 = len(svod.loc[(svod['Исход заболевания'].isnull()) & ( svod['Возраст'] > 60) \
+    NumberFor5 = len(svod.loc[(svod['Исход заболевания'].isnull()) & ( svod['Возраст'] >= 60) \
             & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
             & (svod['Вид лечения'].isin(['Стационарное лечение']))])
-    NumberFor6 = len(svod.loc[(svod['Исход заболевания'].isnull()) & ( svod['Возраст'] > 70) \
+    NumberFor6 = len(svod.loc[(svod['Исход заболевания'].isnull()) & ( svod['Возраст'] >= 70) \
             & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
             & (svod['Вид лечения'].isin(['Стационарное лечение']))])
 
