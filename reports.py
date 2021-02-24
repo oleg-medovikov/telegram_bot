@@ -127,3 +127,4 @@ def mg_from_guber(a):
     UpdateColumsSvod("Свод","P", 94, 200, 96, 23)
     return 'Все готово'
 
+

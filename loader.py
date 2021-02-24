@@ -9,6 +9,7 @@ import win32com.client
 from reports import short_report
 from multiprocessing import Process
 from multiprocessing.pool import ThreadPool
+from reports import short_report
 
 warnings.filterwarnings('ignore')
 
@@ -557,3 +558,57 @@ def load_report_vp_and_cv(a):
         except PermissionError:
             raise my_except('Закройте файлик! Не могу скопировать')
         return shablon
+
+def load_report_guber(a):
+    def load_sheet(file, sheetName, ColumsName, startRows, header_):
+        df = pd.read_excel(file, sheet_name= sheetName,header = None , usecols=ColumsName,  skiprows = startRows)
+        df = df.set_axis(header_, axis=1, inplace=False)
+        df["idRows"] =pd.to_numeric(df["idRows"]) 
+        df = df.sort_values(["idRows"])
+        df = df.loc[df["idRows"].notnull()]
+        df = df.drop_duplicates()
+        df = df.fillna(0)
+        return df
+    def load_file(file, sheetName, ColumsName, startRows, header_, tableName):    
+        list_.clear()
+        try:
+            excel = load_sheet(file, sheetName, ColumsName, startRows, header_)
+        except:
+            pass
+        else:
+            list_.append(excel)
+            df = pd.concat(list_)
+        try:
+            df.to_sql(tableName,con,schema='mon_vp',index = False,if_exists='append')
+        except:
+            pass
+    def check_data_tab(name):
+        sql=f"""
+        IF (EXISTS (SELECT * FROM {name})) 
+        SELECT 1 ELSE SELECT 0 """
+        return pd.read_sql(sql,con).iat[0,0]
+    directory = get_dir('MG')
+    path = directory + '\\' + datetime.datetime.now().strftime("%Y%m%d")
+    try:
+        os.mkdir(path)
+    except:
+        pass
+    df = pd.DataFrame()
+    list_ = []
+    header_vp = ['idRows','nameMO','indicators','vp_Received_Count_All_SPb','vp_Received_Count_All_LO','vp_Received_Count_toDay_Spb','vp_Received_Count_toDay_LO','vp_Discharged_Count_All_SPb','vp_Discharged_Count_All_LO','vp_Discharged_Count_toDay_Spb','vp_Discharged_Count_toDay_LO','vp_Died_Count_All_SPb','vp_Died_Count_All_LO','vp_Died_Count_toDay_Spb','vp_Died_Count_toDay_LO','vp_Hospital_Count_All','vp_Hospital_Count_Spb','vp_Hospital_Count_LO','vp_Hospital_Count_Ivl'] 
+    header_cv = ['idRows','nameMO','indicators','cv_Diagnosis_Count_All_SPb','cv_Diagnosis_Count_All_LO','cv_Diagnosis_Count_toDay_Spb','cv_Diagnosis_Count_toDay_LO','cv_Discharged_Count_All_SPb','cv_Discharged_Count_All_LO','cv_Discharged_Count_toDay_Spb','cv_Discharged_Count_toDay_LO','cv_Died_Count_All_SPb','cv_Died_Count_All_LO','cv_Died_Count_toDay_Spb','cv_Died_Count_toDay_LO','cv_Hospital_Count_All','cv_Hospital_Count_Spb','cv_Hospital_Count_LO','cv_Hospital_Count_Ivl']
+    header_ivl = ['idRows','nameMO','ivl_Invaz_Count_All','ivl_Invaz_Count_Busy','ivl_Invaz_Count_Free_All','ivl_Invaz_Count_Faulty','ivl_NeInvaz_Count_All','ivl_NeInvaz_Count_Busy','ivl_NeInvaz_Count_Free_All','ivl_NeInvaz_Count_Faulty','ivl_Pacient_Count_All','ivl_Pacient_Count_Covid']
+    header_bunk = ['idRows','nameMO','bn_Count_All','bn_Count_Ill_All','bn_Count_Ill_Faulty','bn_Count_Ill_Free']
+
+    for file in glob.glob(directory + r'\из_почты\[!~$]*.xls*'):
+        load_file(file, 'Cвод_ОРВИ_и_Пневм', 'A:S', 4, header_vp, 'ReportGubernator_Pnevm')
+        load_file(file, 'Свод_COVID', 'A:S', 4, header_cv, 'ReportGubernator_Covid')
+        load_file(file, 'Свод_ИВЛ', 'A:L', 3, header_ivl, 'ReportGubernator_Ivl')
+        load_file(file, 'Свод_Койки', 'A:F', 2, header_bunk, 'ReportGubernator_Bunk')
+        os.replace(file, path + r'\\' + os.path.basename(file))
+
+    if check_data_tab('mon_vp.v_DebtorsReportGubernator'):
+        return short_report('SELECT * FROM mon_vp.v_DebtorsReportGubernator')
+    else:
+        shutil.copyfile(get_dir('help') + r'\big_finger.png', get_dir('temp') + r'\big_finger.png')
+        return get_dir('temp') + r'\big_finger.png'

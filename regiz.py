@@ -5,13 +5,13 @@ from sqlalchemy import *
 
 from loader import get_dir
 
+con = create_engine(get_dir('NCRN'),convert_unicode=True)
+
 class my_except(Exception):
     pass
 
-
 def regiz_decomposition(a):
     # Создаем подключение
-    con = create_engine('mssql+pymssql://miacbase3/PNK_NCRN',convert_unicode=True)
     answer = pd.read_sql('SELECT * FROM [dbo].[v_Answer_MO]', con)
     if len(answer) > 0 :
         ftp_user = answer.ftp_user.unique()
@@ -22,7 +22,6 @@ def regiz_decomposition(a):
             del otvet['ftp_user']
             del otvet['LPU_level1_key']
             del otvet['LPU_name']
-            #otvet.SnilsDoctor = otvet.SnilsDoctor.replace('00000000000', '')
             otvet.rename(columns = { 'HistoryNumber':'Номер истории болезни' 
                                                             , 'OpenDate':'Дата открытия СМО'
                                                             #, 'IsAmbulant':'Признак амбулаторного СМО'
@@ -83,10 +82,51 @@ def regiz_decomposition(a):
         
         
         print('Региз разложен по папкам')
-        with open(r'\\MIAC-ftp-emts\FTP\ORI\REGIZ\свод\log.txt', 'a') as file:
+        with open(get_dir('regiz_svod') + r'\log.txt', 'a') as file:
             file.write("  Региз разложен по папкам " + str(datetime.datetime.now()) + '\n' )
             return temp_log
     else:
-        with open(r'\\MIAC-ftp-emts\FTP\ORI\REGIZ\свод\log.txt', 'a') as file:
+        with open(get_dir('regiz_svod') + r'\log.txt', 'a') as file:
             file.write("  РЕГИЗ Нечего раскладывать по папкам " + str(datetime.datetime.now()) + '\n' )
-        raise my_except("Нечего расскладывать по папкам!")
+        raise my_except("Нечего расск ладывать по папкам!")
+
+# Функция проверки колонок таблицы
+def check_table(path_to_excel, names):
+    sum_colum = len(names)
+    num_colum = 0
+    try:
+        file = pd.read_excel(path_to_excel, header=None, na_filter = False)
+    except:
+        return [1,'Файл не читается','',0]
+    if len(file) < 2:
+        return [1,'Файл пустой','',0]
+    for head in range(len(file)):
+        if num_colum != sum_colum:
+            coll = file.loc[head].tolist()
+            num_colum = 0
+            collum = []
+            error = 0
+            error_text = '' 
+            for name in names:
+                k = 0
+                f = 0
+                for col in coll:
+                    if str(col).replace(' ','') == name.replace(' ','') : 
+                        collum.append(k)
+                        num_colum += 1 
+                        f = 1
+                    k+=1
+                if f == 0:
+                    error = 1
+                    error_text = error_text + ' Не найдена колонка ' + name + ';'
+        else:
+            break
+    return error,error_text,collum, head-1
+
+
+def regiz_load_to_base(a):
+    mo = pd.read_excel(get_dir('regiz_svod') + r'\mo_directory.xlsx')
+    names = ['Номер истории болезни','Дата открытия СМО','Признак амбулаторного СМО','СНИЛС врача']
+    path = get_dir('regiz')
+    return 1
+

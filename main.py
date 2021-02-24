@@ -6,7 +6,7 @@ import concurrent.futures
 from procedure import check_robot,svod_40_COVID_19,sort_death_mg,medical_personal_sick,razlojit_death_week,sbor_death_week_files,sbor_death_week_svod
 from reports import fr_deti,short_report,dead_not_mss,dynamics,mg_from_guber
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
-from loader import load_report_vp_and_cv
+from loader import load_report_vp_and_cv,load_report_guber
 from sending import send_all,send_me
 from presentation import generate_pptx
 from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik
@@ -20,56 +20,8 @@ bot = telebot.TeleBot(os.getenv('telegram_bot'))
 users_id=[int(x) for x in os.getenv('telegram_id').split(',')]
 conn = pyodbc.connect(os.getenv('sql_conn'))
 cursor= conn.cursor()
-# =============== Процедурка создания потоков ====
-def create_tred(func,arg):
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(globals()[func],arg)
-        try:
-            return_value = future.result()
-            return True, return_value
-        except:
-            return False, 'Ошибка при выполнении функции: ' +  str(future.exception())
 
-    #===================================================
-
-#============== Тут будут поток для расписаний =====
-
-def load_1():
-    result = create_tred('load_fr',None)
-    if result[0]:
-        result = create_tred('load_fr_death',None)
-        if result[0]:
-            result = create_tred('load_fr_lab',None)
-            if not result[0]:
-                send_me(result[1])
-        else:
-            send_me(result[1])
-    else:
-        send_me(result[1])
-
-def load_2():
-    result = create_tred('load_UMSRS',None)
-    if not result[0]:
-        send_me(result[1])
-
-def otchet_1():
-    result = create_tred('medical_personal_sick',None)
-    if not result[0]:
-        send_me(result[1])
-
-def go():
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
-
-schedule.every().day.at("03:00").do(load_1)
-schedule.every().day.at("06:00").do(load_2)
-schedule.every().day.at("07:00").do(otchet_1)
-
-t = threading.Thread(target=go, name="Расписание работ")
-t.start()
-
-#================Создаем классы для команд и пользователей
+#================Создаём классы для команд и пользователей
 commands = []
 @dataclass
 class command:
@@ -141,7 +93,13 @@ class user:
     def group(id):
         for user in users:
             if user.user_id == id:
-                return user.groups        
+                return user.groups
+    def group_users_id(name_group):
+        list_=[]
+        for user in users:
+            if user.groups == name_group:
+                list_.append(user.user_id)
+        return list_
     def master():
         for user in users:
             if user.groups == 'master':
@@ -154,6 +112,66 @@ def get_group_user_id(group_name):
         if user.groups == group_name:
             list_.append(user_id)
     return list_
+
+# =============== Процедурка создания потоков ====
+def create_tred(func,arg):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(globals()[func],arg)
+        try:
+            return_value = future.result()
+            return True, return_value
+        except:
+            return False, 'Ошибка при выполнении функции: ' +  str(future.exception())
+
+    #===================================================
+
+#============== Тут будут поток для расписаний =====
+
+def load_1():
+    result = create_tred('load_fr',None)
+    if result[0]:
+        result = create_tred('load_fr_death',None)
+        if result[0]:
+            result = create_tred('load_fr_lab',None)
+            if not result[0]:
+                send_me(result[1])
+        else:
+            send_me(result[1])
+    else:
+        send_me(result[1])
+
+def load_2():
+    result = create_tred('load_UMSRS',None)
+    if not result[0]:
+        send_me(result[1])
+
+def otchet_1():
+    result = create_tred('medical_personal_sick',None)
+    if not result[0]:
+        send_me(result[1])
+
+def regiz_razlogenie():
+    for id in user.group_users_id('info'):
+        bot.send_message(id, 'Начинаю раскладывать ошибки РЕГИЗ по папкам' )
+    result = create_tred('regiz_decomposition',None)
+    for id in user.group_users_id('info'):
+        bot.send_document(id, open(result[1], 'rb'))
+    bot.send_message(user.master(), result[1])
+    os.remove(result[1])
+
+def go():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+schedule.every().day.at("03:00").do(load_1)
+schedule.every().day.at("06:00").do(load_2)
+schedule.every().day.at("07:00").do(otchet_1)
+schedule.every().day.at("07:05").do(regiz_razlogenie)
+
+t = threading.Thread(target=go, name="Расписание работ")
+t.start()
+
 
 
 # ========= Маленькая процедурка для определения периода суток
