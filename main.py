@@ -149,6 +149,9 @@ def otchet_1():
     result = create_tred('medical_personal_sick',None)
     if not result[0]:
         send_me(result[1])
+    else:
+        for id in user.group_users_id('admin'):
+            bot.send_message(id, result[1])
 
 def regiz_razlogenie():
     for id in user.group_users_id('info'):
@@ -156,7 +159,7 @@ def regiz_razlogenie():
     result = create_tred('regiz_decomposition',None)
     for id in user.group_users_id('info'):
         bot.send_document(id, open(result[1], 'rb'))
-    bot.send_message(user.master(), result[1])
+    bot.send_document(user.master(), open(result[1], 'rb'))
     os.remove(result[1])
 
 def go():
@@ -200,8 +203,9 @@ def get_text_messages(message):
                 result = create_tred(commands[command_id].procedure_name,commands[command_id].procedure_arg)
                 if result[0]:
                     if commands[command_id].return_file:
-                        bot.send_document(message.from_user.id, open(result[1], 'rb'))
-                        os.remove(result[1])
+                        for file in result[1].split(';'):
+                            bot.send_document(message.from_user.id, open(file, 'rb'))
+                            os.remove(file)
                         if message.from_user.id != user.master():
                             bot.send_message(user.master(), 'Хозяин, для пользователя ' + user.name(message.from_user.id) + ' было выполнено задание ' + str(command_id))
                     else:

@@ -1,7 +1,9 @@
-import os,pyodbc,subprocess,datetime,shutil,glob
+import os,pyodbc,subprocess,datetime,shutil,glob,imgkit
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 from sqlalchemy import *
+
+
 
 conn = pyodbc.connect(os.getenv('sql_conn'))
 con = create_engine(os.getenv('sql_engine'),convert_unicode=False)
@@ -33,8 +35,9 @@ def short_report(textsql):
     df = pd.read_sql(textsql,conn)
     table_html = get_dir('temp') + r'\table.html'
     table_png = get_dir('temp') + r'\table.png'
-    df.to_html(table_html)
-    subprocess.call('wkhtmltoimage.exe --encoding utf-8 -f png --width 0 ' +  table_html + ' ' + table_png, shell=True)
+
+    df.to_html(table_html,index=False,justify='center')
+    subprocess.call('wkhtmltoimage.exe --quiet --encoding utf-8 -f png --width 0 ' +  table_html + ' ' + table_png, shell=True)
     return table_png
 
 def dead_not_mss(a):

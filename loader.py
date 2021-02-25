@@ -587,6 +587,13 @@ def load_report_guber(a):
         IF (EXISTS (SELECT * FROM {name})) 
         SELECT 1 ELSE SELECT 0 """
         return pd.read_sql(sql,con).iat[0,0]
+    def UpdateShablonFile(workb, nameSheet, svod, startRows):
+        ws = workb[nameSheet]
+        rows = dataframe_to_rows(svod,index=False, header=False)
+        for r_idx, row in enumerate(rows, startRows):  
+            for c_idx, value in enumerate(row, 1):
+                ws.cell(row=r_idx, column=c_idx, value=value)
+
     directory = get_dir('MG')
     path = directory + '\\' + datetime.datetime.now().strftime("%Y%m%d")
     try:
@@ -610,5 +617,53 @@ def load_report_guber(a):
     if check_data_tab('mon_vp.v_DebtorsReportGubernator'):
         return short_report('SELECT * FROM mon_vp.v_DebtorsReportGubernator')
     else:
-        shutil.copyfile(get_dir('help') + r'\big_finger.png', get_dir('temp') + r'\big_finger.png')
-        return get_dir('temp') + r'\big_finger.png'
+        file1 = get_dir('help') + r'\09_стационары_для_Справки_Губернатора.xlsx'
+        file2 = get_dir('help') + r'\09_стационары_для_Справки_Губернатора2.xlsx'
+        df_covid = pd.read_sql('SELECT * FROM [mon_vp].[v_GrandReport_Guber_Covid]' ,con)
+        df_covid = df_covid.sort_values(["idRows"])
+        df1_covid = df_covid.drop('Установлены диагнозы: вчера',1).drop('Установлены диагнозы: должно быть',1).drop('Установлены диагнозы: фактически',1).drop('на стационарном лечении: вчерашние данные',1).drop('на стационарном лечении: должно быть',1).drop('на стационарном лечении: фактически',1)
+
+        df_pnev = pd.read_sql('SELECT * FROM [mon_vp].[v_GrandReport_Guber_Pnev]' ,con)
+        df_pnev = df_pnev.sort_values(["idRows"])
+        df1_pnev = df_pnev.drop('Установлены диагнозы: вчера',1).drop('Установлены диагнозы: должно быть',1).drop('Установлены диагнозы: фактически',1).drop('на стационарном лечении: вчерашние данные',1).drop('на стационарном лечении: должно быть',1).drop('на стационарном лечении: фактически',1)
+
+        df_ivl = pd.read_sql('SELECT * FROM [mon_vp].[v_GrandReport_Guber_Ivl]' ,con)
+        df_ivl = df_ivl.sort_values(["idRows"])
+
+        df_bunk = pd.read_sql('SELECT * FROM [mon_vp].[v_GrandReport_Guber_Bunk]' ,con)
+        df_bunk = df_bunk.sort_values(["idRows"])
+
+        df_sys = pd.read_sql('SELECT * FROM mon_vp.v_GrandReport' ,con)
+        df1_sys = df_sys.loc[df_sys.typeMO==1].sort_values(["numSort"]).drop('typeMO',1).drop('numSort',1)
+        df2_sys = df_sys.loc[df_sys.typeMO==2].sort_values(["numSort"]).drop('typeMO',1).drop('numSort',1)
+
+        wb = openpyxl.load_workbook(file1)
+
+        UpdateShablonFile(wb, 'Cвод_ОРВИ_и_Пневм', df1_pnev, 6)
+        UpdateShablonFile(wb, 'Свод_COVID', df1_covid, 6)
+        UpdateShablonFile(wb, 'Свод_ИВЛ', df_ivl, 5)
+        UpdateShablonFile(wb, 'Свод_Койки', df_bunk, 4)
+
+        if check_data_tab('mon_vp.v_DebtorsReport'):
+            pass
+        else:
+            UpdateShablonFile(wb, 'Отчет_СЮС', df1_sys, 9)
+            UpdateShablonFile(wb, 'Отчет_СЮС', df2_sys, 73)
+        
+        new_file1 = directory + r'\09_стационары для Справки Губернатора_'+ datetime.datetime.now().strftime("%d.%m.%Y_%H_%M") + '.xlsx'
+        wb.save(new_file1)
+
+        wb1 = openpyxl.load_workbook(file2)
+
+        UpdateShablonFile(wb1, 'Свод', df_pnev, 8)
+        UpdateShablonFile(wb1, 'Свод', df_covid, 97)
+
+        ws = wb1['Свод']
+        ws['Q2'] = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime('%d.%m.%Y')
+                
+        new_file2 = directory + r'\09_стационары для Справки Губернатора_'+ datetime.datetime.now().strftime("%d.%m.%Y") + '.xlsx'
+        wb1.save(new_file2)
+        
+        shutil.copyfile(new_file1,get_dir('temp') + '\\' + new_file1.split('\\')[-1])
+        shutil.copyfile(new_file2,get_dir('temp') + '\\' + new_file2.split('\\')[-1])
+        return  get_dir('temp') + '\\' +  new_file1.split('\\')[-1]+ ';' + get_dir('temp') + '\\' +  new_file2.split('\\')[-1]
