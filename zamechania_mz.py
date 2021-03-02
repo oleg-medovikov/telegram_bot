@@ -1,8 +1,11 @@
 import pandas as pd
 import os,datetime,pyodbc,glob
 
-from loader import get_dir
+from  loader import get_dir
 conn=pyodbc.connect(os.getenv('sql_conn'))
+
+class my_except(Exception):
+    pass
 
 
 sql_no_snils="""
@@ -223,3 +226,16 @@ def net_dnevnik(a):
     put_svod(df,'нет дневниковых записей')
     put_excel_for_mo(df,'нет дневниковых записей')
     return get_dir('temp') + '\\' + 'отчет по разложению нет дневниковых записей.xlsx'
+
+def delete_old_files(date):
+    path = get_dir('covid')+ f"\\EPID.COVID.*\\EPID.COVID.*\\Замечания Мин. Здравоохранения\\{date.strftime('%Y-%m-%d')}*.xlsx"
+    files = glob.glob(path)
+    if len(files) == 0:
+        return 'Нет файлов за это число!'
+    for file in files:
+        try:
+            os.remove(file)
+        except:
+            pass
+    return f"Я все поудалял за дату {date.strftime('%Y-%m-%d')}"
+    

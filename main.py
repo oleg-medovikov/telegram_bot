@@ -1,4 +1,4 @@
-import telebot,schedule,time,threading,os,random,pyodbc
+import telebot,schedule,time,threading,os,random,pyodbc,datetime
 from dataclasses import dataclass
 import concurrent.futures
 
@@ -9,9 +9,12 @@ from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,loa
 from loader import load_report_vp_and_cv,load_report_guber
 from sending import send_all,send_me
 from presentation import generate_pptx
-from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik
+from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik,delete_old_files
 from regiz import regiz_decomposition
 from send_ODLI import send_bundle_to_ODLI
+import telebot_calendar
+from telebot_calendar import CallbackData
+from telebot.types import ReplyKeyboardRemove,CallbackQuery
 # ========== настройки бота ============
 
 # используются переменные среды Windows
@@ -33,6 +36,7 @@ class command:
     return_file    : bool
     hello_words    : list
     ids            : list
+    ask_day        : bool
 
     def get_commands():
         commands.clear()
@@ -45,6 +49,7 @@ class command:
                                     ,row[5]
                                     ,[str(x) for x in row[6].split(';')]
                                     ,[int(x) for x in row[7].split(',')]
+                                    ,row[8]
                                    ))
     def search(key):
         for command in commands:
@@ -189,6 +194,20 @@ def get_hello_start():
          22  <= temp   < 24 :  'Доброй ночи, '
     }[True]
 
+def markup():
+    row = list()
+    markup = telebot.types.InlineKeyboardMarkup()
+    for i in range(28):
+        d = 28 - i
+        date = (datetime.datetime.today() - datetime.timedelta(days=d)).strftime("%Y-%m-%d")
+        day = (datetime.datetime.today() - datetime.timedelta(days=d)).strftime("%d")
+        button = telebot.types.InlineKeyboardButton(text=day, callback_data=date)
+        row.append(button)
+        if i % 7 == 6:
+            markup.add(*row)
+            row.clear()
+    return markup
+
 # ========== Главная процедура бота ===============
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
@@ -200,25 +219,50 @@ def get_text_messages(message):
             if command.number(message.from_user.id,message.text.lower())[0]:
                 command_id = command.number(message.from_user.id,message.text.lower())[1]
                 bot.send_message(message.from_user.id,random.choice(commands[command_id].hello_words))
-                result = create_tred(commands[command_id].procedure_name,commands[command_id].procedure_arg)
-                if result[0]:
-                    if commands[command_id].return_file:
-                        for file in result[1].split(';'):
-                            bot.send_document(message.from_user.id, open(file, 'rb'))
-                            os.remove(file)
-                        if message.from_user.id != user.master():
-                            bot.send_message(user.master(), 'Хозяин, для пользователя ' + user.name(message.from_user.id) + ' было выполнено задание ' + str(command_id))
+                if commands[command_id].ask_day:
+                    calendar_1 = CallbackData("calendar_1", "action", "year", "month", "day")
+                    bot.send_message(message.from_user.id,'с помощью клавиатуры',reply_markup=telebot_calendar.create_calendar(
+                                    name=calendar_1.prefix,
+                                    year=datetime.datetime.now().year,
+                                    month=datetime.datetime.now().month ) )
+
+                    @bot.callback_query_handler(func=lambda call: call.data.startswith(calendar_1.prefix))
+                    def callback_inline(call: CallbackQuery):
+                        name, action, year, month, day = call.data.split(calendar_1.sep)
+                        date = telebot_calendar.calendar_query_handler(
+                                        bot=bot, call=call, name=name, action=action, year=year, month=month, day=day
+                                            )
+                        if action == "DAY":
+                            bot.send_message(chat_id=call.from_user.id,
+                                            text=f"Вы выбрали {date.strftime('%d.%m.%Y')}",
+                                            reply_markup=ReplyKeyboardRemove(),)
+                            result = create_tred(commands[command_id].procedure_name,date)
+                            bot.send_message(message.from_user.id,result[1])
+                        elif action == "CANCEL":
+                            bot.send_message(chat_id=call.from_user.id,
+                                    text="Вы решили ничего не выбирать",reply_markup=ReplyKeyboardRemove(),)
+                    
+#                   result = create_tred(commands[command_id].procedure_name,call.data)
+#                   bot.send_message(message.from_user.id,result[1])
+                else:
+                    result = create_tred(commands[command_id].procedure_name,commands[command_id].procedure_arg)
+                    if result[0]:
+                        if commands[command_id].return_file:
+                            for file in result[1].split(';'):
+                                bot.send_document(message.from_user.id, open(file, 'rb'))
+                                os.remove(file)
+                            if message.from_user.id != user.master():
+                                bot.send_message(user.master(), 'Хозяин, для пользователя ' + user.name(message.from_user.id) + ' было выполнено задание ' + str(command_id))
+                        else:
+                            bot.send_message(message.from_user.id, result[1])
+                            if message.from_user.id != user.master():
+                                bot.send_message(user.master(), 'Хозяин, для пользователя ' + user.name(message.from_user.id) + ' было выполнено задание ' + str(command_id))
                     else:
                         bot.send_message(message.from_user.id, result[1])
                         if message.from_user.id != user.master():
-                            bot.send_message(user.master(), 'Хозяин, для пользователя ' + user.name(message.from_user.id) + ' было выполнено задание ' + str(command_id))
-                else:
-                    bot.send_message(message.from_user.id, result[1])
-                    if message.from_user.id != user.master():
-                        bot.send_message(user.master(),\
-                            'Хозяин, что-то сломалось при выполнении задания ' + str(command_id) + ' для пользователя ' + user.name(message.from_user.id) )
-                        bot.send_message(user.master(), result[1])
-                
+                            bot.send_message(user.master(),\
+                                'Хозяин, что-то сломалось при выполнении задания ' + str(command_id) + ' для пользователя ' + user.name(message.from_user.id) )
+                            bot.send_message(user.master(), result[1])
             else:
                 bot.send_message(message.from_user.id,'Возможно, у Вас нет прав на выполнение данной операции')
                 if message.from_user.id != user.master():

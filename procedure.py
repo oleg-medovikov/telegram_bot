@@ -189,7 +189,7 @@ def svod_40_COVID_19(a):
 def razlojit_death_week(a):
     date_start = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-2,weekday=3)).date()
     date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=3)).date()
-    ql = f"""
+    sql = f"""
     select dbo.get_Gid(idPatient) as 'Gid',[Медицинская организация],[ФИО],[Дата рождения]
     ,dbo.[f_calculation_age]([Дата рождения],[Дата исхода заболевания]) as 'Возраст'
     ,[Посмертный диагноз]
@@ -202,12 +202,14 @@ def razlojit_death_week(a):
       and [Субъект РФ] = 'г. Санкт-Петербург'    
     """
     df = pd.read_sql(sql,conn)
-    columns = ['Дата начала заболевания','Факт обращения за медицинской помощью на амбулаторном этапе (да/нет)'
+    columns = ['Район проживания'
+               ,'Дата начала заболевания','Факт обращения за медицинской помощью на амбулаторном этапе (да/нет)'
                ,'Дата обращения за медицинской помощью  на амбулаторном этапе','Факт выполнения КТ на амбулаторном этапе (да/нет)'
                ,'Факт выполнения ПЦР-SARS-CoV-2  на амбулаторном этапе (да/нет)'
                ,'Факт получения бесплатной лекарственной терапии (БЛТ) на амбулаторном этапе (да/нет)'
                ,'Дата госпитализации','Степень тяжести состояния при госпитализации (легкая, ср.тяжести, тяжелая)'
-               ,'Поступление в ОРИТ  при госпитализации (да/нет)','Факт получения антицитокиновой терапии в стационаре (да/нет)'
+               ,'Поступление в ОРИТ  при госпитализации (да/нет)','Смерть наступила в первые сутки с момента госпитализации (да/нет)'
+               ,'Факт получения антицитокиновой терапии в стационаре (да/нет)'
     ]
 
     for col in columns:
@@ -286,8 +288,7 @@ def sbor_death_week_svod(a):
         list_.append(chast)
     df = pd.concat(list_)
     df['Ndays'] = (pd.to_datetime(df['Дата госпитализации'],errors='coerce') - pd.to_datetime(df['Дата начала заболевания'],errors='coerce')).dt.days
-
-    svod = pd.read_sql(f"exec robo.death_week_value '{date_start}','{date_end}'", con)
+    svod = pd.read_sql(f"exec robo.death_week_value'{date_start}','{date_end}'", con)
     svod = svod.fillna(0)
 
     MOs = svod['Медицинская организация'].unique()
@@ -543,10 +544,37 @@ def sbor_death_week_svod(a):
         ,svod['Количество пациентов, умерших от ВБП, имеющих СД'].sum()
     )
 
+    add_stroka (
+        'Сопутствующий артериальная гипертония'
+        ,svod['Количество пациентов, умерших от U07.1, имеющих АГ'].sum()
+        ,svod['Количество пациентов, умерших от U07.2, имеющих АГ'].sum()
+        ,svod['Количество пациентов, умерших от ВБП, имеющих АГ'].sum()
+    )
+
+    add_stroka (
+        'Сопутствующий ожирение'
+        ,svod['Количество пациентов, умерших от U07.1, имеющих ожирение'].sum()
+        ,svod['Количество пациентов, умерших от U07.2, имеющих ожирение'].sum()
+        ,svod['Количество пациентов, умерших от ВБП, имеющих ожирение'].sum()
+    )
+# ========== Расчёт районов ==================
+    districts = df['Район проживания'].unique()
+    zone = pd.DataFrame()
+    for area in districts:
+        k = len (zone)
+        zone.loc[k,'Район проживания'] = area
+        zone.loc[k,'Количество умерших'] = len(df.loc[df['Район проживания'] == area])
+        zone.loc[k,'из них: в первые сутки'] = len(df.loc[(df['Район проживания'] == area) \
+                & (df['Смерть наступила в первые сутки с момента госпитализации (да/нет)'].isin(['да']))])
+        zone.loc[k,'из них: возраст старше 60'] = len(df.loc[(df['Район проживания'] == area) \
+                & (df['Смерть наступила в первые сутки с момента госпитализации (да/нет)'].isin(['да'])) \
+                & (df['Возраст'] >= 60) ])
+
     file_svod= get_dir('temp') + f'\Умершие за неделю с {date_start} по {date_end} свод.xlsx'
     with pd.ExcelWriter(file_svod) as writer:
         svod.to_excel(writer,sheet_name='Свод по МО',index=False)
         sp.to_excel(writer,sheet_name='Проценты',index=False)
+        zone.to_excel(writer,sheet_name='Умершие по районам',index=False)
     try:
         shutil.copyfile(file_svod,new_path + r'\свод.xlsx')
     except:

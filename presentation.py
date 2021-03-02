@@ -35,23 +35,30 @@ def generate_pptx(date):
                     , d1.eror1 -  d2.eror2 as 'Динамика'           
             from (
         SELECT [Медицинская организация]
-              , [{type_error}] as 'eror1'
+              , isnull([{type_error}],0) as 'eror1'
           FROM [COVID].[robo].[cv_Zamechania_fr]
           where [дата отчета] = '{date_start_sql}' 
             and [Тип организации] = '{type_org}'  ) as d1
           full join (
         SELECT [Медицинская организация]
-              , [{type_error}] as 'eror2'
+              , isnull([{type_error}],0) as 'eror2'
           FROM [COVID].[robo].[cv_Zamechania_fr]
           where [дата отчета] = cast(getdate() as date)
           and [Тип организации] = '{type_org}' ) as d2
           on (d1.[Медицинская организация] = d2.[Медицинская организация])
           order by  d1.eror1 - d2.eror2  DESC , d1.eror1 DESC
         """
-        df = pd.read_sql(sql,conn)
-        
-        sum_err1 = df['eror1'].sum()
-        sum_err2 = df['eror2'].sum()
+        frame = pd.read_sql(sql,conn)
+        frame.fillna(0,inplace=True)
+        frame ['Динамика'] = pd.to_numeric(frame['Динамика'])
+        df = frame.loc[~frame['Динамика'].isin([0])]
+        if len(df) > 16:
+            df = df.head(8).append(df.tail(8))
+            df.index = range(len(df))
+        else:
+            df.index = range(len(df))
+        sum_err1 = frame['eror1'].sum()
+        sum_err2 = frame['eror2'].sum()
         title_only_slide_layout = prs.slide_layouts[5]
         slide = prs.slides.add_slide(title_only_slide_layout)
         shapes = slide.shapes
@@ -77,7 +84,7 @@ def generate_pptx(date):
         p.font.color.rgb = RGBColor(20,20,20)
         p.font.size = Pt(18)
         
-        rows = 17
+        rows = len(df) + 1
         cols = 5
         left = Inches(0.5)
         top = Inches(2)
@@ -102,7 +109,7 @@ def generate_pptx(date):
         table.cell(0, 2).text = date_start
         table.cell(0, 3).text = date_end
         table.cell(0, 4).text = 'Динамика'
-        for i in range(16):
+        for i in range(len(df)):
             table.cell(i+1, 0).text = str(i+1) 
             table.cell(i+1, 0).text_frame.paragraphs[0].font.size = Pt(12)
             table.cell(i+1, 1).text = df.at[i,'Медицинская организация']
