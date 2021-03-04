@@ -1,9 +1,9 @@
-import datetime
-import calendar
-import typing
+import datetime,calendar,typing
 
 from telebot import TeleBot
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+
+calendar.setfirstweekday(calendar.MONDAY)
 
 MONTHS = (
     "Январь",
@@ -19,7 +19,7 @@ MONTHS = (
     "Ноябрь",
     "Декабрь",
 )
-DAYS = ("Воск", "Пон", "Вт", "Ср", "Чет", "Пят", "Суб")
+DAYS = ( "Пон", "Вт", "Ср", "Чет", "Пят", "Суб","Воск")
 
 class CallbackData:
     """

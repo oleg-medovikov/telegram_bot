@@ -6,6 +6,7 @@ from sqlalchemy import *
 from sqlalchemy.orm import sessionmaker
 from collections import namedtuple
 from dateutil import relativedelta
+from collections import namedtuple
 
 con = create_engine(os.getenv('sql_engine'),convert_unicode=False)
 conn=pyodbc.connect(os.getenv('sql_conn'))
@@ -102,7 +103,16 @@ def sort_death_mg(a):
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
     wb.save(file)
-    return 'Сгенерирован файл' + file.split('\\')[-1]
+    wb= openpyxl.load_workbook(file)
+    ws = wb['Перевернутый свод']
+    rows = dataframe_to_rows(otchet.T,index=False, header=False)
+
+    for r_idx, row in enumerate(rows,1):
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    wb.save(file)
+
+    return 'Сгенерирован файл ' + file.split('\\')[-1]
 
 def medical_personal_sick(a):
     medPers = pd.read_sql('EXEC  med.p_StartMedicalPersonalSick',conn)
@@ -164,7 +174,7 @@ def svod_40_COVID_19(a):
         potreb.to_sql('vaccine_potrebnost',con,schema='robo',if_exists = 'append',index=False)
         new_name = str(date_otch) + '_40_COVID_19_cvod.xlsx'
 
-        shablon_path = os.getenv('path_help')
+        shablon_path = get_dir('help')
         shutil.copyfile(shablon_path + r'\40_COVID_19_svod.xlsx', shablon_path  + '\\' + new_name)
 
         wb= openpyxl.load_workbook( shablon_path  + '\\' + new_name)
@@ -175,13 +185,6 @@ def svod_40_COVID_19(a):
                 ws.cell(row=r_idx, column=c_idx, value=value)
         wb.save( shablon_path  + '\\' + new_name) 
 
-#        wb= openpyxl.load_workbook( shablon_path  + '\\' + new_name)
-#        ws = wb['ИТОГО']
-#        rows = dataframe_to_rows(itog,index=False, header=False)
-#        for r_idx, row in enumerate(rows,4):  
-#            for c_idx, value in enumerate(row, 1):
-#                ws.cell(row=r_idx, column=c_idx, value=value)
-#        wb.save( shablon_path  + '\\' + new_name) 
         return(shablon_path  + '\\' + new_name)
     else:
         raise my_exception('Пустая папка!')
@@ -214,7 +217,6 @@ def razlojit_death_week(a):
 
     for col in columns:
         df[col] = ''
-        
 
     MOs = df['Медицинская организация'].unique()
 
@@ -236,8 +238,16 @@ def razlojit_death_week(a):
             del otchet['Gid']
             file = directory+'Умершие за неделю' + '\умершие с '+ str(date_start) + ' по ' + str(date_end) + '.xlsx'
             print(MO+';'+file)
-            with pd.ExcelWriter(file) as writer:
-                otchet.to_excel(writer,index=False)
+#            with pd.ExcelWriter(file) as writer:
+#                otchet.to_excel(writer,index=False)
+            shutil.copyfile(get_dir('help') + r'\death_week_shablon.xlsx', file)
+            wb= openpyxl.load_workbook( file)
+            ws = wb['death_week']
+            rows = dataframe_to_rows(otchet,index=False, header=False)
+            for r_idx, row in enumerate(rows,2):
+                for c_idx, value in enumerate(row, 1):
+                    ws.cell(row=r_idx, column=c_idx, value=value)
+            wb.save(file) 
             k = len(report_1)
             report_1.loc[k,'Медицинская организация'] = MO
             report_1.loc[k,'файл'] = file
@@ -581,5 +591,98 @@ def sbor_death_week_svod(a):
         pass
     return file_svod
 
+def svod_unique_patient(date_global):
+    def search(fio,birthday):
+        for i in range(len(svod_list)):
+            if birthday == svod_list[i].birthday:
+                if fio ==  svod_list[i].fio:
+                    return  svod_list[i].number_row
+        return None
+    if date_global.weekday() in [1,2,3,4]:
+        date_svod = (date_global - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+        svod = pd.read_excel(get_dir('cov_list') + r'\Автосвод ' + date_svod +'.xlsx', shet_name = 'Свод',stype = str)
+        list_ = []
+        date_rpn = date_global.strftime("%d.%m.%Y")
+        file  = get_dir('covid') + r'\EPID.COVID.RPN\Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
+        file2 = get_dir('covid') + r'\EPID.COVID.RPN\Заболевшие covid в ФС за ' + date_rpn +'.xls'
+        try:
+            rpn = pd.read_excel(file,stype = str)
+        except:
+            rpn = pd.read_excel(file2,stype = str)
+        rpn['Дата отчета'] = date_rpn
 
+    if date_global.weekday() in [0]:
+        date_svod = (date_global - datetime.timedelta(days=3)).strftime("%Y-%m-%d")
+        svod = pd.read_excel(get_dir('cov_list') + r'\Автосвод ' + date_svod +'.xlsx', shet_name = 'Свод',stype = str)
+        list_ = []
+        for i in range(3):
+            date_rpn = (date_global - datetime.timedelta(days=i)).strftime("%d.%m.%Y")
+            file  = get_dir('cov_list') + r'\EPID.COVID.RPN\Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
+            file2 = get_dir('cov_list') + r'\EPID.COVID.RPN\Заболевшие covid в ФС за ' + date_rpn +'.xls'
+            try:
+               excel = pd.read_excel(file,stype = str)
+            except:
+               excel = pd.read_excel(file2,stype = str)
+            excel['Дата отчета'] = date_rpn
+            list_.append(excel)
+        rpn = pd.DataFrame
+        rpn = pd.concat(list_)
+        rpn['Unnamed: 0'] = range(len(rpn))
 
+    if date_global.weekday() in [0,1,2,3,4]:
+        svod_1 = svod
+        svod_1['дата рождения'] = pd.to_datetime(svod_1['дата рождения'],errors='coerce')
+        svod_1 = svod_1[svod_1['дата рождения'].notnull()]
+        svod_1.index = range(len(svod_1))
+
+        rpn_1 = rpn
+        rpn_1['Дата рождения '] = pd.to_datetime(rpn_1['Дата рождения '],errors='coerce')
+        rpn_1 = rpn_1[rpn_1['Дата рождения '].notnull()]
+        rpn_1.index = range(len(rpn_1))
+        rpn_1['Номер строки'] = range(len(rpn_1))
+        svod_list = []
+        rpn_list  = []
+        human = namedtuple('hunan',['fio','birthday','number_row','dubl_row'])
+        for i in range(len(svod_1)):
+            svod_list.append(human(
+                        svod_1.at[i,'Фио'].lower(),
+                        svod_1.at[i,'дата рождения'].strftime('%d.%m.%Y'),
+                        svod_1.at[i,'№п/п'],
+                        -1
+                        ))
+        for i in range(len(rpn_1)):
+            rpn_list.append(human(
+                        rpn_1.at[i,'фио'].lower(),
+                        rpn_1.at[i,'Дата рождения '].strftime('%d.%m.%Y'),
+                        rpn_1.at[i,'Unnamed: 0'],
+                        search(rpn_1.at[i,'фио'].lower(),rpn_1.at[i,'Дата рождения '].strftime('%d.%m.%Y'))
+                        ))
+        dubli = pd.DataFrame()
+
+        for human in rpn_list:
+            if human.dubl_row != None:
+                k = len(dubli)
+                dubli.loc[k,'Номер строки']         = human.number_row
+                dubli.loc[k,'Фио']                  = human.fio
+                dubli.loc[k,'Дата рождения']        = human.birthday
+                dubli.loc[k,'Номер строки в своде'] = human.dubl_row
+
+        for human in rpn_list:
+            if human.dubl_row != None:
+                svod.loc[svod['№п/п']==human.dubl_row,'Дата занесения в базу'] = \
+                    str(svod.loc[svod['№п/п'] == human.dubl_row,'Дата занесения в базу'].unique()[0] ) \
+                    + " , " \
+                    +  rpn.loc[rpn['Unnamed: 0'] == human.number_row, 'Дата отчета'].unique()[0]
+
+        for human in rpn_list:
+            if human.dubl_row != None:
+                rpn = rpn[rpn['Unnamed: 0']!=human.number_row]
+
+        file = get_dir('cov_list') + r'\Автосвод ' + date_global.strftime("%Y-%m-%d") +'.xlsx'
+        with pd.ExcelWriter(file) as writer:
+            svod.to_excel(writer,index=False, sheet_name='Свод')
+            rpn.to_excel(writer,index=False, sheet_name='РПН')
+            dubli.to_excel(writer,index=False, sheet_name='Дубли')
+        return 'Свод сделан!'
+    else:
+        return 'Не буду я работать по выходным дням!'

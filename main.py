@@ -4,6 +4,7 @@ import concurrent.futures
 
 # ======== мои модули 
 from procedure import check_robot,svod_40_COVID_19,sort_death_mg,medical_personal_sick,razlojit_death_week,sbor_death_week_files,sbor_death_week_svod
+from procedure import svod_unique_patient
 from reports import fr_deti,short_report,dead_not_mss,dynamics,mg_from_guber
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
 from loader import load_report_vp_and_cv,load_report_guber
@@ -180,8 +181,6 @@ schedule.every().day.at("07:05").do(regiz_razlogenie)
 t = threading.Thread(target=go, name="Расписание работ")
 t.start()
 
-
-
 # ========= Маленькая процедурка для определения периода суток
 
 def get_hello_start():
@@ -193,20 +192,6 @@ def get_hello_start():
          16  <= temp   < 22 :  'Добрый вечер, ',
          22  <= temp   < 24 :  'Доброй ночи, '
     }[True]
-
-def markup():
-    row = list()
-    markup = telebot.types.InlineKeyboardMarkup()
-    for i in range(28):
-        d = 28 - i
-        date = (datetime.datetime.today() - datetime.timedelta(days=d)).strftime("%Y-%m-%d")
-        day = (datetime.datetime.today() - datetime.timedelta(days=d)).strftime("%d")
-        button = telebot.types.InlineKeyboardButton(text=day, callback_data=date)
-        row.append(button)
-        if i % 7 == 6:
-            markup.add(*row)
-            row.clear()
-    return markup
 
 # ========== Главная процедура бота ===============
 @bot.message_handler(content_types=['text'])
@@ -225,7 +210,6 @@ def get_text_messages(message):
                                     name=calendar_1.prefix,
                                     year=datetime.datetime.now().year,
                                     month=datetime.datetime.now().month ) )
-
                     @bot.callback_query_handler(func=lambda call: call.data.startswith(calendar_1.prefix))
                     def callback_inline(call: CallbackQuery):
                         name, action, year, month, day = call.data.split(calendar_1.sep)
@@ -236,14 +220,14 @@ def get_text_messages(message):
                             bot.send_message(chat_id=call.from_user.id,
                                             text=f"Вы выбрали {date.strftime('%d.%m.%Y')}",
                                             reply_markup=ReplyKeyboardRemove(),)
+                            bot.send_message(call.from_user.id,commands[command_id].procedure_name)
                             result = create_tred(commands[command_id].procedure_name,date)
-                            bot.send_message(message.from_user.id,result[1])
+                            bot.send_message(call.from_user.id,result[1])
+                            if call.from_user.id != user.master():
+                                bot.send_message(user.master(), 'Хозяин, для пользователя ' + user.name(call.from_user.id) + ' было выполнено задание ' + str(command_id))
                         elif action == "CANCEL":
                             bot.send_message(chat_id=call.from_user.id,
                                     text="Вы решили ничего не выбирать",reply_markup=ReplyKeyboardRemove(),)
-                    
-#                   result = create_tred(commands[command_id].procedure_name,call.data)
-#                   bot.send_message(message.from_user.id,result[1])
                 else:
                     result = create_tred(commands[command_id].procedure_name,commands[command_id].procedure_arg)
                     if result[0]:
