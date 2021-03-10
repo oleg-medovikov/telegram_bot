@@ -617,8 +617,8 @@ def svod_unique_patient(date_global):
         list_ = []
         for i in range(3):
             date_rpn = (date_global - datetime.timedelta(days=i)).strftime("%d.%m.%Y")
-            file  = get_dir('cov_list') + r'\EPID.COVID.RPN\Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
-            file2 = get_dir('cov_list') + r'\EPID.COVID.RPN\Заболевшие covid в ФС за ' + date_rpn +'.xls'
+            file  = get_dir('covid') + r'\EPID.COVID.RPN\Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
+            file2 = get_dir('covid') + r'\EPID.COVID.RPN\Заболевшие covid в ФС за ' + date_rpn +'.xls'
             try:
                excel = pd.read_excel(file,stype = str)
             except:
