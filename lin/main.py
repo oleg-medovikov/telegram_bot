@@ -117,6 +117,7 @@ class user:
                 return user.user_id
 command.get_commands()
 user.get_users()
+
 def get_group_user_id(group_name):
     list_ = []
     for user in users:

@@ -1,7 +1,6 @@
-import datetime,glob,os,shutil,openpyxl,sqlalchemy
+import datetime,glob,os,shutil,sqlalchemy,openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
-#from loader import get_dir,sql_execute
 from collections import namedtuple
 from dateutil import relativedelta
 from collections import namedtuple
@@ -10,8 +9,6 @@ server  = os.getenv('server')
 user    = os.getenv('mysqluser')
 passwd  = os.getenv('mypassword')
 dbase   = os.getenv('db')
-
-#conn = pymssql.connect(server,user,passwd,dbase)
 
 eng = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}")
 con = eng.connect()
@@ -145,15 +142,15 @@ def sort_death_mg(a):
     return 'Сгенерирован файл ' + file.split('/')[-1]
 
 def medical_personal_sick(a):
-    medPers = pd.read_sql('EXEC  med.p_StartMedicalPersonalSick',conn)
+    medPers = pd.read_sql('EXEC  med.p_StartMedicalPersonalSick',con)
     date = datetime.datetime.today().strftime("%Y_%m_%d_%H_%M")
-    file = get_dir('med_sick') + r'\Заболевшие медики '+ date +'.xlsx'
+    file = os.getenv('med_sick') + '/Заболевшие медики '+ date +'.xlsx'
     with pd.ExcelWriter(file) as writer:
         medPers.to_excel(writer,sheet_name='meducal',index=False)
     return 'Создан файл по заболевшим сотрудникам'
 
 def svod_40_COVID_19(a):
-    path = get_dir('40_covid_19') + r'\[!~]*.xls'
+    path = os.getenv('covid_40_19') + '/[!~]*.xls'
     list_=[]
     usecolumns = 'A,B,C,D,F,G,I,J,L,M,O,P,R,S,U,V,X,Y,AA,AB,AC,AD,AF,AG,AI,AJ,AK'
     date_otch = None
@@ -161,7 +158,7 @@ def svod_40_COVID_19(a):
         mo = pd.read_excel(xls, header=2,usecols=usecolumns,sheet_name='Для заполнения')
         mo = mo[mo[2].notnull() & (~mo[2].isin(['Пункт вакцинации'])) ]
         if date_otch is None:
-            date_otch = pd.to_datetime(xls.split('\\')[-1].split('_Основной')[0][-1-9:],format="%d.%m.%Y").date()
+            date_otch = pd.to_datetime(xls.split('/')[-1].split('_Основной')[0][-1-9:],format="%d.%m.%Y").date()
         if len(mo.index) > 1:
             for i in mo.index:
                 if i:
@@ -170,7 +167,6 @@ def svod_40_COVID_19(a):
                     mo.loc[i,2] = str(mo.at[i,2].split(' ',1)[1])
                 else:
                     mo.loc[i,0] = 'Медицинская организация'
-
             list_.append(mo)
 
     if len(list_):
@@ -178,7 +174,7 @@ def svod_40_COVID_19(a):
 
         cols = list(df.columns.values)
         cols = cols[-1:] + cols[:-1]
-        df =df[cols]
+        df = df[cols]
         df.index=range(1,len(df)+1)
 
         itog = pd.DataFrame()
@@ -200,22 +196,23 @@ def svod_40_COVID_19(a):
             potreb.loc[k,'Potrebnost_v1'] = df.iat[i,21]
             potreb.loc[k,'Potrebnost_v2'] = df.iat[i,23]
 
-        sql_execute(f"delete from robo.vaccine_potrebnost where cast([Date] as date) = '{str(date_otch)}' select 1")
+        pd.read_sql(f"delete from robo.vaccine_potrebnost where cast([Date] as date) = '{str(date_otch)}' select 1",con)
         potreb.to_sql('vaccine_potrebnost',con,schema='robo',if_exists = 'append',index=False)
+
         new_name = str(date_otch) + '_40_COVID_19_cvod.xlsx'
+        shablon_path = os.getenv('help')
 
-        shablon_path = get_dir('help')
-        shutil.copyfile(shablon_path + r'\40_COVID_19_svod.xlsx', shablon_path  + '\\' + new_name)
+        shutil.copyfile(shablon_path + '/40_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
 
-        wb= openpyxl.load_workbook( shablon_path  + '\\' + new_name)
+        wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
         ws = wb['Пунты вакцинации']
         rows = dataframe_to_rows(df,index=False, header=False)
         for r_idx, row in enumerate(rows,5):  
             for c_idx, value in enumerate(row, 1):
                 ws.cell(row=r_idx, column=c_idx, value=value)
-        wb.save( shablon_path  + '\\' + new_name) 
+        wb.save( shablon_path  + '/' + new_name) 
 
-        return(shablon_path  + '\\' + new_name)
+        return(shablon_path  + '/' + new_name)
     else:
         raise my_exception('Пустая папка!')
 
@@ -234,7 +231,7 @@ def razlojit_death_week(a):
            or [Посмертный диагноз] like 'J1[2-8]%' ) 
       and [Субъект РФ] = 'г. Санкт-Петербург'    
     """
-    df = pd.read_sql(sql,conn)
+    df = pd.read_sql(sql,con)
     columns = ['Район проживания'
                ,'Дата начала заболевания','Факт обращения за медицинской помощью на амбулаторном этапе (да/нет)'
                ,'Дата обращения за медицинской помощью  на амбулаторном этапе','Факт выполнения КТ на амбулаторном этапе (да/нет)'
@@ -250,15 +247,14 @@ def razlojit_death_week(a):
 
     MOs = df['Медицинская организация'].unique()
 
-    mo_directory = pd.read_sql('SELECT [Наименование в ФР], directory from robo.directory', conn)
+    mo_directory = pd.read_sql('SELECT [Наименование в ФР], [user] from robo.directory', con)
 
     report_1 = pd.DataFrame()
     for MO in MOs:
         try:
-            directory = mo_directory.loc[mo_directory['Наименование в ФР'] == MO, 'directory'].unique()[0]
+            directory = os.getenv('covid') + mo_directory.loc[mo_directory['Наименование в ФР'] == MO, 'user'].unique()[0]
         except:
             print('Не найдена организация', MO)
-            
         else:
             try:
                 os.mkdir(directory+'Умершие за неделю')
@@ -266,11 +262,11 @@ def razlojit_death_week(a):
                 pass
             otchet = df[df['Медицинская организация'] == MO]
             del otchet['Gid']
-            file = directory+'Умершие за неделю' + '\умершие с '+ str(date_start) + ' по ' + str(date_end) + '.xlsx'
+            file = directory+'Умершие за неделю' + '/умершие с '+ str(date_start) + ' по ' + str(date_end) + '.xlsx'
             print(MO+';'+file)
 #            with pd.ExcelWriter(file) as writer:
 #                otchet.to_excel(writer,index=False)
-            shutil.copyfile(get_dir('help') + r'\death_week_shablon.xlsx', file)
+            shutil.copyfile(os.getenv('help') + '/death_week_shablon.xlsx', file)
             wb= openpyxl.load_workbook( file)
             ws = wb['death_week']
             rows = dataframe_to_rows(otchet,index=False, header=False)
@@ -282,7 +278,7 @@ def razlojit_death_week(a):
             report_1.loc[k,'Медицинская организация'] = MO
             report_1.loc[k,'файл'] = file
 
-    report_file = get_dir('temp') + r'\разложенные файлы.xlsx'
+    report_file = os.getenv('temp') + '/разложенные файлы.xlsx'
     with pd.ExcelWriter(report_file) as writer:
         report_1.to_excel(writer,index=False)
 
@@ -298,12 +294,12 @@ def razlojit_death_week(a):
     )
     return report_file
 
-def sbor_death_week_files(a):
+def sbor_death_week_files(a): 
     date_start = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-2,weekday=3)).date()
     date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=3)).date()
 
-    path = get_dir('covid') + f'\EPID.COVID.*\EPID.COVID.*\Умершие за неделю\*{date_start} по {date_end}*.xlsx'
-    new_path = get_dir('death_week') + f'\с {date_start} по {date_end}'
+    path = os.getenv('covid') + f'/EPID.COVID.*/EPID.COVID.*/Умершие за неделю/*{date_start} по {date_end}*.xlsx'
+    new_path = os.getenv('death_week') + f'/с {date_start} по {date_end}'
 
     try:
         os.mkdir(new_path)
@@ -311,7 +307,7 @@ def sbor_death_week_files(a):
         pass
     
     for file in glob.glob(path):
-       shutil.copyfile(file, new_path +'\\'+ file.split('\\')[-1 -2] +' '+ file.split('\\')[-1] )
+       shutil.copyfile(file, new_path +'/'+ file.split('/')[-1 -2] +' '+ file.split('/')[-1] )
 
     return f'Файлы с {date_start} по {date_end} собраны в папку'
 
@@ -319,8 +315,8 @@ def sbor_death_week_svod(a):
     date_start = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-2,weekday=3)).date()
     date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=3)).date()
 
-    new_path = get_dir('death_week') + f'\с {date_start} по {date_end}'
-    path= get_dir('death_week') + f'\с {date_start} по {date_end}\[!~]*[!свод].xlsx'
+    new_path = os.getenv('death_week') + f'/с {date_start} по {date_end}'
+    path= os.getenv('death_week') + f'/с {date_start} по {date_end}\[!~]*[!свод].xlsx'
     df = pd.DataFrame()
     list_=[]
     for excel in glob.glob(path):
@@ -610,13 +606,13 @@ def sbor_death_week_svod(a):
                 & (df['Смерть наступила в первые сутки с момента госпитализации (да/нет)'].isin(['да'])) \
                 & (df['Возраст'] >= 60) ])
 
-    file_svod= get_dir('temp') + f'\Умершие за неделю с {date_start} по {date_end} свод.xlsx'
+    file_svod= os.getenv('temp') + f'/Умершие за неделю с {date_start} по {date_end} свод.xlsx'
     with pd.ExcelWriter(file_svod) as writer:
         svod.to_excel(writer,sheet_name='Свод по МО',index=False)
         sp.to_excel(writer,sheet_name='Проценты',index=False)
         zone.to_excel(writer,sheet_name='Умершие по районам',index=False)
     try:
-        shutil.copyfile(file_svod,new_path + r'\свод.xlsx')
+        shutil.copyfile(file_svod,new_path + '/свод.xlsx')
     except:
         pass
     return file_svod
@@ -630,11 +626,11 @@ def svod_unique_patient(date_global):
         return None
     if date_global.weekday() in [1,2,3,4]:
         date_svod = (date_global - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-        svod = pd.read_excel(get_dir('cov_list') + r'\Автосвод ' + date_svod +'.xlsx', shet_name = 'Свод',stype = str)
+        svod = pd.read_excel(os.getenv('cov_list') + '/Автосвод ' + date_svod +'.xlsx', shet_name = 'Свод',stype = str)
         list_ = []
         date_rpn = date_global.strftime("%d.%m.%Y")
-        file  = get_dir('covid') + r'\EPID.COVID.RPN\Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
-        file2 = get_dir('covid') + r'\EPID.COVID.RPN\Заболевшие covid в ФС за ' + date_rpn +'.xls'
+        file  = os.getenv('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
+        file2 = os.getenv('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xls'
         try:
             rpn = pd.read_excel(file,stype = str)
         except:
@@ -643,12 +639,12 @@ def svod_unique_patient(date_global):
 
     if date_global.weekday() in [0]:
         date_svod = (date_global - datetime.timedelta(days=3)).strftime("%Y-%m-%d")
-        svod = pd.read_excel(get_dir('cov_list') + r'\Автосвод ' + date_svod +'.xlsx', shet_name = 'Свод',stype = str)
+        svod = pd.read_excel(os.getenv('cov_list') + '/Автосвод ' + date_svod +'.xlsx', shet_name = 'Свод',stype = str)
         list_ = []
         for i in range(3):
             date_rpn = (date_global - datetime.timedelta(days=i)).strftime("%d.%m.%Y")
-            file  = get_dir('cov_list') + r'\EPID.COVID.RPN\Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
-            file2 = get_dir('cov_list') + r'\EPID.COVID.RPN\Заболевшие covid в ФС за ' + date_rpn +'.xls'
+            file  = os.getenv('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
+            file2 = os.getenv('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xls'
             try:
                excel = pd.read_excel(file,stype = str)
             except:
@@ -708,7 +704,7 @@ def svod_unique_patient(date_global):
             if human.dubl_row != None:
                 rpn = rpn[rpn['Unnamed: 0']!=human.number_row]
 
-        file = get_dir('cov_list') + r'\Автосвод ' + date_global.strftime("%Y-%m-%d") +'.xlsx'
+        file = os.getenv('cov_list') + '/Автосвод ' + date_global.strftime("%Y-%m-%d") +'.xlsx'
         with pd.ExcelWriter(file) as writer:
             svod.to_excel(writer,index=False, sheet_name='Свод')
             rpn.to_excel(writer,index=False, sheet_name='РПН')

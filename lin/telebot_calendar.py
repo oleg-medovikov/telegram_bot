@@ -117,7 +117,6 @@ class CallbackData:
 
         return True
 
-
 def create_calendar(
     name: str = "calendar", year: int = None, month: int = None,
 ) -> InlineKeyboardMarkup:
@@ -190,7 +189,6 @@ def create_calendar(
 
     return keyboard
 
-
 def create_months_calendar(
     name: str = "calendar", year: int = None
 ) -> InlineKeyboardMarkup:
@@ -220,7 +218,6 @@ def create_months_calendar(
         )
 
     return keyboard
-
 
 def calendar_query_handler(
     bot: TeleBot,
