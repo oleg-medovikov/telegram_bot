@@ -123,7 +123,7 @@ def medical_personal_sick(a):
     return 'Создан файл по заболевшим сотрудникам'
 
 def svod_40_COVID_19(a):
-    path = get_dir('40_covid_19') + r'\[!~]*.xls'
+    path = get_dir('40_covid_19') + r'\[!~]*.xlsx'
     list_=[]
     usecolumns = 'A,B,C,D,F,G,I,J,L,M,O,P,R,S,U,V,X,Y,AA,AB,AC,AD,AF,AG,AI,AJ,AK'
     date_otch = None
