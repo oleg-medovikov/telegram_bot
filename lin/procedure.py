@@ -6,11 +6,11 @@ from dateutil import relativedelta
 from collections import namedtuple
 
 server  = os.getenv('server')
-user    = os.getenv('mysqluser')
+user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser')
 passwd  = os.getenv('mypassword')
 dbase   = os.getenv('db')
 
-eng = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}")
+eng = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}", pool_pre_ping=True)
 con = eng.connect()
 
 class my_exception(Exception):
