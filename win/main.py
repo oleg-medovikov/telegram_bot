@@ -6,7 +6,7 @@ import concurrent.futures
 from procedure import check_robot,svod_40_COVID_19,sort_death_mg,medical_personal_sick,razlojit_death_week,sbor_death_week_files,sbor_death_week_svod
 from procedure import svod_unique_patient
 from reports import fr_deti,short_report,dead_not_mss,dynamics,mg_from_guber
-from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
+from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS
 from loader import load_report_vp_and_cv,load_report_guber
 from sending import send_all,send_me,pismo_po_vode
 from presentation import generate_pptx

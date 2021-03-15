@@ -9,7 +9,7 @@ conn = pyodbc.connect(os.getenv('sql_conn'))
 con = create_engine(os.getenv('sql_engine'),convert_unicode=False)
 
 def get_dir(name):
-    sql = f"SELECT Directory FROM [robo].[directions_for_bot] where NameDir = '{name}'"
+    sql = f"SELECT Directory FROM [robo].[directions_for_bot] where NameDir = '{name}' and [linux] = 'False'"
     df = pd.read_sql(sql,con)
     return df.iloc[0,0] 
 
