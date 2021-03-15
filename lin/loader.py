@@ -20,7 +20,7 @@ class my_except(Exception):
     pass
 
 def get_dir(name):
-    sql = f"SELECT Directory FROM [robo].[directions_for_bot] where NameDir = '{name}'"
+    sql = f"SELECT Directory FROM [robo].[directions_for_bot] where NameDir = '{name}' and [linux] = 'True'"
     df = pd.read_sql(sql,con)
     return df.iloc[0,0] 
 
@@ -35,15 +35,15 @@ def check_table(name):
     return pd.read_sql(sql,conn).iat[0,0]
 
 def search_file(category):
-    path = os.getenv('path_robot') + '\\' + datetime.datetime.now().strftime("%Y_%m_%d")
+    path = get_dir('path_robot') + '/' + datetime.datetime.now().strftime("%Y_%m_%d")
     if category == 'fr':
-        pattern = path + r'\Федеральный регистр лиц, больных *[!ИАЦ].xlsx'
+        pattern = path + '/Федеральный регистр лиц, больных *[!ИАЦ].xlsx'
     if category == 'fr_death':
-        pattern = path + r'\*Умершие пациенты*.xlsx'
+        pattern = path + '/*Умершие пациенты*.xlsx'
     if category == 'fr_lab':
-        pattern = path + r'\*Отчёт по лабораторным*.xlsx'
+        pattern = path + '/*Отчёт по лабораторным*.xlsx'
     if category == 'UMSRS':
-        pattern = path + r'\*УМСРС*.xlsx'
+        pattern = path + '/*УМСРС*.xlsx'
     file_excel = glob.glob(pattern)
     file_csv = glob.glob(pattern[:-4] + 'csv')
     if len(file_csv):
@@ -122,13 +122,13 @@ def slojit_fr(a):
         with pd.ExcelWriter(new_iach) as writer:
             df.to_excel(writer,index=False)
         return 1
-    pathFolderFedRegParts = os.getenv('path_robot') +r'\_ФР_по_частям'
+    pathFolderFedRegParts = get_dir('path_robot') + '/_ФР_по_частям'
     date = datetime.datetime.today().strftime("%Y_%m_%d")
     _list = []
     list_numbers = ['раз', 'двас', 'трис']
     pool = ThreadPool(processes=2)
     i = 0
-    for excel in glob.glob(pathFolderFedRegParts + r'\Федеральный регистр*.xlsx'):
+    for excel in glob.glob(pathFolderFedRegParts + '/Федеральный регистр*.xlsx'):
         thread = pool.apply_async(read_part_df,(excel,i)).get()
         _list.append(thread)
         i+=1
@@ -139,8 +139,8 @@ def slojit_fr(a):
     svod = svod[svod["Дата создания РЗ"].notnull()] 
     svod["п/н"] = range(1, len(svod)+1)
     
-    new_fedreg = pathFolderFedRegParts + r'\Федеральный регистр лиц, больных COVID-19 - ' + date + '.xlsx'
-    new_iach = pathFolderFedRegParts + r'\Федеральный регистр лиц, больных COVID-19 - ' + date + '_ИАЦ.xlsx'
+    new_fedreg = pathFolderFedRegParts + '/Федеральный регистр лиц, больных COVID-19 - ' + date + '.xlsx'
+    new_iach   = pathFolderFedRegParts + '/Федеральный регистр лиц, больных COVID-19 - ' + date + '_ИАЦ.xlsx'
 #    shutil.copyfile(pathFolderFedRegParts + r'\ФР.xlsx', new_fedreg)
 #    shutil.copyfile(pathFolderFedRegParts + r'\ФР_ИАЦ.xlsx', new_iach)
 #    wb= openpyxl.load_workbook(new_fedreg)
@@ -258,7 +258,7 @@ def load_fr(a):
     send_all('Я проснулся и хочу грузить фр!')
     search = search_file('fr')
     if search[0] and search[1]:
-        send_all('Вот нашёлся такой файлик:\n' + search[2].split('\\')[-1])
+        send_all('Вот нашёлся такой файлик:\n' + search[2].split('/')[-1])
         send_all('Сейчас я его проверю...')
         check = check_file(search[2],'fr')
         if check[0]:
@@ -275,7 +275,7 @@ def load_fr(a):
         if search[0]:
             send_all('Нее... я не хочу работать с xlsx, щас конвертирую!')
             file_csv = excel_to_csv(search[2]) 
-            send_all('Результат:\n' + file_csv.split('\\')[-1])
+            send_all('Результат:\n' + file_csv.split('/')[-1])
             check = check_file(file_csv,'fr')
             if check[0]:
                 send_all('Файл прошёл проверку, начинаю грузить в память')
@@ -291,8 +291,8 @@ def load_fr(a):
             return 0
     return 1
 
-def load_fr_death(a):
-    def fr_death_to_sql(df):
+def load_fr_death(a): 
+    def fr_death_to_sq l(df):
         send_all('Обрезаю слишком длинные строки')
         for column in df.columns:
             for i in range(len(df)):
@@ -314,7 +314,7 @@ def load_fr_death(a):
     send_all('Пришло время спокойных')
     search = search_file('fr_death')
     if search[0] and search[1]:
-        send_all('Найден файл:\n' + search[2].split('\\')[-1])
+        send_all('Найден файл:\n' + search[2].split('/')[-1])
         send_all('Сейчас мы его рассмотрим...')
         check = check_file(search[2],'fr_death')
         if check[0]:
@@ -330,7 +330,7 @@ def load_fr_death(a):
         if search[0]:
             send_all('Давайте всё-таки работать с csv, конвертирую')
             file_csv = excel_to_csv(search[2]) 
-            send_all('Результат:\n' + file_csv.split('\\')[-1])
+            send_all('Результат:\n' + file_csv.split('/')[-1])
             check = check_file(file_csv,'fr_death')
             if check[0]:
                 send_all('Теперь можно и загрузить в память')
@@ -345,8 +345,8 @@ def load_fr_death(a):
             send_all('Не найден файл умерших')
         return 0
 
-def load_fr_lab(a):
-    def fr_lab_to_sql(df):
+def load_fr_lab(a): 
+    def fr_lab_to_sq l(df):
         send_all('Ну, тут надо переименовать колонки и можно грузить')
         i = 1
         for column in df.columns:
@@ -369,7 +369,7 @@ def load_fr_lab(a):
     send_all('Посмотрим на файлик лабораторных исследований')
     search = search_file('fr_lab')
     if search[0] and search[1]:
-        send_all('Найден файл:\n' + search[2].split('\\')[-1])
+        send_all('Найден файл:\n' + search[2].split('/')[-1])
         send_all('Сейчас мы его рассмотрим...')
         check = check_file(search[2],'fr_lab')
         if check[0]:
@@ -385,7 +385,7 @@ def load_fr_lab(a):
         if search[0]:
             send_all('Ну, это точно нужно перевести в csv!')
             file_csv = excel_to_csv(search[2]) 
-            send_all('Результат:\n' + file_csv.split('\\')[-1])
+            send_all('Результат:\n' + file_csv.split('/')[-1])
             check = check_file(file_csv,'fr_lab')
             if check[0]:
                 send_all('Теперь можно и загрузить в память')
@@ -400,8 +400,8 @@ def load_fr_lab(a):
             send_all('Не найден файл лаборатории')
         return 0
 
-def load_UMSRS(a):
-    def UMSRS_to_sql(df):
+def load_UMSRS(a): 
+    def UMSRS_to_sq l(df):
         df.to_sql('cv_input_umsrs_2',con,schema='dbo',if_exists='append',index = False)
         send_all('Данные загружены в input_umsrs_2, запускаю процедурки')
         sql_execute("""
@@ -417,7 +417,7 @@ def load_UMSRS(a):
     send_all('А теперь будем грузить УМСРС')
     search = search_file('UMSRS')
     if search[0] and search[1]:
-        send_all('файл уже сконвертирован:\n' + search[2].split('\\')[-1])
+        send_all('файл уже сконвертирован:\n' + search[2].split('/')[-1])
         send_all('Посмотрим что внутри...')
         check = check_file(search[2],'UMSRS')
         if check[0]:
@@ -433,7 +433,7 @@ def load_UMSRS(a):
         if search[0]:
             send_all('Нее... я не хочу работать с xlsx, щас конвертирую!')
             file_csv = excel_to_csv(search[2]) 
-            send_all('Результат:\n' + file_csv.split('\\')[-1])
+            send_all('Результат:\n' + file_csv.split('/')[-1])
             check = check_file(file_csv,'UMSRS')
             if check[0]:
                 send_all('Файл прошёл проверку, начинаю грузить в память')
@@ -448,8 +448,8 @@ def load_UMSRS(a):
             send_all('Но я не нашёл файла УМСРС! (((')
             return 0 
 
-def load_report_vp_and_cv(a):
-    def open_save(file):
+def load_report_vp_and_cv(a): 
+    def open_save(file): 
         xcl = win32com.client.Dispatch("Excel.Application")
         wb = xcl.Workbooks.Open(file)
         xcl.DisplayAlerts = False
@@ -461,18 +461,18 @@ def load_report_vp_and_cv(a):
         df = pd.read_excel(file, sheet_name= 'Данные1', header =6, usecols='C:AH', nrows = 1)
         df = df.fillna(0)
         df['nameMO'] = nameMO
-        os.replace(file, path + r'\\' + os.path.basename(file))
-        return df
-    def check_data_table(name):
+        os.replace(file, path + '/' + os.path.basename(file))
+        return df 
+    def check_data _table(name):
         sql=f"""
             IF (EXISTS (SELECT * FROM {name})) 
                 SELECT 1 ELSE SELECT 0 """
         return pd.read_sql(sql,conn).iat[0,0]
     send_all('Продготовка к отчету Мониторинг ВП и COVID')
-    files = glob.glob(get_dir('VP_CV') + r'\из_почты\[!~$]*.xls*')
+    files = glob.glob(get_dir('VP_CV') + '/из_почты/[!~$]*.xls*')
     if len(files) == 0:
         raise my_except('Папка пустая!')
-    path = get_dir('VP_CV') + r'\\' + datetime.datetime.now().strftime("%Y%m%d")
+    path = get_dir('VP_CV') + '/' + datetime.datetime.now().strftime("%Y%m%d")
     if os.path.exists(path):
         pass
     else:
@@ -490,7 +490,7 @@ def load_report_vp_and_cv(a):
             try:
                 excel = load_file_mo(file)
             except:
-                send_all('не обработался следующий файл \n'+ file.split('\\')[-1])
+                send_all('не обработался следующий файл \n'+ file.split('/')[-1])
             else:
                 list_.append(excel)
         else:
@@ -511,8 +511,8 @@ def load_report_vp_and_cv(a):
         df = pd.read_sql('SELECT * FROM mon_vp.v_GrandReport' ,conn)
         df1 = df.loc[df.typeMO==1].sort_values(["numSort"]).drop('typeMO',1).drop('numSort',1)
         df2 = df.loc[df.typeMO==2].sort_values(["numSort"]).drop('typeMO',1).drop('numSort',1)
-        shablon = get_dir('help') + r'\СводОбщий_' + (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%d %m %Y") +'.xlsx'
-        shutil.copyfile(get_dir('help') + r'\шаблон Мониторинг ВП.xlsx', shablon)
+        shablon = get_dir('help') + '/СводОбщий_' + (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%d %m %Y") +'.xlsx'
+        shutil.copyfile(get_dir('help') + '/шаблон Мониторинг ВП.xlsx', shablon)
 
         wb= openpyxl.load_workbook(shablon)
         ws= wb['Данные']
@@ -555,7 +555,7 @@ def load_report_vp_and_cv(a):
 
         wb.save(shablon)
         try:
-            shutil.copyfile(shablon, get_dir('VP_CV') + '\\' + shablon.split('\\')[-1])
+            shutil.copyfile(shablon, get_dir('VP_CV') + '/' + shablon.split('/')[-1])
         except PermissionError:
             raise my_except('Закройте файлик! Не могу скопировать')
         return shablon
@@ -596,7 +596,7 @@ def load_report_guber(a):
                 ws.cell(row=r_idx, column=c_idx, value=value)
 
     directory = get_dir('MG')
-    path = directory + '\\' + datetime.datetime.now().strftime("%Y%m%d")
+    path = directory + '/' + datetime.datetime.now().strftime("%Y%m%d")
     try:
         os.mkdir(path)
     except:
@@ -608,18 +608,18 @@ def load_report_guber(a):
     header_ivl = ['idRows','nameMO','ivl_Invaz_Count_All','ivl_Invaz_Count_Busy','ivl_Invaz_Count_Free_All','ivl_Invaz_Count_Faulty','ivl_NeInvaz_Count_All','ivl_NeInvaz_Count_Busy','ivl_NeInvaz_Count_Free_All','ivl_NeInvaz_Count_Faulty','ivl_Pacient_Count_All','ivl_Pacient_Count_Covid']
     header_bunk = ['idRows','nameMO','bn_Count_All','bn_Count_Ill_All','bn_Count_Ill_Faulty','bn_Count_Ill_Free']
 
-    for file in glob.glob(directory + r'\из_почты\[!~$]*.xls*'):
+    for file in glob.glob(directory + '/из_почты/[!~$]*.xls*'):
         load_file(file, 'Cвод_ОРВИ_и_Пневм', 'A:S', 4, header_vp, 'ReportGubernator_Pnevm')
         load_file(file, 'Свод_COVID', 'A:S', 4, header_cv, 'ReportGubernator_Covid')
         load_file(file, 'Свод_ИВЛ', 'A:L', 3, header_ivl, 'ReportGubernator_Ivl')
         load_file(file, 'Свод_Койки', 'A:F', 2, header_bunk, 'ReportGubernator_Bunk')
-        os.replace(file, path + r'\\' + os.path.basename(file))
+        os.replace(file, path + '/' + os.path.basename(file))
 
     if check_data_tab('mon_vp.v_DebtorsReportGubernator'):
         return short_report('SELECT * FROM mon_vp.v_DebtorsReportGubernator')
     else:
-        file1 = get_dir('help') + r'\09_стационары_для_Справки_Губернатора.xlsx'
-        file2 = get_dir('help') + r'\09_стационары_для_Справки_Губернатора2.xlsx'
+        file1 = get_dir('help') + '/09_стационары_для_Справки_Губернатора.xlsx'
+        file2 = get_dir('help') + '/09_стационары_для_Справки_Губернатора2.xlsx'
         df_covid = pd.read_sql('SELECT * FROM [mon_vp].[v_GrandReport_Guber_Covid]' ,con)
         df_covid = df_covid.sort_values(["idRows"])
         df1_covid = df_covid.drop('Установлены диагнозы: вчера',1).drop('Установлены диагнозы: должно быть',1).drop('Установлены диагнозы: фактически',1).drop('на стационарном лечении: вчерашние данные',1).drop('на стационарном лечении: должно быть',1).drop('на стационарном лечении: фактически',1)
@@ -651,7 +651,7 @@ def load_report_guber(a):
             UpdateShablonFile(wb, 'Отчет_СЮС', df1_sys, 9)
             UpdateShablonFile(wb, 'Отчет_СЮС', df2_sys, 73)
         
-        new_file1 = directory + r'\09_стационары для Справки Губернатора_'+ datetime.datetime.now().strftime("%d.%m.%Y_%H_%M") + '.xlsx'
+        new_file1 = directory + '/09_стационары для Справки Губернатора_'+ datetime.datetime.now().strftime("%d.%m.%Y_%H_%M") + '.xlsx'
         wb.save(new_file1)
 
         wb1 = openpyxl.load_workbook(file2)
@@ -662,9 +662,10 @@ def load_report_guber(a):
         ws = wb1['Свод']
         ws['Q2'] = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime('%d.%m.%Y')
                 
-        new_file2 = directory + r'\09_стационары для Справки Губернатора_'+ datetime.datetime.now().strftime("%d.%m.%Y") + '.xlsx'
+        new_file2 = directory + '/09_стационары для Справки Губернатора_'+ datetime.datetime.now().strftime("%d.%m.%Y") + '.xlsx'
         wb1.save(new_file2)
         
-        shutil.copyfile(new_file1,get_dir('temp') + '\\' + new_file1.split('\\')[-1])
-        shutil.copyfile(new_file2,get_dir('temp') + '\\' + new_file2.split('\\')[-1])
-        return  get_dir('temp') + '\\' +  new_file1.split('\\')[-1]+ ';' + get_dir('temp') + '\\' +  new_file2.split('\\')[-1]
+        shutil.copyfile(new_file1,get_dir('temp') + '/' + new_file1.split('/')[-1])
+        shutil.copyfile(new_file2,get_dir('temp') + '/' + new_file2.split('/')[-1])
+        return  get_dir('temp') + '/' +  new_file1.split('/')[-1]+ ';' + get_dir('temp') + '/' +  new_file2.split('/')[-1]
+
