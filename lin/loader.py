@@ -455,6 +455,7 @@ def load_report_vp_and_cv(a):
         xcl.DisplayAlerts = False
         wb.SaveAs(file)
         xcl.Quit()
+        del xcl
     def load_file_mo(file):
         nameMO = pd.read_excel(file, sheet_name= 'Титул', header =3, usecols='H', nrows = 1).iloc[0,0]
         df = pd.read_excel(file, sheet_name= 'Данные1', header =6, usecols='C:AH', nrows = 1)
