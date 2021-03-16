@@ -466,7 +466,7 @@ def load_report_vp_and_cv(a):
             IF (EXISTS (SELECT * FROM {name})) 
                 SELECT 1 ELSE SELECT 0 """
         return pd.read_sql(sql,con).iat[0,0]
-    send_all('Продготовка к отчету Мониторинг ВП и COVID')
+    #send_all('Продготовка к отчету Мониторинг ВП и COVID')
     files = glob.glob(get_dir('VP_CV') + '/из_почты/[!~$]*.xls*')
     if len(files) == 0:
         raise my_except('Папка пустая!')
@@ -488,7 +488,7 @@ def load_report_vp_and_cv(a):
             try:
                 excel = load_file_mo(file)
             except:
-                send_all('не обработался следующий файл \n'+ file.split('/')[-1])
+                pass #send_all('не обработался следующий файл \n'+ file.split('/')[-1])
             else:
                 list_.append(excel)
         else:
