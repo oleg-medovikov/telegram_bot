@@ -1,4 +1,4 @@
-import os,datetime,pyodbc
+import os,datetime,sqlalchemy
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.util import Pt
@@ -6,8 +6,15 @@ from pptx.enum.dml import MSO_THEME_COLOR
 from pptx.enum.dml import MSO_THEME_COLOR
 from pptx.util import Inches
 import pandas as pd
+from loader import get_dir
 
-conn = pyodbc.connect(os.getenv('sql_conn'))
+server  = os.getenv('server')
+user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser') # Тут правильный двойной слеш!
+passwd  = os.getenv('mypassword')
+dbase   = os.getenv('db')
+
+eng = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True)
+con = eng.connect()
 
 valume = [
      ['2 группа замечаний: Нет сведений ОМС (Стац.)','Нет сведений ОМС','Стационарная']
@@ -48,7 +55,7 @@ def generate_pptx(date):
           on (d1.[Медицинская организация] = d2.[Медицинская организация])
           order by  d1.eror1 - d2.eror2  DESC , d1.eror1 DESC
         """
-        frame = pd.read_sql(sql,conn)
+        frame = pd.read_sql(sql,con)
         frame.fillna(0,inplace=True)
         frame ['Динамика'] = pd.to_numeric(frame['Динамика'])
         df = frame.loc[~frame['Динамика'].isin([0])]
@@ -133,10 +140,6 @@ def generate_pptx(date):
     title.text = "Замечания по ведению Федерального регистра лиц, больных COVID-19"
     subtitle.text = "По состоянию на " + datetime.datetime.today().strftime("%d.%m.%Y")
 
-    try:
-        os.remove(os.getenv('path_temp')+r'\test.pptx')
-    except:
-        pass
     # Второй слайд
 
 
@@ -205,7 +208,7 @@ def generate_pptx(date):
     tf = body_shape.text_frame
 
 
-    df = pd.read_sql("Select count(*) from cv_fedreg where DATEDIFF(day,[Дата создания РЗ],getdate() ) < 31", conn)
+    df = pd.read_sql("Select count(*) from cv_fedreg where DATEDIFF(day,[Дата создания РЗ],getdate() ) < 31", con)
 
     p = tf.add_paragraph()
     p.text = 'за последние 30 дней: + ' + str(df.iat[0,0]) + ' УНРЗ'
@@ -221,6 +224,7 @@ def generate_pptx(date):
     for title,type_error,type_org in valume:
         create_slide(title,type_error,type_org,date_start)
 
-    prs.save(os.getenv('path_temp')+r'\test.pptx')
-    
-    return(os.getenv('path_temp')+r'\test.pptx')
+    pptx_file = get_dir('temp') + '/dynamic.pptx' 
+    prs.save(pptx_file)
+
+    return pptx_file

@@ -1,9 +1,11 @@
 import datetime,glob,os,shutil,sqlalchemy,openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
+import numpy as np
 from collections import namedtuple
 from dateutil import relativedelta
 from collections import namedtuple
+from loader import get_dir
 
 server  = os.getenv('server')
 user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser')
@@ -215,6 +217,33 @@ def svod_40_COVID_19(a):
         return(shablon_path  + '/' + new_name)
     else:
         raise my_exception('Пустая папка!')
+
+def svod_vachine_dates(a):
+    sql="""SELECT [Date],[District],[Name],[Vsego_day_v1],[Vsego_day_v2]
+    FROM [COVID].[robo].[vaccine_potrebnost]
+    where [Type] = 'Пункт вакцинации' and [Name] <> '0'
+    and [Date] != '2021-01-30'
+    order by [Date]"""
+
+    df = pd.read_sql(sql,con)
+
+    res = df.pivot_table(index=['District','Name'], columns=['Date'], values=['Vsego_day_v1','Vsego_day_v2'],fill_value=0, aggfunc=np.sum)
+    summ = df.pivot_table(index=['District'], columns=['Date'], values=['Vsego_day_v1','Vsego_day_v2'],fill_value=0, aggfunc=np.sum)
+    total = pd.DataFrame(summ.sum()).T
+
+    res['Район'] = res.index.get_level_values(0)
+    res['Пункт вакцинации'] = res.index.get_level_values(1)
+    summ['Район'] = summ.index.get_level_values(0)
+    summ['Пункт вакцинации'] = 'Всего'
+    total['Район'] = 'Весь город'
+    total['Пункт вакцинации'] = 'Все'
+
+    itog= pd.concat([total,summ,res], ignore_index=True)
+    itog = itog.set_index(['Район','Пункт вакцинации'])     
+
+    excel = get_dir('temp') + '/vaccine_dates.xlsx'
+    itog.to_excel(excel)
+    return excel
 
 def razlojit_death_week(a):
     date_start = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-2,weekday=3)).date()

@@ -1,12 +1,15 @@
-import os,pyodbc,subprocess,datetime,shutil,glob,imgkit
+import os,pyodbc,subprocess,datetime,shutil,glob,sqlalchemy
+#,imgkit
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
-from sqlalchemy import *
 
+server  = os.getenv('server')
+user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser') # Тут правильный двойной слеш!
+passwd  = os.getenv('mypassword')
+dbase   = os.getenv('db')
 
-
-conn = pyodbc.connect(os.getenv('sql_conn'))
-con = create_engine(os.getenv('sql_engine'),convert_unicode=False)
+eng = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True)
+con = eng.connect()
 
 def get_dir(name):
     sql = f"SELECT Directory FROM [robo].[directions_for_bot] where NameDir = '{name}' and [linux] = 'True'"
@@ -23,38 +26,38 @@ def sql_execute(sql):
 def fr_deti(a):
     sql_week = 'exec [dbo].[Proc_Report_Children_by_week]'
     sql_month = 'exec [dbo].[Proc_Report_Children_by_month]'
-    file = get_dir('temp') + r'\otchet_deti.xlsx'
-    week = pd.read_sql(sql_week,conn)
-    month = pd.read_sql(sql_month,conn)
+    file = get_dir('temp') + '/otchet_deti.xlsx'
+    week = pd.read_sql(sql_week,con)
+    month = pd.read_sql(sql_month,con)
     with pd.ExcelWriter(file) as writer:
         week.to_excel(writer,sheet_name='week',index=False) 
         month.to_excel(writer,sheet_name='month',index=False) 
     return file
 
 def short_report(textsql):
-    df = pd.read_sql(textsql,conn)
-    table_html = get_dir('temp') + r'\table.html'
-    table_png = get_dir('temp') + r'\table.png'
+    df = pd.read_sql(textsql,con)
+    table_html = get_dir('temp') + '/table.html'
+    table_png  = get_dir('temp') + '/table.png'
 
     df.to_html(table_html,index=False,justify='center')
-    subprocess.call('wkhtmltoimage.exe --quiet --encoding utf-8 -f png --width 0 ' +  table_html + ' ' + table_png, shell=True)
+    subprocess.call('wkhtmltoimage --quiet --encoding utf-8 -f png --width 0 ' +  table_html + ' ' + table_png, shell=True)
     return table_png
 
 def dead_not_mss(a):
     frNotMss = pd.read_sql('EXEC dbo.p_FedRegNotMss',con)
     date = datetime.datetime.today().strftime("%Y_%m_%d_%H_%M")
-    file = get_dir('fr_not_mss') + r'\Список_без_МСС_'+ date +'.xlsx'
+    file = get_dir('fr_not_mss') + '/Список_без_МСС_'+ date +'.xlsx'
     with pd.ExcelWriter(file) as writer:
         frNotMss.to_excel(writer,sheet_name='notMSS',index=False)
-    return "Список готов\n" + file.split('\\')[- 1]
+    return "Список готов\n" + file.split('/')[- 1]
 
 def dynamics(a):
     frNotMss = pd.read_sql('EXEC [dbo].[275_M3]',con)
     date = datetime.datetime.today().strftime("%Y_%m_%d_%H_%M")
-    file = get_dir('dynam') + r'\Динамика_'+ date +'.xlsx'
+    file = get_dir('dynam') + '/Динамика_'+ date +'.xlsx'
     with pd.ExcelWriter(file) as writer:
         frNotMss.to_excel(writer,sheet_name='notMSS',index=False)
-    return "Динамика готова\n" + file.split('\\')[-1]
+    return "Динамика готова\n" + file.split('/')[-1]
 
 def mg_from_guber(a):
     def CreateExcelSvod(nameSheetShablon, startRowsShablons, nameSheetSvod, startRowsSvod, pathSvod, i):
@@ -104,8 +107,8 @@ def mg_from_guber(a):
         wb.save(_path_svod_vp_cv)
         return 1
     _path_folder_report = get_dir('MG')
-    _name_file_svod = r'\09 стационары для Справки Губернатора'
-    _path_folder_files_mo = _path_folder_report + r'\Беглов_09\*.xlsx'
+    _name_file_svod = '/09 стационары для Справки Губернатора'
+    _path_folder_files_mo = _path_folder_report + '/Беглов_09/*.xlsx'
 
     _path_svod_all   = _path_folder_report + _name_file_svod + '_'+ datetime.datetime.now().strftime("%d.%m.%Y_%H_%M") + '.xlsx'
     _path_svod_vp_cv = _path_folder_report + _name_file_svod + '_'+ datetime.datetime.now().strftime("%d.%m.%Y") + '.xlsx'

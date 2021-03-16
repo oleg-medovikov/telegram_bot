@@ -1,8 +1,17 @@
 import pandas as pd
-import os,datetime,pyodbc,glob
+import os,datetime,glob,sqlalchemy
 
 from  loader import get_dir
-conn=pyodbc.connect(os.getenv('sql_conn'))
+
+
+server  = os.getenv('server')
+user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser')
+passwd  = os.getenv('mypassword')
+dbase   = os.getenv('db')
+
+eng = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True)
+con = eng.connect()
+
 
 class my_except(Exception):
     pass
@@ -125,13 +134,14 @@ select [Медицинская организация],[УНРЗ], [ФИО], [Д
 """
 
 def get_path_mo(organization):
-    sql = f"select top(1) directory from robo.directory where [Наименование в ФР] = '{organization}'"
+    sql = f"select top(1) user from robo.directory where [Наименование в ФР] = '{organization}'"
+    root = get_dir('covid')
     try:
-        dir = pd.read_sql(sql,conn).iat[0,0]
+        dir = pd.read_sql(sql,con).iat[0,0]
     except:
         return 0
     else:
-        return dir
+        return root + dir
 
 def put_excel_for_mo(df,name):
     stat = pd.DataFrame()
@@ -149,7 +159,7 @@ def put_excel_for_mo(df,name):
                 os.makedirs(path_otch)
             except OSError:
                 pass
-            file = path_otch + '\\' +str(datetime.datetime.now().date()) + ' '+ name + '.xlsx'
+            file = path_otch + '/' + str(datetime.datetime.now().date()) + ' ' + name + '.xlsx'
             with pd.ExcelWriter(file) as writer:
                 part.to_excel(writer,sheet_name='унрз')
             stat.loc[k,'Статус'] = 'Файл положен'
@@ -157,11 +167,11 @@ def put_excel_for_mo(df,name):
         else:
             stat.loc[k,'Статус'] = 'Не найдена директория для файла'
     stat.index = range(1,len(stat) + 1)
-    with pd.ExcelWriter(get_dir('Temp') + r'\отчет по разложению ' + name + '.xlsx') as writer:
+    with pd.ExcelWriter(get_dir('temp') + '/отчет по разложению ' + name + '.xlsx') as writer:
         stat.to_excel(writer,sheet_name='унрз') 
 
-def put_svod(df,name):
-    path = get_dir('zam_svod') + '\\' + name
+def put_svod(df,name): 
+    path = get_dir('zam_svod') + '/' + name
     name = str(datetime.datetime.now().date()) + ' ' + name + '.xlsx'
     try:
         os.mkdir(path)
@@ -170,65 +180,65 @@ def put_svod(df,name):
     df.index = range(1, len(df) + 1)
     df = df.applymap(str)
     df.fillna('пусто')
-    with pd.ExcelWriter(path + '\\' + name ) as writer:
+    with pd.ExcelWriter(path + '/' + name ) as writer:
         df.to_excel(writer) 
 
 def no_snils(a): 
-    df = pd.read_sql(sql_no_snils,conn)
+    df = pd.read_sql(sql_no_snils,con)
     put_svod(df,'Нет СНИЛСа')
     put_excel_for_mo(df,'Нет СНИЛСа')
-    return get_dir('temp') + '\\' + 'отчет по разложению Нет СНИЛСа.xlsx'
+    return get_dir('temp') + '/' + 'отчет по разложению Нет СНИЛСа.xlsx'
 
 def bez_izhoda(a):
-    df = pd.read_sql(sql_bez_izhoda,conn) 
+    df = pd.read_sql(sql_bez_izhoda,con) 
     put_svod(df,'Без исхода 45 дней')
     put_excel_for_mo(df,'Без исхода 45 дней')
-    return get_dir('temp') + '\\' + 'отчет по разложению Без исхода 45 дней.xlsx'
+    return get_dir('temp') + '/' + 'отчет по разложению Без исхода 45 дней.xlsx'
 
 def bez_ambulat_level(a):
-    df = pd.read_sql(sql_bez_ambulat_level,conn) 
+    df = pd.read_sql(sql_bez_ambulat_level,con) 
     put_svod(df,'Нет амбулаторного этапа')
     put_excel_for_mo(df,'Нет амбулаторного этапа')
-    return get_dir('temp') + '\\' + 'отчет по разложению Нет амбулаторного этапа.xlsx'
+    return get_dir('temp') + '/' + 'отчет по разложению Нет амбулаторного этапа.xlsx'
 
 def no_OMS(a):
-    df = pd.read_sql(sql_no_OMS,conn) 
+    df = pd.read_sql(sql_no_OMS,con) 
     put_svod(df,'Нет данных ОМС')
     put_excel_for_mo(df,'Нет данных ОМС')
-    return get_dir('temp') + '\\' + 'отчет по разложению Нет данных ОМС.xlsx'
+    return get_dir('temp') + '/' + 'отчет по разложению Нет данных ОМС.xlsx'
 
 def neveren_vid_lechenia(a):
-    df = pd.read_sql(sql_neveren_vid_lechenia,conn) 
+    df = pd.read_sql(sql_neveren_vid_lechenia,con) 
     put_svod(df,'неверный вид лечения')
     put_excel_for_mo(df,'неверный вид лечения')
-    return get_dir('temp') + '\\' + 'отчет по разложению неверный вид лечения.xlsx'
+    return get_dir('temp') + '/' + 'отчет по разложению неверный вид лечения.xlsx'
 
 def no_lab(a):
-    df = pd.read_sql(sql_no_lab,conn) 
+    df = pd.read_sql(sql_no_lab,con) 
     put_svod(df,'нет лабораторного подтверждения')
     put_excel_for_mo(df,'нет лабораторного подтверждения')
-    return get_dir('temp') + '\\' + 'отчет по разложению нет лабораторного подтверждения.xlsx'
+    return get_dir('temp') + '/' + 'отчет по разложению нет лабораторного подтверждения.xlsx'
 
 def net_diagnoz_covid(a):
-    df = pd.read_sql(sql_net_diagnoz_covid,conn) 
+    df = pd.read_sql(sql_net_diagnoz_covid,con) 
     put_svod(df,'нет диагноза COVID')
     put_excel_for_mo(df,'нет диагноза COVID')
-    return get_dir('temp') + '\\' + 'отчет по разложению нет диагноза COVID.xlsx'
+    return get_dir('temp') + '/' + 'отчет по разложению нет диагноза COVID.xlsx'
 
 def net_pad(a):
-    df = pd.read_sql(sql_net_pad,conn) 
+    df = pd.read_sql(sql_net_pad,con) 
     put_svod(df,'нет ПАЗ')
     put_excel_for_mo(df,'нет ПАЗ')
-    return  get_dir('temp') + '\\' + 'отчет по разложению нет ПАЗ.xlsx'
+    return  get_dir('temp') + '/' + 'отчет по разложению нет ПАЗ.xlsx'
 
 def net_dnevnik(a):
-    df = pd.read_sql(sql_net_dnevnik,conn)
+    df = pd.read_sql(sql_net_dnevnik,con)
     put_svod(df,'нет дневниковых записей')
     put_excel_for_mo(df,'нет дневниковых записей')
-    return get_dir('temp') + '\\' + 'отчет по разложению нет дневниковых записей.xlsx'
+    return get_dir('temp') + '/' + 'отчет по разложению нет дневниковых записей.xlsx'
 
 def delete_old_files(date):
-    path = get_dir('covid')+ f"\\EPID.COVID.*\\EPID.COVID.*\\Замечания Мин. Здравоохранения\\{date.strftime('%Y-%m-%d')}*.xlsx"
+    path = get_dir('covid')+ f"/EPID.COVID.*/EPID.COVID.*/Замечания Мин. Здравоохранения/{date.strftime('%Y-%m-%d')}*.xlsx"
     files = glob.glob(path)
     if len(files) == 0:
         return 'Нет файлов за это число!'
@@ -237,5 +247,5 @@ def delete_old_files(date):
             os.remove(file)
         except:
             pass
-    return f"Я все поудалял за дату {date.strftime('%Y-%m-%d')}"
+    return f"Я все поудалял за  дату {date.strftime('%Y-%m-%d')}"
     

@@ -1,11 +1,9 @@
 #Работа с базами данных
 import pandas as pd
-import glob,warnings,datetime,os,xlrd,csv,openpyxl,shutil,threading,pyodbc,time,numpy
+import glob,warnings,datetime,os,xlrd,csv,openpyxl,shutil,threading,pyodbc,time,numpy,sqlalchemy
 from sending import send_all,send_me,send_epid,send_admin
-from sqlalchemy import *
 from sqlalchemy.orm import sessionmaker
 from openpyxl.utils.dataframe import dataframe_to_rows
-import win32com.client
 from reports import short_report
 from multiprocessing import Process
 from multiprocessing.pool import ThreadPool
@@ -13,11 +11,16 @@ from reports import short_report
 
 warnings.filterwarnings('ignore')
 
-con = create_engine(os.getenv('sql_engine'),convert_unicode=False)
-conn = pyodbc.connect(os.getenv('sql_conn'))
-
 class my_except(Exception):
     pass
+
+server  = os.getenv('server')
+user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser') # Тут правильный двойной слеш!
+passwd  = os.getenv('mypassword')
+dbase   = os.getenv('db')
+
+eng = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True)
+con = eng.connect()
 
 def get_dir(name):
     sql = f"SELECT Directory FROM [robo].[directions_for_bot] where NameDir = '{name}' and [linux] = 'True'"
@@ -32,7 +35,7 @@ def check_table(name):
         end AS 'Check'
             FROM [dbo].[cv_{name}]
     """
-    return pd.read_sql(sql,conn).iat[0,0]
+    return pd.read_sql(sql,con).iat[0,0]
 
 def search_file(category):
     path = get_dir('path_robot') + '/' + datetime.datetime.now().strftime("%Y_%m_%d")
@@ -292,7 +295,7 @@ def load_fr(a):
     return 1
 
 def load_fr_death(a): 
-    def fr_death_to_sq l(df):
+    def fr_death_to_sql(df):
         send_all('Обрезаю слишком длинные строки')
         for column in df.columns:
             for i in range(len(df)):
@@ -346,7 +349,7 @@ def load_fr_death(a):
         return 0
 
 def load_fr_lab(a): 
-    def fr_lab_to_sq l(df):
+    def fr_lab_to_sql(df):
         send_all('Ну, тут надо переименовать колонки и можно грузить')
         i = 1
         for column in df.columns:
@@ -401,7 +404,7 @@ def load_fr_lab(a):
         return 0
 
 def load_UMSRS(a): 
-    def UMSRS_to_sq l(df):
+    def UMSRS_to_sql(df):
         df.to_sql('cv_input_umsrs_2',con,schema='dbo',if_exists='append',index = False)
         send_all('Данные загружены в input_umsrs_2, запускаю процедурки')
         sql_execute("""
@@ -450,12 +453,7 @@ def load_UMSRS(a):
 
 def load_report_vp_and_cv(a): 
     def open_save(file): 
-        xcl = win32com.client.Dispatch("Excel.Application")
-        wb = xcl.Workbooks.Open(file)
-        xcl.DisplayAlerts = False
-        wb.SaveAs(file)
-        xcl.Quit()
-        del xcl
+        pass
     def load_file_mo(file):
         nameMO = pd.read_excel(file, sheet_name= 'Титул', header =3, usecols='H', nrows = 1).iloc[0,0]
         df = pd.read_excel(file, sheet_name= 'Данные1', header =6, usecols='C:AH', nrows = 1)
@@ -463,11 +461,11 @@ def load_report_vp_and_cv(a):
         df['nameMO'] = nameMO
         os.replace(file, path + '/' + os.path.basename(file))
         return df 
-    def check_data _table(name):
+    def check_data_table(name):
         sql=f"""
             IF (EXISTS (SELECT * FROM {name})) 
                 SELECT 1 ELSE SELECT 0 """
-        return pd.read_sql(sql,conn).iat[0,0]
+        return pd.read_sql(sql,con).iat[0,0]
     send_all('Продготовка к отчету Мониторинг ВП и COVID')
     files = glob.glob(get_dir('VP_CV') + '/из_почты/[!~$]*.xls*')
     if len(files) == 0:
@@ -508,7 +506,7 @@ def load_report_vp_and_cv(a):
         return short_report('SELECT * FROM mon_vp.v_DebtorsReport')
     else:
         #==========  тут мы грузим исходные данные в первую вкладку отчета
-        df = pd.read_sql('SELECT * FROM mon_vp.v_GrandReport' ,conn)
+        df = pd.read_sql('SELECT * FROM mon_vp.v_GrandReport' ,con)
         df1 = df.loc[df.typeMO==1].sort_values(["numSort"]).drop('typeMO',1).drop('numSort',1)
         df2 = df.loc[df.typeMO==2].sort_values(["numSort"]).drop('typeMO',1).drop('numSort',1)
         shablon = get_dir('help') + '/СводОбщий_' + (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%d %m %Y") +'.xlsx'
@@ -532,7 +530,7 @@ def load_report_vp_and_cv(a):
 
         #  ========== сейчас мы загрузим и сохраним данные по проверкам
 
-        df=pd.read_sql("exec mon_vp.p_CheckMonitorVpAndCovid",conn)
+        df=pd.read_sql("exec mon_vp.p_CheckMonitorVpAndCovid",con)
         part_one = df.iloc[:,range(26)]
         part_two = df.iloc[:,[0] + list(range(26,58,1)) ]
 

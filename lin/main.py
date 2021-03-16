@@ -5,13 +5,13 @@ import concurrent.futures
 
 # ======== мои модули 
 from procedure import check_robot,svod_40_COVID_19,sort_death_mg,medical_personal_sick,razlojit_death_week,sbor_death_week_files,sbor_death_week_svod
-from procedure import svod_unique_patient
-#from reports import fr_deti,short_report,dead_not_mss,dynamics,mg_from_guber
-#from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
-#from loader import load_report_vp_and_cv,load_report_guber
+from procedure import svod_unique_patient,svod_vachine_dates
+from reports import fr_deti,short_report,dead_not_mss,dynamics,mg_from_guber
+from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
+from loader import load_report_vp_and_cv,load_report_guber
 #from sending import send_all,send_me
-#from presentation import generate_pptx
-#from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik,delete_old_files
+from presentation import generate_pptx
+from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik,delete_old_files
 #from regiz import regiz_decomposition
 #from send_ODLI import send_bundle_to_ODLI
 import telebot_calendar
@@ -24,7 +24,7 @@ from telebot.types import ReplyKeyboardRemove,CallbackQuery
 bot = telebot.TeleBot(os.getenv('telegram_bot'))
 
 server  = os.getenv('server')
-user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser')
+user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser') # Тут правильный двойной слеш!
 passwd  = os.getenv('mypassword')
 dbase   = os.getenv('db')
 
@@ -34,7 +34,7 @@ con = eng.connect()
 #================Создаём классы для команд и пользователей
 commands = []
 @dataclass
-class command:
+class command: 
     command_id     : int
     command_name   : str
     command_key    : list
@@ -73,7 +73,7 @@ class command:
             if id in command.ids:
                 string += '\n' + command.command_key[0] +') ' + command.command_name
         return string
-    def number(id,mess):
+    def number( id,mess):
         for command in commands:
             if id in command.ids and mess in command.command_key:
                 return True, command.command_id
@@ -186,7 +186,7 @@ schedule.every().day.at("07:00").do(otchet_1)
 schedule.every().day.at("07:05").do(regiz_razlogenie)
 
 t = threading.Thread(target=go, name="Расписание работ")
-t.start()
+#t.start()
 
 # ========= Маленькая процедурка для определения периода суток
 
@@ -199,6 +199,28 @@ def get_hello_start():
          16  <= temp   < 22 :  'Добрый вечер, ',
          22  <= temp   < 24 :  'Доброй ночи, '
     }[True]
+
+# ========= Процедура логирования =================
+def logi(user_id,command_id,result):
+    if result[0]:
+        if user_id != user.master():
+            bot.send_message(user.master(), 'Хозяин, для пользователя ' + user.name(user_id) + ' было выполнено задание \n' + commands[command_id].command_name)
+    else:
+        if user_id != user.master():
+            bot.send_message(user.master(), 'Хозяин, у пользователя ' + user.name(user_id) \
+                    + ' что-то пошло не так с заданием \n' + commands[command_id].command_name \
+                    + '\n' + result[1])
+    sql = f"""
+    INSERT INTO [robo].[bot_logs]
+	       ([user],[task],[schedule],[success],[result])
+	 VALUES
+	       ('{user.name(user_id)}'
+	       ,'{commands[command_id].command_name}'
+	       ,'False'
+	       ,'{result[0]}'
+	       ,'{result[1].replace("'","")}')
+    """
+    con.execute(sql)
 
 # ========== Главная процедура бота ===============
 @bot.message_handler(content_types=['text'])
@@ -230,8 +252,7 @@ def get_text_messages(message):
                             bot.send_message(call.from_user.id,commands[command_id].procedure_name)
                             result = create_tred(commands[command_id].procedure_name,date)
                             bot.send_message(call.from_user.id,result[1])
-                            if call.from_user.id != user.master():
-                                bot.send_message(user.master(), 'Хозяин, для пользователя ' + user.name(call.from_user.id) + ' было выполнено задание ' + str(command_id))
+                            logi(call.from_user.id,command_id,result)
                         elif action == "CANCEL":
                             bot.send_message(chat_id=call.from_user.id,
                                     text="Вы решили ничего не выбирать",reply_markup=ReplyKeyboardRemove(),)
@@ -242,18 +263,13 @@ def get_text_messages(message):
                             for file in result[1].split(';'):
                                 bot.send_document(message.from_user.id, open(file, 'rb'))
                                 os.remove(file)
-                            if message.from_user.id != user.master():
-                                bot.send_message(user.master(), 'Хозяин, для пользователя ' + user.name(message.from_user.id) + ' было выполнено задание ' + str(command_id))
+                                logi(message.from_user.id,command_id,result)
                         else:
                             bot.send_message(message.from_user.id, result[1])
-                            if message.from_user.id != user.master():
-                                bot.send_message(user.master(), 'Хозяин, для пользователя ' + user.name(message.from_user.id) + ' было выполнено задание ' + str(command_id))
+                            logi(message.from_user.id,command_id,result)
                     else:
                         bot.send_message(message.from_user.id, result[1])
-                        if message.from_user.id != user.master():
-                            bot.send_message(user.master(),\
-                                'Хозяин, что-то сломалось при выполнении задания ' + str(command_id) + ' для пользователя ' + user.name(message.from_user.id) )
-                            bot.send_message(user.master(), result[1])
+                        logi(message.from_user.id,command_id,result)
             else:
                 bot.send_message(message.from_user.id,'Возможно, у Вас нет прав на выполнение данной операции')
                 if message.from_user.id != user.master():
