@@ -4,12 +4,17 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 
 server  = os.getenv('server')
+server_parus  = os.getenv('server_parus')
 user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser') # Тут правильный двойной слеш!
 passwd  = os.getenv('mypassword')
 dbase   = os.getenv('db')
+db_parus   = os.getenv('db_parus')
 
-eng = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True)
-con = eng.connect()
+
+eng1 = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True)
+eng2 = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server_parus}/{db_parus}",pool_pre_ping=True)
+con = eng1.connect()
+con_parus = eng2.connect()
 
 def get_dir(name):
     sql = f"SELECT Directory FROM [robo].[directions_for_bot] where NameDir = '{name}' and [linux] = 'True'"
@@ -134,3 +139,31 @@ def mg_from_guber(a):
     return 'Все готово'
 
 
+def parus_43_cov_nulls(a):
+    sql="""
+    select 
+            org.MED_ORGANIZATION_NAME as 'организация',data.BEGIN_DATE as 'Дата',count(*) as 'нулей в накопительных итогах'
+      FROM [PARUS].[REPORT_DATA] as data
+      inner join PARUS.MED_ORGANIZATIONS as org
+            on (data.MED_ORGANIZATION_ID = org.MED_ORGANIZATION_ID)
+      inner join PARUS.FORMS as form
+            on (data.FORM_ID = form.FORM_ID)
+      inner join PARUS.INDICATORS as ind
+            on (data.INDICATOR_ID = ind.INDICATOR_ID)
+    where form.FORM_CODE = '43 COVID 19'
+            and  ind.INDICATOR_CODE  in ('43_covid_05','43_covid_07','43_covid_09_2')
+            and len(org.MED_ORGANIZATION_NAME) > 5
+            and  data.BEGIN_DATE in (cast(getdate()-2 as date),cast(getdate()-1 as date),cast(getdate()   as date))  
+            and NUM_VALUE = '0' 
+            group by [MED_ORGANIZATION_NAME],[BEGIN_DATE]
+    """
+    df = pd.read_sql(sql,con_parus)
+    df = pd.pivot_table(df,index = ['организация'], values=['нулей в накопительных итогах'],columns=['Дата'])
+    df = df.fillna(0)
+    df['нулей в накопительных итогах'] = df['нулей в накопительных итогах'].round().astype(int)
+    table_html = get_dir('temp') + '/table.html'
+    table_png  = get_dir('temp') + '/table.png'
+
+    df.to_html(table_html,justify='justify')
+    subprocess.call('wkhtmltoimage --quiet --encoding utf-8 -f png --width 0 ' +  table_html + ' ' + table_png, shell=True)
+    return table_png
