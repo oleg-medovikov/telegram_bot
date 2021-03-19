@@ -1,11 +1,18 @@
 import pandas as pd
-import datetime,warnings,shutil
+import datetime,warnings,shutil,sqlalchemy,os,glob
 warnings.filterwarnings('ignore')
-from sqlalchemy import *
-
 from loader import get_dir
+from sending import send
 
-con = create_engine(get_dir('NCRN'),convert_unicode=True)
+
+
+server  = os.getenv('server_parus')
+user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser') # Тут правильный двойной слеш!
+passwd  = os.getenv('mypassword')
+dbase   = os.getenv('db_ncrn')
+
+eng = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True)
+con = eng.connect()
 
 class my_except(Exception):
     pass
@@ -28,7 +35,7 @@ def regiz_decomposition(a):
                                                             #, 'SnilsDoctor':'СНИЛС врача'
                                                             , 'Error':'Ошибка, выявленная в РЕГИЗ'
                                                       }, inplace = True)
-            path_otvet = str(get_dir('regiz')+'\\' + ftp +r'\Ответы'+ r'\_'+ str(datetime.datetime.now().date()) +' '+ lpu_name+'.xlsx').replace('"','')
+            path_otvet = str(get_dir('regiz')+'/' + ftp +'/Ответы/_'+ str(datetime.datetime.now().date()) +' '+ lpu_name+'.xlsx').replace('"','')
             with pd.ExcelWriter(path_otvet) as writer:
                 try:
                     otvet.to_excel(writer,sheet_name='номера',index=False)
@@ -37,18 +44,18 @@ def regiz_decomposition(a):
 
             k = len(statistic)
             statistic.loc[k,'MOName'] = lpu_name
-            statistic.loc[k,'NameFile'] = path_otvet.split('\\')[-1]
+            statistic.loc[k,'NameFile'] = path_otvet.split('/')[-1]
             statistic.loc[k,'CountRows'] = len(otvet)
             statistic.loc[k,'TextError'] = ''
             statistic.loc[k,'OtherFiles'] = ''
             statistic.loc[k,'DateLoadFile'] = datetime.datetime.now()
             statistic.loc[k,'InOrOut'] = 'Out'
 
-        path_log = get_dir('regiz_svod')+'\\'+ str(datetime.datetime.now().date()) + r' лог разложения.xlsx'
+        path_log = get_dir('regiz_svod')+'/'+ str(datetime.datetime.now().date()) + ' лог разложения.xlsx'
 
         with pd.ExcelWriter(path_log) as writer:
             statistic.to_excel(writer,sheet_name='логи',index=False)
-        temp_log = get_dir('temp') + '\\' + path_log.split('\\')[-1]
+        temp_log = get_dir('temp') + '/' + path_log.split('/')[-1]
         shutil.copyfile(path_log,temp_log)
         statistic.to_sql(
                     'JrnLoadFiles',
@@ -57,7 +64,7 @@ def regiz_decomposition(a):
                     if_exists='append',
                     index=False
             )
-        print('Загружены логи')
+        send('info','Загружены логи')
 
         # Очистка таблиц в базе данных
         from sqlalchemy.orm import sessionmaker
@@ -81,14 +88,24 @@ def regiz_decomposition(a):
         session.close()
         
         
-        print('Региз разложен по папкам')
-        with open(get_dir('regiz_svod') + r'\log.txt', 'a') as file:
-            file.write("  Региз разложен по папкам " + str(datetime.datetime.now()) + '\n' )
+        send('info','Региз разложен по папкам')
+        try:
+            file = open(get_dir('regiz_svod') + '/log.txt', 'a')
+        except:
+            send('info', 'Файл лога недоступен!' )
+        else:
+            with file:
+                file.write("  Региз разложен по папкам " + str(datetime.datetime.now()) + '\n' )
             return temp_log
     else:
-        with open(get_dir('regiz_svod') + r'\log.txt', 'a') as file:
-            file.write("  РЕГИЗ Нечего раскладывать по папкам " + str(datetime.datetime.now()) + '\n' )
-        raise my_except("Нечего расск ладывать по папкам!")
+        try:
+            file = open(get_dir('regiz_svod') + r'/log.txt', 'a')
+        except:
+            send('info', 'Файл лога недоступен!' )
+        else:
+            with file:
+                file.write("  РЕГИЗ Нечего раскладывать по папкам " + str(datetime.datetime.now()) + '\n' )
+            raise my_except("Нечего раскладывать по папкам!")
 
 # Функция проверки колонок таблицы
 def check_table(path_to_excel, names):
@@ -123,10 +140,130 @@ def check_table(path_to_excel, names):
             break
     return error,error_text,collum, head-1
 
-
 def regiz_load_to_base(a):
-    mo = pd.read_excel(get_dir('regiz_svod') + r'\mo_directory.xlsx')
+    mo = pd.read_excel(get_dir('regiz_svod') + '/mo_directory.xlsx')
     names = ['Номер истории болезни','Дата открытия СМО','Признак амбулаторного СМО','СНИЛС врача']
     path = get_dir('regiz')
-    return 1
+
+    list_=[]
+    svod = pd.DataFrame()
+    statistic = pd.DataFrame()
+
+    for i in range(len(mo)):
+        path_otc = path + '/' + mo.at[i,'ftp_user'] +'/_Входящие'
+        if os.path.exists(path_otc) == True:
+            listOfFiles =  os.listdir(path_otc)
+            files = glob.glob(path_otc+'/*.xl*')
+            file_alien = str(glob.glob(path_otc+'/*[!xls]*')).replace(path,'')
+
+            if len(files) == 0:
+                k = len(statistic)
+                statistic.at[k,'MOName'] = mo.at[i,'MO']
+                statistic.at[k,'NameFile'] = ''
+                statistic.at[k,'CountRows'] = 0
+                statistic.at[k,'TextError'] = 'Файл не найден'
+                statistic.at[k,'OtherFiles'] = file_alien
+                statistic.at[k,'DateLoadFile'] = datetime.datetime.now()
+                statistic.at[k,'InOrOut'] = 'IN'
+
+            else:
+                for file in files:
+                    check = check_table(file,names)
+                    if check[0] == 1:
+                        k = len(statistic)
+                        statistic.at[k,'MOName'] = mo.at[i,'MO']
+                        statistic.at[k,'NameFile'] = file.split('/')[-1]
+                        statistic.at[k,'CountRows'] = 0
+                        statistic.at[k,'TextError'] = check[1]
+                        statistic.at[k,'OtherFiles'] = file_alien
+                        statistic.at[k,'DateLoadFile'] = datetime.datetime.now()
+                        statistic.at[k,'InOrOut'] = 'IN'
+                    else:
+                        try:
+                            otchet = pd.read_excel(file,header=check[3], usecols = check[2], dtype=str)
+                        except:
+                            k = len(statistic)
+                            statistic.at[k,'MOName'] = mo.at[i,'MO']
+                            statistic.at[k,'NameFile'] = file.split('/')[-1]
+                            statistic.at[k,'CountRows'] = 0
+                            statistic.at[k,'TextError'] = 'Не смог прочитать'
+                            statistic.at[k,'OtherFiles'] = file_alien
+                            statistic.at[k,'DateLoadFile'] = datetime.datetime.now()
+                            statistic.at[k,'InOrOut'] = 'IN'
+                        else:
+                            for col in excel.columns:
+                                otchet[col.replace(' ','')] = excel[col]
+                            otchet['level1_key'] = mo.at[i,'level1_key']
+                            otchet.rename(columns = {     'Номеристорииболезни':'HistoryNumber'
+                                                          ,'ДатаоткрытияСМО':'OpenDate'
+                                                          ,'ПризнакамбулаторногоСМО':'IsAmbulant'
+                                                          , 'СНИЛСврача':'SnilsDoctor'
+                                                          , 'level1_key':'LPU_level1_key'
+                                                     }, inplace = True)
+                            columnsTitles=['LPU_level1_key','HistoryNumber','OpenDate','IsAmbulant','SnilsDoctor']
+                            otchet=otchet.reindex(columns=columnsTitles)
+                            list_.append(otchet)
+                            try:
+                                otchet.to_sql('TempTableFromMO',con,schema='dbo',if_exists='append',index=False)
+                            except:
+                                k = len(statistic)
+                                statistic.at[k,'MOName'] = mo.at[i,'MO']
+                                statistic.at[k,'NameFile'] = file.split('/')[-1]
+                                statistic.at[k,'CountRows'] = 0
+                                statistic.at[k,'TextError'] = 'Не смог отправить в базу'
+                                statistic.at[k,'OtherFiles'] = file_alien
+                                statistic.at[k,'DateLoadFile'] = datetime.datetime.now()
+                                statistic.at[k,'InOrOut'] = 'IN'
+                            else:
+                                new_file = path +'/' + mo.at[i,'ftp_user'] + '/Архив/время_'+ datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '.xlsx'
+                                pd.to_excel(new_file)
+                                try:
+                                    os.remove(file)
+                                except PermissionError:
+                                    pass
+                                k = len(statistic)
+                                statistic.at[k,'MOName'] = mo.at[i,'MO']
+                                statistic.at[k,'NameFile'] = file.split('\\')[-1]
+                                statistic.at[k,'CountRows'] = len(otchet)
+                                statistic.at[k,'TextError'] = ''
+                                statistic.at[k,'OtherFiles'] = file_alien
+                                statistic.at[k,'DateLoadFile'] = datetime.datetime.now()
+                                statistic.at[k,'InOrOut'] = 'IN'
+
+    try:
+        svod = pd.concat(list_)
+    except ValueError:
+        send('info', 'Нет новых файлов для сбора')
+        try:
+            f = open(get_dir('regiz_svod') + '/log.txt', 'a')
+        except:
+            pass
+        else:
+            with f:
+                f.write("  Региз нет новых файлов " + str(datetime.datetime.now()) + '\n' )
+        raise: my_exception('Нечего делать')
+    else:
+        svod.index = range(1,len(svod)+1)
+        svod_file = path + '/свод/' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') +' свод номеров для проверки.xlsx'
+        with pd.ExcelWriter(svod_file) as writer:
+            svod.to_excel(writer,sheet_name='номера',index=False)
+            statistic.to_excel(writer,sheet_name='статистика',index=False)
+        con.excecute("""
+                TRUNCATE TABLE [dbo].[TempTableFromMO]
+                TRUNCATE TABLE [nsi].[Organization] 
+                """)
+        mo.to_sql('Organization',con,schema='nsi',if_exists='append',index=False)
+
+        con.excecute('EXEC [dbo].[Insert_Table_FileMO]')
+
+        try:
+            f = open(get_dir('regiz_svod') + '/log.txt', 'a')
+        except:
+            pass
+        else:
+            with f:
+                f.write("  Региз файлы загружены в базу " + str(datetime.datetime.now()) + '\n' )
+    
+    statistic.to_sql('JrnLoadFiles',con,schema='logs',if_exists='append',index=False)
+    return svod_file
 

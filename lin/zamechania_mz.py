@@ -134,7 +134,7 @@ select [Медицинская организация],[УНРЗ], [ФИО], [Д
 """
 
 def get_path_mo(organization):
-    sql = f"select top(1) user from robo.directory where [Наименование в ФР] = '{organization}'"
+    sql = f"select top(1) [user] from robo.directory where [Наименование в ФР] = '{organization}'"
     root = get_dir('covid')
     try:
         dir = pd.read_sql(sql,con).iat[0,0]

@@ -249,8 +249,9 @@ def svod_vachine_dates(a):
     return excel
 
 def razlojit_death_week(a):
-    date_start = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-2,weekday=3)).date()
-    date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=3)).date()
+    date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
+    date_start = date_end - datetime.timedelta(days=6) 
+
     sql = f"""
     select dbo.get_Gid(idPatient) as 'Gid',[Медицинская организация],[ФИО],[Дата рождения]
     ,dbo.[f_calculation_age]([Дата рождения],[Дата исхода заболевания]) as 'Возраст'
@@ -261,7 +262,7 @@ def razlojit_death_week(a):
       and YEAR([Дата исхода заболевания]) = YEAR(getdate())
       and ([Посмертный диагноз]  in ('U07.1','U07.2')
            or [Посмертный диагноз] like 'J1[2-8]%' ) 
-      and [Субъект РФ] = 'г. Санкт-Петербург'    
+      and [Субъект РФ] = 'г. Санкт-Петербург'
     """
     df = pd.read_sql(sql,con)
     columns = ['Район проживания'
@@ -321,14 +322,14 @@ def razlojit_death_week(a):
         name='report_deth_week',
         con=con,
         schema='robo',
-        if_exists='replace',
+        if_exists='append',
         index=False
     )
     return report_file
 
 def sbor_death_week_files(a): 
-    date_start = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-2,weekday=3)).date()
-    date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=3)).date()
+    date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
+    date_start = date_end - datetime.timedelta(days=6) 
 
     path     = get_dir('covid') + f'/EPID.COVID.*/EPID.COVID.*/Умершие за неделю/*{date_start} по {date_end}*.xlsx'
     new_path = get_dir('death_week') + f'/с {date_start} по {date_end}'
@@ -344,8 +345,8 @@ def sbor_death_week_files(a):
     return f'Файлы с {date_start} по {date_end} собраны в папку'
 
 def sbor_death_week_svod(a):
-    date_start = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-2,weekday=3)).date()
-    date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=3)).date()
+    date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
+    date_start = date_end - datetime.timedelta(days=6) 
 
     new_path = get_dir('death_week') + f'/с {date_start} по {date_end}'
     path     = get_dir('death_week') + f'/с {date_start} по {date_end}\[!~]*[!свод].xlsx'

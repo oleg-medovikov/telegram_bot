@@ -9,10 +9,10 @@ from procedure import svod_unique_patient,svod_vachine_dates
 from reports import fr_deti,short_report,dead_not_mss,dynamics,mg_from_guber,parus_43_cov_nulls
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
 from loader import load_report_vp_and_cv,load_report_guber
-#from sending import send_all,send_me
+from sending import send,voda
 from presentation import generate_pptx
 from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik,delete_old_files
-#from regiz import regiz_decomposition
+from regiz import regiz_decomposition,regiz_load_to_base
 #from send_ODLI import send_bundle_to_ODLI
 import telebot_calendar
 from telebot_calendar import CallbackData
@@ -139,32 +139,42 @@ def create_tred(func,arg):
 #===================================================
 
 #============== Тут будут поток для расписаний =====
+def log_shedule(work,result):
+    if not result[0]:
+        send('admin', 'При выполнении ' + work + ' произошло\n' + result[1])
+    else:
+        send('admin', 'Выполнил ' + work)
+
+    sql = f"""
+    INSERT INTO [robo].[bot_logs]
+	       ([user],[task],[schedule],[success],[result])
+	 VALUES
+	       ('devil'
+	       ,'{work}'
+	       ,'True'
+	       ,'{result[0]}'
+	       ,'{result[1].replace("'","")}')
+    """
+    con.execute(sql)
+
 
 def load_1():
     result = create_tred('load_fr',None)
+    log_shedule('загрузка фр', result)
     if result[0]:
         result = create_tred('load_fr_death',None)
+        log_shedule('загрузка умерших', result)
         if result[0]:
             result = create_tred('load_fr_lab',None)
-            if not result[0]:
-                send_me(result[1])
-        else:
-            send_me(result[1])
-    else:
-        send_me(result[1])
+            log_shedule('загрузка лаборатории', result)
 
 def load_2():
     result = create_tred('load_UMSRS',None)
-    if not result[0]:
-        send_me(result[1])
+    log_shedule('загрузка УМСРС', result)
 
 def otchet_1():
     result = create_tred('medical_personal_sick',None)
-    if not result[0]:
-        send_me(result[1])
-    else:
-        for id in user.group_users_id('admin'):
-            bot.send_message(id, result[1])
+    log_shedule('файл заболевших медработников', result)
 
 def regiz_razlogenie():
     for id in user.group_users_id('info'):
@@ -229,6 +239,10 @@ def get_text_messages(message):
         if message.text.lower() in ['привет', 'ghbdtn','/start','старт']:
             bot.send_message(message.from_user.id, get_hello_start() + user.name(message.from_user.id))
             bot.send_message(message.from_user.id,command.hello_mess(message.from_user.id))
+        elif message.text.lower() in ['Вода','djlf','вода']:
+            mes = bot.reply_to(message, 'Здравствуйте '+ user.name(message.from_user.id) + ' напишите номер бутылочки.')
+            bot.register_next_step_handler(mes, voda)
+            
         else:
             if command.number(message.from_user.id,message.text.lower())[0]:
                 command_id = command.number(message.from_user.id,message.text.lower())[1]

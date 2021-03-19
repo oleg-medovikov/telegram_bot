@@ -1,5 +1,4 @@
 import os,pyodbc,subprocess,datetime,shutil,glob,sqlalchemy
-#,imgkit
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 
@@ -10,11 +9,14 @@ passwd  = os.getenv('mypassword')
 dbase   = os.getenv('db')
 db_parus   = os.getenv('db_parus')
 
-
 eng1 = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True)
-eng2 = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server_parus}/{db_parus}",pool_pre_ping=True)
+try:
+    eng2 = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server_parus}/{db_parus}",pool_pre_ping=True)
+    con_parus = eng2.connect()
+except:
+    print(f"mssql+pymssql://{user}:{passwd}@{server_parus}/{db_parus}")
+
 con = eng1.connect()
-con_parus = eng2.connect()
 
 def get_dir(name):
     sql = f"SELECT Directory FROM [robo].[directions_for_bot] where NameDir = '{name}' and [linux] = 'True'"
@@ -137,7 +139,6 @@ def mg_from_guber(a):
     UpdateColumsSvod("Свод","D", 94, 200, 96, 20)
     UpdateColumsSvod("Свод","P", 94, 200, 96, 23)
     return 'Все готово'
-
 
 def parus_43_cov_nulls(a):
     sql="""
