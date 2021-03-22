@@ -150,6 +150,8 @@ def check_table(path_to_excel, names):
 
 
 
+
+
 def regiz_load_to_base(a):
     mo = pd.read_excel(get_dir('regiz_svod') + '/mo_directory.xlsx')
     names = ['Номер истории болезни','Дата открытия СМО','Признак амбулаторного СМО','СНИЛС врача']
@@ -158,122 +160,115 @@ def regiz_load_to_base(a):
     list_ = []
     remove_files = []
     statistic = pd.DataFrame()
-    for file in files:
+
+    def read_file(file):
         other_files = str(glob.glob(file.rsplit('/',1)[0] + '/*'))
-        try:
+        if len(mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO']): 
             organization = mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO'].values[0]
-        except:
-            organization = 'Неопределена'
-        df = pd.DataFrame()
+        else:
+            organization = 'Не определена'
         try:
             df = pd.read_excel(file, header=None, na_filter = False)
         except:
             try:
                 df = pd.read_html(file)
                 df = pd.concat(df)
+                return df
             except:
-                statistic = statistic.append({'MOName'       : organization,
+                statistic.append({'MOName'       : organization,
                                               'NameFile'     : file,
                                               'CountRows'    : 0 ,
                                               'TextError'    : 'Файл не читается совсем',
                                               'OtherFiles'   : other_files,
                                               'DateLoadFile' : datetime.datetime.now(),
                                               'InOrOut'      : 'IN'}, ignore_index=True)
+                return pd.DataFrame(None)
         else:
-            sum_colum = len(names)
-            num_colum = 0
             if len(df) < 2:
-                statistic = statistic.append({'MOName'       : organization,
+                statistic.append({'MOName'       : organization,
                                               'NameFile'     : file,
                                               'CountRows'    : 0 ,
                                               'TextError'    : 'Файл пустой',
                                               'OtherFiles'   : other_files,
                                               'DateLoadFile' : datetime.datetime.now(),
                                               'InOrOut'      : 'IN'}, ignore_index=True)
-
-            for head in range(len(df)):
-                if num_colum != sum_colum:
-                    coll = df.loc[head].tolist()
-                    num_colum = 0
-                    collum = []
-                    error = 0
-                    error_text = '' 
-                    for name in names:
-                        k = 0
-                        f = 0
-                        for col in coll:
-                            if str(col).replace(' ','') == name.replace(' ','') : 
-                                collum.append(k)
-                                num_colum += 1 
-                                f = 1
-                            k+=1
-                        if f == 0:
-                            error = 1
-                            error_text = error_text + ' Не найдена колонка ' + name + ';'
-                else:
-                    break
-            if not error:
+                return pd.DataFrame(None)
+            
+            check = check_table(file,names)
+            if not check[0]:
                 df = pd.read_excel(file,header=check[3], usecols = check[2], dtype=str)
+                return df
             else:
-                df = pd.DataFrame(None)
-                statistic = statistic.append({'MOName'       : organization,
+                statistic.append({'MOName'       : organization,
                                               'NameFile'     : file,
                                               'CountRows'    : 0 ,
-                                              'TextError'    : error_text,
+                                              'TextError'    : chek[1],
                                               'OtherFiles'   : other_files,
                                               'DateLoadFile' : datetime.datetime.now(),
                                               'InOrOut'      : 'IN'}, ignore_index=True)
-        if len(df):
-            for col in df.columns:
-                df[col.replace(' ','')] = df[col]
+                return pd.DataFrame(None)
+    def load_file(df): 
+        for col in df.columns:
+            df[col.replace(' ','')] = df[col]
+            del df[col]
+        if len(mo.loc[mo['ftp_user'] == file.split('/')[5], 'level1_key']):
+            df['level1_key'] = mo.loc[mo['ftp_user'] == file.split('/')[5], 'level1_key'].values[0]
+            df.rename(columns = {        'Номеристорииболезни':'HistoryNumber'
+                                        ,'ДатаоткрытияСМО':'OpenDate'
+                                        ,'ПризнакамбулаторногоСМО':'IsAmbulant'
+                                        , 'СНИЛСврача':'SnilsDoctor'
+                                        ,'level1_key':'LPU_level1_key'
+                                    }, inplace = True)
+            columnsTitles=['LPU_level1_key','HistoryNumber','OpenDate','IsAmbulant','SnilsDoctor']
+            df = df.reindex(columns=columnsTitles)
             try:
-                df['level1_key'] = mo.loc[mo['ftp_user'] == file.split('/')[5], 'level1_key'].values[0]
+                df.to_sql('TempTableFromMO',con,schema='dbo',if_exists='append',index=False)
             except:
-                statistic = statistic.append({'MOName'       : organization,
+                statistic.append({'MOName'       : organization,
                                               'NameFile'     : file,
                                               'CountRows'    : 0 ,
-                                              'TextError'    : 'Не определено левел 1 кей',
+                                              'TextError'    : 'Не удалось загрузить файл в базу',
                                               'OtherFiles'   : other_files,
                                               'DateLoadFile' : datetime.datetime.now(),
                                               'InOrOut'      : 'IN'}, ignore_index=True)
             else:
-                df.rename(columns = {        'Номеристорииболезни':'HistoryNumber'
-                                            ,'ДатаоткрытияСМО':'OpenDate'
-                                            ,'ПризнакамбулаторногоСМО':'IsAmbulant'
-                                            , 'СНИЛСврача':'SnilsDoctor'
-                                            ,'level1_key':'LPU_level1_key'
-                                        }, inplace = True)
-                columnsTitles=['LPU_level1_key','HistoryNumber','OpenDate','IsAmbulant','SnilsDoctor']
-                df = df.reindex(columns=columnsTitles)
+                statistic.append({'MOName'       : mo.loc[mo['ftp_user'] == path.split('/')[5], 'MO'].values[0],
+                                              'NameFile'     : file,
+                                              'CountRows'    : len(df) ,
+                                              'TextError'    : 'Успешно загружен',
+                                              'OtherFiles'   : other_files,
+                                              'DateLoadFile' : datetime.datetime.now(),
+                                              'InOrOut'      : 'IN'}, ignore_index=True)
+                new_file = path.rsplit('/',2)[0] + '/Архив/время_'+ datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '.xlsx'
+                df.to_excel(new_file, index=False)
+                remove_files.append(file)
                 list_.append(df)
-                try:
-                    df.to_sql('TempTableFromMO',con,schema='dbo',if_exists='append',index=False)
-                except:
-                    statistic = statistic.append({'MOName'       : organization,
-                                                  'NameFile'     : file,
-                                                  'CountRows'    : 0 ,
-                                                  'TextError'    : 'Не удалось загрузить файл в базу',
-                                                  'OtherFiles'   : other_files,
-                                                  'DateLoadFile' : datetime.datetime.now(),
-                                                  'InOrOut'      : 'IN'}, ignore_index=True)
-                else:
-                    statistic = statistic.append({'MOName'       : mo.loc[mo['ftp_user'] == path.split('/')[5], 'MO'].values[0],
-                                                  'NameFile'     : file,
-                                                  'CountRows'    : len(df) ,
-                                                  'TextError'    : 'Успешно загружен',
-                                                  'OtherFiles'   : other_files,
-                                                  'DateLoadFile' : datetime.datetime.now(),
-                                                  'InOrOut'      : 'IN'}, ignore_index=True)
-                    new_file = path.rsplit('/',2)[0] + '/Архив/время_'+ datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '.xlsx'
-                    df.to_excel(new_file, index=False)
-                    remove_files.append(file)
+        else:
+            statistic.append({'MOName'       : organization,
+                                          'NameFile'     : file,
+                                          'CountRows'    : 0 ,
+                                          'TextError'    : 'Не определен левел 1 кей',
+                                          'OtherFiles'   : other_files,
+                                          'DateLoadFile' : datetime.datetime.now(),
+                                          'InOrOut'      : 'IN'}, ignore_index=True)
+            
+    for file in files:
+        try:
+            df = read_file(file)
+        except:
+            send('', 'Ошибка при чтении ' +  file)
+        if len(df):
+            try:
+                load_file(df)
+            except:
+                send('', 'Ошибка при загрузке ' + file)
+                send('', 'Ошибка при загрузке ' + str(df.head(2)))
 
 
-
+    send('','Приступаем к сборке свода')
     try:
         svod = pd.concat(list_)
     except ValueError:
-        #send('info', 'Нет новых файлов для сбора')
         try:
             f = open(get_dir('regiz_svod') + '/log.txt', 'a')
         except:
@@ -285,7 +280,6 @@ def regiz_load_to_base(a):
         with pd.ExcelWriter(svod_file) as writer:
             statistic.to_excel(writer,sheet_name='статистика',index=False)
         return svod_file 
-        #raise my_except('Нечего делать' + str(remove_files))
     else:
         svod.index = range(1,len(svod)+1)
         svod_file = get_dir('regiz_svod') + '/' + + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') +' свод номеров для проверки.xlsx'
@@ -304,11 +298,11 @@ def regiz_load_to_base(a):
         else:
             with f:
                 f.write("  Региз файлы загружены в базу " + str(datetime.datetime.now()) + '\n' )
-        for file in remove_files:
-            try:
-                os.remove(file)
-            except:
-                pass
+        #for file in remove_files:
+        #    try:
+        #        os.remove(file)
+        #    except:
+        #       pass
     
     statistic.to_sql('JrnLoadFiles',con,schema='logs',if_exists='append',index=False)
     return svod_file

@@ -6,14 +6,14 @@ import concurrent.futures
 # ======== мои модули 
 from procedure import check_robot,svod_40_COVID_19,sort_death_mg,medical_personal_sick,razlojit_death_week,sbor_death_week_files,sbor_death_week_svod
 from procedure import svod_unique_patient,svod_vachine_dates
-from reports import fr_deti,short_report,dead_not_mss,dynamics,mg_from_guber,parus_43_cov_nulls
+from reports import fr_deti,short_report,dead_not_mss,dynamics,mg_from_guber
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
 from loader import load_report_vp_and_cv,load_report_guber
 from sending import send,voda
 from presentation import generate_pptx
 from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik,delete_old_files
 from regiz import regiz_decomposition,regiz_load_to_base
-from parus import o_40_covid_by_date,svod_40_cov_19 
+from parus import o_40_covid_by_date,svod_40_cov_19,parus_43_cov_nulls,svod_43_covid_19
 #from send_ODLI import send_bundle_to_ODLI
 import telebot_calendar
 from telebot_calendar import CallbackData
