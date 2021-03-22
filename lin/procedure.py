@@ -6,6 +6,7 @@ from collections import namedtuple
 from dateutil import relativedelta
 from collections import namedtuple
 from loader import get_dir
+from sending import send
 
 server  = os.getenv('server')
 user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser')
@@ -348,8 +349,8 @@ def sbor_death_week_svod(a):
     date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
     date_start = date_end - datetime.timedelta(days=6) 
 
-    new_path = get_dir('death_week') + f'/с {date_start} по {date_end}'
-    path     = get_dir('death_week') + f'/с {date_start} по {date_end}\[!~]*[!свод].xlsx'
+    path     = get_dir('death_week') + f'/с {date_start} по {date_end}/[!~]*[!вод].xlsx'
+    send('', path)
     df = pd.DataFrame()
     list_=[]
     for excel in glob.glob(path):

@@ -153,6 +153,10 @@ def check_table(path_to_excel, names):
 
 
 def regiz_load_to_base(a):
+    sql_execute("""
+                TRUNCATE TABLE dbo.TempTableFromMO
+                TRUNCATE TABLE nsi.Organization
+            """)
     mo = pd.read_excel(get_dir('regiz_svod') + '/mo_directory.xlsx')
     names = ['Номер истории болезни','Дата открытия СМО','Признак амбулаторного СМО','СНИЛС врача']
     path = get_dir('regiz') + '/ori.regiz*/_Входящие/*.xls' 
@@ -168,7 +172,7 @@ def regiz_load_to_base(a):
         else:
             organization = 'Не определена'
         try:
-            df = pd.read_excel(file, header=None, na_filter = False)
+            df = pd.read_excel(file)
         except:
             try:
                 df = pd.read_html(file)
@@ -193,10 +197,15 @@ def regiz_load_to_base(a):
                                               'DateLoadFile' : datetime.datetime.now(),
                                               'InOrOut'      : 'IN'}, ignore_index=True)
                 return pd.DataFrame(None)
-            
+            if list(df.columns) == ['Unnamed: 0','LPU_level1_key','HistoryNumber','OpenDate','IsAmbulant','SnilsDoctor']:
+                del df['Unnamed: 0']
+                return df
+            if list(df.columns) == ['Номер истории болезни','Дата открытия СМО','Признак амбулаторного СМО','СНИЛС врача']:
+                return df
             check = check_table(file,names)
             if not check[0]:
                 df = pd.read_excel(file,header=check[3], usecols = check[2], dtype=str)
+                del df['Unnamed: 0']
                 return df
             else:
                 statistic.append({'MOName'       : organization,
@@ -207,20 +216,39 @@ def regiz_load_to_base(a):
                                               'DateLoadFile' : datetime.datetime.now(),
                                               'InOrOut'      : 'IN'}, ignore_index=True)
                 return pd.DataFrame(None)
-    def load_file(df): 
+    def load_file(df,file): 
+        if len(mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO']): 
+            organization = mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO'].values[0]
+        else:
+            organization = 'Неизвестно'
+        
+        if list(df.columns) == ['LPU_level1_key','HistoryNumber','OpenDate','IsAmbulant','SnilsDoctor']:
+            df.to_sql('TempTableFromMO',con,schema='dbo',if_exists='append',index=False)
+            statistic.append({'MOName'       :  organization,
+                                              'NameFile'     : file,
+                                              'CountRows'    : len(df) ,
+                                              'TextError'    : 'Успешно загружен повторно',
+                                              'OtherFiles'   : '',
+                                              'DateLoadFile' : datetime.datetime.now(),
+                                              'InOrOut'      : 'IN'}, ignore_index=True)
+            return 1
+
         for col in df.columns:
             df[col.replace(' ','')] = df[col]
             del df[col]
+
+                   
         if len(mo.loc[mo['ftp_user'] == file.split('/')[5], 'level1_key']):
             df['level1_key'] = mo.loc[mo['ftp_user'] == file.split('/')[5], 'level1_key'].values[0]
-            df.rename(columns = {        'Номеристорииболезни':'HistoryNumber'
-                                        ,'ДатаоткрытияСМО':'OpenDate'
-                                        ,'ПризнакамбулаторногоСМО':'IsAmbulant'
-                                        , 'СНИЛСврача':'SnilsDoctor'
-                                        ,'level1_key':'LPU_level1_key'
+            key = df['level1_key']
+            df.drop(labels=['level1_key'], axis=1,inplace = True)
+            df.insert(0, 'level1_key', key)
+            df.rename(columns = {        'level1_key'              : 'LPU_level1_key'
+                                        ,'Номеристорииболезни'     : 'HistoryNumber'
+                                        ,'ДатаоткрытияСМО'         : 'OpenDate'
+                                        ,'ПризнакамбулаторногоСМО' : 'IsAmbulant'
+                                        , 'СНИЛСврача'             : 'SnilsDoctor'
                                     }, inplace = True)
-            columnsTitles=['LPU_level1_key','HistoryNumber','OpenDate','IsAmbulant','SnilsDoctor']
-            df = df.reindex(columns=columnsTitles)
             try:
                 df.to_sql('TempTableFromMO',con,schema='dbo',if_exists='append',index=False)
             except:
@@ -228,30 +256,33 @@ def regiz_load_to_base(a):
                                               'NameFile'     : file,
                                               'CountRows'    : 0 ,
                                               'TextError'    : 'Не удалось загрузить файл в базу',
-                                              'OtherFiles'   : other_files,
+                                              'OtherFiles'   : '',
                                               'DateLoadFile' : datetime.datetime.now(),
                                               'InOrOut'      : 'IN'}, ignore_index=True)
+                return 1
             else:
-                statistic.append({'MOName'       : mo.loc[mo['ftp_user'] == path.split('/')[5], 'MO'].values[0],
+                statistic.append({'MOName'       : organization ,
                                               'NameFile'     : file,
                                               'CountRows'    : len(df) ,
                                               'TextError'    : 'Успешно загружен',
-                                              'OtherFiles'   : other_files,
+                                              'OtherFiles'   : '',
                                               'DateLoadFile' : datetime.datetime.now(),
                                               'InOrOut'      : 'IN'}, ignore_index=True)
-                new_file = path.rsplit('/',2)[0] + '/Архив/время_'+ datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '.xlsx'
+                
+                new_file = file.rsplit('/',2)[0] + '/Архив/время_'+ datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '.xlsx'
                 df.to_excel(new_file, index=False)
                 remove_files.append(file)
                 list_.append(df)
+                return 1
         else:
             statistic.append({'MOName'       : organization,
                                           'NameFile'     : file,
                                           'CountRows'    : 0 ,
                                           'TextError'    : 'Не определен левел 1 кей',
-                                          'OtherFiles'   : other_files,
+                                          'OtherFiles'   : '',
                                           'DateLoadFile' : datetime.datetime.now(),
                                           'InOrOut'      : 'IN'}, ignore_index=True)
-            
+            return 1
     for file in files:
         try:
             df = read_file(file)
@@ -259,37 +290,37 @@ def regiz_load_to_base(a):
             send('', 'Ошибка при чтении ' +  file)
         if len(df):
             try:
-                load_file(df)
+                load_file(df,file)
             except:
-                send('', 'Ошибка при загрузке ' + file)
-                send('', 'Ошибка при загрузке ' + str(df.head(2)))
-
+                send('', 'Ошибка при загрузке ' +  file)
 
     send('','Приступаем к сборке свода')
     try:
         svod = pd.concat(list_)
     except ValueError:
+        mo.to_sql('Organization',con,schema='nsi',if_exists='append',index=False)
+        statistic.to_sql('JrnLoadFiles',con,schema='logs',if_exists='append',index=False)
         try:
             f = open(get_dir('regiz_svod') + '/log.txt', 'a')
         except:
             pass
         else:
             with f:
-                f.write("  Региз нет новых файлов " + str(datetime.datetime.now()) + '\n' )
+                f.write('Региз нет новых файлов ' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '\n' )
         svod_file = get_dir('regiz_svod') + '/' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') +' свод номеров для проверки.xlsx'
         with pd.ExcelWriter(svod_file) as writer:
             statistic.to_excel(writer,sheet_name='статистика',index=False)
         return svod_file 
     else:
         svod.index = range(1,len(svod)+1)
-        svod_file = get_dir('regiz_svod') + '/' + + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') +' свод номеров для проверки.xlsx'
+        svod_file = get_dir('regiz_svod') + '/' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') +' свод номеров для проверки.xlsx'
         with pd.ExcelWriter(svod_file) as writer:
             svod.to_excel(writer,sheet_name='номера',index=False)
             statistic.to_excel(writer,sheet_name='статистика',index=False)
         
         mo.to_sql('Organization',con,schema='nsi',if_exists='append',index=False)
-
-        sql_execute('EXEC [dbo].[Insert_Table_FileMO]')
+        statistic.to_sql('JrnLoadFiles',con,schema='logs',if_exists='append',index=False)
+        #sql_execute('EXEC [dbo].[Insert_Table_FileMO]')
 
         try:
             f = open(get_dir('regiz_svod') + '/log.txt', 'a')
@@ -297,15 +328,13 @@ def regiz_load_to_base(a):
             pass
         else:
             with f:
-                f.write("  Региз файлы загружены в базу " + str(datetime.datetime.now()) + '\n' )
-        #for file in remove_files:
-        #    try:
-        #        os.remove(file)
-        #    except:
-        #       pass
-    
-    statistic.to_sql('JrnLoadFiles',con,schema='logs',if_exists='append',index=False)
-    return svod_file
+                f.write("  Региз файлы загружены в базу " + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '\n' )
+        for file in remove_files:
+            try:
+                os.remove(file)
+            except:
+               pass
+        return svod_file
 
                 
 def regiz_load_to_base_old(a):
