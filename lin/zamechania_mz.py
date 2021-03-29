@@ -18,10 +18,14 @@ class my_except(Exception):
 
 
 sql_no_snils="""
+select f.*,isnull(c.[Примечания],'') as [Примечания]  from(
 select [УНРЗ],[ФИО],[Дата рождения],[Медицинская организация]
 from cv_fedreg
-where [СНИЛС] = 'Не идентифицирован'
+where [СНИЛС] = 'Не идентифицирован' ) f
+left join robo.snils_comment c
+on (f.УНРЗ = c.УНРЗ)
 """
+
 sql_bez_izhoda="""
 select [УНРЗ],[Медицинская организация],[Диагноз установлен],[Дата исхода заболевания]
 from dbo.cv_fedreg
@@ -248,4 +252,35 @@ def delete_old_files(date):
         except:
             pass
     return f"Я все поудалял за  дату {date.strftime('%Y-%m-%d')}"
-    
+   
+def load_snils_comment(a):
+    path = get_dir('snils_com') + '/*'
+    text = ''
+    for file in glob.glob(path):
+        try:
+            df = pd.read_excel(file,usecols=['УНРЗ','Примечания'])
+        except Exception as e: text +=  file.split('/')[-1] +'\n' + str(e) 
+        else:
+            with con.connect() as cursor:
+                cursor.execute("""TRUNCATE TABLE tmp.snils_comment""")
+            df.to_sql('snils_comment',con,schema='tmp',if_exists='append',index=False)
+            with con.connect() as cursor:
+                cursor.execute("""
+                update  a
+                    set a.[Примечания] = b.[Примечания]
+                    from [robo].[snils_comment] a inner join [tmp].[snils_comment] b
+                    on a.[УНРЗ] = b.[УНРЗ]
+
+            insert [robo].[snils_comment] 
+                    ([УНРЗ]
+                  ,[Примечания])
+                 SELECT b.[УНРЗ]
+                        ,b.[Примечания]
+                FROM [tmp].[snils_comment] b
+                left join [robo].[snils_comment] a
+                on a.[УНРЗ] = b.[УНРЗ]
+                where a.[УНРЗ] is null
+                """)
+            text += '\n Хорошо обработан файл ' + file.split('/')[-1]
+    return text
+

@@ -11,9 +11,9 @@ from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,loa
 from loader import load_report_vp_and_cv,load_report_guber
 from sending import send,voda
 from presentation import generate_pptx
-from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik,delete_old_files
+from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik,delete_old_files,load_snils_comment
 from regiz import regiz_decomposition,regiz_load_to_base
-from parus import o_40_covid_by_date,svod_40_cov_19,parus_43_cov_nulls,svod_43_covid_19
+from parus import o_40_covid_by_date,svod_40_cov_19,parus_43_cov_nulls,svod_43_covid_19,no_save_43
 #from send_ODLI import send_bundle_to_ODLI
 import telebot_calendar
 from telebot_calendar import CallbackData
@@ -154,20 +154,23 @@ def log_shedule(work,result):
 	       ,'{work}'
 	       ,'True'
 	       ,'{result[0]}'
-	       ,'{result[1].replace("'","")}')
+	       ,'{str(result[1]).replace("'","")}')
     """
     con.execute(sql)
 
 
 def load_1():
     result = create_tred('load_fr',None)
-    log_shedule('загрузка фр', result)
+    work = 'загрузка фр'
+    log_shedule(work, result)
     if result[0]:
         result = create_tred('load_fr_death',None)
-        log_shedule('загрузка умерших', result)
+        work = 'загрузка умерших'
+        log_shedule(work, result)
         if result[0]:
             result = create_tred('load_fr_lab',None)
-            log_shedule('загрузка лаборатории', result)
+            work = 'загрузка лаборатории'
+            log_shedule(work, result)
 
 def load_2():
     result = create_tred('load_UMSRS',None)
@@ -175,14 +178,15 @@ def load_2():
 
 def otchet_1():
     result = create_tred('medical_personal_sick',None)
-    log_shedule('файл заболевших медработников', result)
+    work = 'файл заболевших медработников' 
+    log_shedule(work, result)
 
 def regiz_razlogenie():
-    for id in user.group_users_id('info'):
-        bot.send_message(id, 'Начинаю раскладывать ошибки РЕГИЗ по папкам' )
+    #for id in user.group_users_id('info'):
+    #    bot.send_message(id, 'Начинаю раскладывать ошибки РЕГИЗ по папкам' )
     result = create_tred('regiz_decomposition',None)
-    for id in user.group_users_id('info'):
-        bot.send_document(id, open(result[1], 'rb'))
+    #for id in user.group_users_id('info'):
+    #    bot.send_document(id, open(result[1], 'rb'))
     bot.send_document(user.master(), open(result[1], 'rb'))
     os.remove(result[1])
 
@@ -197,7 +201,7 @@ schedule.every().day.at("07:00").do(otchet_1)
 schedule.every().day.at("07:05").do(regiz_razlogenie)
 
 t = threading.Thread(target=go, name="Расписание работ")
-#t.start()
+t.start()
 
 # ========= Маленькая процедурка для определения периода суток
 
@@ -229,7 +233,7 @@ def logi(user_id,command_id,result):
 	       ,'{commands[command_id].command_name}'
 	       ,'False'
 	       ,'{result[0]}'
-	       ,'{result[1].replace("'","")}')
+	       ,'{str(result[1]).replace("'","")}')
     """
     con.execute(sql)
 

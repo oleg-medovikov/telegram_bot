@@ -285,11 +285,13 @@ def parus_43_cov_nulls(a):
 
 def svod_43_covid_19(a):
     sql = """
-        SELECT  DAY, organization,
+        SELECT  
+                --DAY, organization,
                 covid_02, covid_03,
                         cast(covid_04 AS int) covid_04 , cast(covid_05 AS int) covid_05,
                         cast(covid_06_old_2 AS int) covid_06_old_2 ,
                         cast(covid_06 AS int) covid_06 , cast(covid_07 AS int) covid_07,
+                        cast(covid_08_old_2 AS int) covid_08_old_2, 
                         cast(covid_08 AS int) covid_08 , cast(covid_09 AS int) covid_09,
                         cast(covid_09_2 AS int) covid_09_2, cast(covid_10_old_2 AS int) covid_10_old_2,
                         cast(covid_10 AS int) covid_10 , cast(covid_11 AS int) covid_11
@@ -317,7 +319,7 @@ def svod_43_covid_19(a):
         on(d.BALANCEINDEX = bi.RN)
         WHERE  rf.CODE = '43 COVID 19'
         and bi.CODE in ('43_covid_02', '43_covid_03', '43_covid_04', '43_covid_05', '43_covid_06_old_2',
-                                        '43_covid_06',  '43_covid_07', '43_covid_08', '43_covid_09', '43_covid_09_2',
+                                        '43_covid_06',  '43_covid_07', '43_covid_08_old_2', '43_covid_08', '43_covid_09', '43_covid_09_2',
                                         '43_covid_10_old_2', '43_covid_10', '43_covid_11')
         AND r.BDATE =  trunc(SYSDATE) )
         pivot
@@ -326,17 +328,75 @@ def svod_43_covid_19(a):
         FOR POKAZATEL IN ('43_covid_02' covid_02, '43_covid_03' covid_03,
                                           '43_covid_04' covid_04, '43_covid_05' covid_05,
                                           '43_covid_06_old_2' covid_06_old_2,
-                                          '43_covid_06' covid_06, '43_covid_07' covid_07,
+                                          '43_covid_06' covid_06, '43_covid_07' covid_07,'43_covid_08_old_2' covid_08_old_2,
                                           '43_covid_08' covid_08, '43_covid_09' covid_09,
                                           '43_covid_09_2' covid_09_2, '43_covid_10_old_2' covid_10_old_2,
                                           '43_covid_10' covid_10, '43_covid_11' covid_11 )
         ) """
 
+    if datetime.datetime.today().weekday() == 0:
+        n = 3
+    else:
+        n = 1
+
+    sql1 = f"""
+        SELECT  
+                --DAY, organization,
+                covid_02, covid_03,
+                        cast(covid_04 AS int) covid_04 , cast(covid_05 AS int) covid_05,
+                        cast(covid_06_old_2 AS int) covid_06_old_2 ,
+                        cast(covid_06 AS int) covid_06 , cast(covid_07 AS int) covid_07,
+                        cast(covid_08_old_2 AS int) covid_08_old_2, 
+                        cast(covid_08 AS int) covid_08 , cast(covid_09 AS int) covid_09,
+                        cast(covid_09_2 AS int) covid_09_2, cast(covid_10_old_2 AS int) covid_10_old_2,
+                        cast(covid_10 AS int) covid_10 , cast(covid_11 AS int) covid_11
+        FROM (
+        SELECT 
+                CAST(r.BDATE AS varchar(30))  day,
+                a.AGNABBR  organization,
+                bi.CODE pokazatel,
+                CASE WHEN STRVAL  IS NOT NULL THEN STRVAL
+                         WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
+                         WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
+                        ELSE NULL END value
+        FROM PARUS.BLINDEXVALUES  d
+        INNER JOIN PARUS.BLSUBREPORTS s
+        ON (d.PRN = s.RN)
+        INNER JOIN PARUS.BLREPORTS r
+        ON(s.PRN = r.RN)
+        INNER JOIN PARUS.AGNLIST a 
+        on(r.AGENT = a.rn)
+        INNER JOIN PARUS.BLREPFORMED pf 
+        on(r.BLREPFORMED = pf.RN)
+        INNER JOIN PARUS.BLREPFORM rf 
+        on(pf.PRN = rf.RN)
+        INNER JOIN PARUS.BALANCEINDEXES bi 
+        on(d.BALANCEINDEX = bi.RN)
+        WHERE  rf.CODE = '43 COVID 19'
+        and bi.CODE in ('43_covid_02', '43_covid_03', '43_covid_04', '43_covid_05', '43_covid_06_old_2',
+                                        '43_covid_06',  '43_covid_07', '43_covid_08_old_2', '43_covid_08', '43_covid_09', '43_covid_09_2',
+                                        '43_covid_10_old_2', '43_covid_10', '43_covid_11')
+        AND r.BDATE =  trunc(SYSDATE - {n}) )
+        pivot
+        (
+        max(value)
+        FOR POKAZATEL IN ('43_covid_02' covid_02, '43_covid_03' covid_03,
+                                          '43_covid_04' covid_04, '43_covid_05' covid_05,
+                                          '43_covid_06_old_2' covid_06_old_2,
+                                          '43_covid_06' covid_06, '43_covid_07' covid_07,'43_covid_08_old_2' covid_08_old_2,
+                                          '43_covid_08' covid_08, '43_covid_09' covid_09,
+                                          '43_covid_09_2' covid_09_2, '43_covid_10_old_2' covid_10_old_2,
+                                          '43_covid_10' covid_10, '43_covid_11' covid_11 )
+        ) """
     try:
         df = pd.read_sql(sql,con)
+        df_old = pd.read_sql(sql1,con)
     except: 
         raise my_except('Не удалось прочесть базу')
     
+    df.index     = range(1,len(df) + 1)
+    df_old.index = range(1,len(df_old) + 1)
+
     date_otch = datetime.datetime.now().strftime('%d_%m_%Y')
     new_name = date_otch + '_43_COVID_19_cvod.xlsx'
     shablon_path = get_dir('help')
@@ -344,8 +404,16 @@ def svod_43_covid_19(a):
     shutil.copyfile(shablon_path + '/43 COVID 19.xlsx', shablon_path  + '/' + new_name)
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
-    ws = wb['Лист1']
-    rows = dataframe_to_rows(df,index=False, header=False)
+    ws = wb['Разрез по МО']
+    rows = dataframe_to_rows(df,index=True, header=False)
+    for r_idx, row in enumerate(rows,4):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    wb.save( shablon_path  + '/' + new_name) 
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    ws = wb['Вчера']
+    rows = dataframe_to_rows(df_old,index=True, header=False)
     for r_idx, row in enumerate(rows,4):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
@@ -353,4 +421,43 @@ def svod_43_covid_19(a):
 
     return  shablon_path  + '/' + new_name
 
+def no_save_43(a):
+    sql="""
+         SELECT 
+             a.AGNNAME "Наименование МО"
+            ,a.AGNABBR "Мнемокод" 
+            ,CASE 
+              WHEN r.SENT =  1
+                THEN 'Да'
+                ELSE 'Нет'
+             END "Отправлен на проверку"
+          FROM PARUS.BLINDEXVALUES  d
+            INNER JOIN PARUS.BLSUBREPORTS s
+              ON (d.PRN = s.RN)
+            INNER JOIN PARUS.BLREPORTS r
+              ON (s.PRN = r.RN)
+            INNER JOIN PARUS.AGNLIST a 
+              ON (r.AGENT = a.rn)
+            INNER JOIN PARUS.BLREPFORMED pf 
+              ON (r.BLREPFORMED = pf.RN)
+            INNER JOIN PARUS.BLREPFORM rf 
+              ON (pf.PRN = rf.RN)
+            INNER JOIN PARUS.BALANCEINDEXES bi 
+              ON (d.BALANCEINDEX = bi.RN)
+          WHERE rf.CODE = '43 COVID 19' -- наименование отчета
+              AND r.BDATE = trunc(SYSDATE) -- отчет за сегодняшнюю дату
+              AND bi.CODE = '43_covid_03' -- тип показателя, в котором указано наименование МО
+              AND s.SAVE_RESULT = 0    -- кто не сохранил свой отчет    
+          ORDER BY a.AGNABBR
+                """
+    try:
+        df = pd.read_sql(sql,con)
+    except:
+        raise my_except('Не удалось прочитать базу')
+    df = df.fillna(0)
+    table_html = get_dir('temp') + '/table.html'
+    table_png  = get_dir('temp') + '/table.png'
 
+    df.to_html(table_html,justify='center', index=False)
+    subprocess.call('wkhtmltoimage --quiet --encoding utf-8 -f png --width 0 ' +  table_html + ' ' + table_png, shell=True)
+    return table_png

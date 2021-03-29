@@ -208,7 +208,16 @@ def generate_pptx(date):
     tf = body_shape.text_frame
 
 
-    df = pd.read_sql("Select count(*) from cv_fedreg where DATEDIFF(day,[Дата создания РЗ],getdate() ) < 31", con)
+    #df = pd.read_sql("Select count(*) from cv_fedreg where DATEDIFF(day,[Дата создания РЗ],getdate() ) < 31", con)
+    df = pd.read_sql("""
+	    select count(*)
+	    from cv_fedreg 
+	    where 
+	    DATEDIFF(day,[Дата создания РЗ],getdate() ) < 31
+	    and (DATEDIFF(day,[Дата создания РЗ],[Диагноз установлен] ) > 7 or DATEDIFF(day,[Дата создания РЗ],[Диагноз установлен] ) < -7 )
+
+            """, con)
+
 
     p = tf.add_paragraph()
     p.text = 'за последние 30 дней: + ' + str(df.iat[0,0]) + ' УНРЗ'
