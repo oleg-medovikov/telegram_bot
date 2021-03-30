@@ -245,7 +245,18 @@ def regiz_load_to_base(a):
                 df.to_excel(new_file, index=False)
                 remove_files.append(file)
         df = df[0:0]
-
+    
+    mo.rename(columns = { 'ftp_user':'ftp_user'
+                        , 'oid':'OID'
+                        , 'level1_key':'level1_key'
+                        , 'МО_краткое наименование':'MONameSpr64'
+                        , 'MO':'MOName'
+                        , 'MO_полное':'MONameFull'
+                        , 'email':'Email'
+                        , 'active':'IsActive'
+                        , 'ИОГВ' : 'IOGV'
+                        }, inplace = True)
+    
     mo.to_sql('Organization',con,schema='nsi',if_exists='append',index=False)
     statistic.to_sql('JrnLoadFiles',con,schema='logs',if_exists='append',index=False)
     try:
@@ -266,7 +277,7 @@ def regiz_load_to_base(a):
 
         for file in remove_files:
             try:
-                os.remove(file)
+                #os.remove(file)
             except:
                pass
         return svod_file
@@ -416,6 +427,15 @@ def regiz_load_to_base_new_old(a):
 
     send('','Приступаем к сборке свода')
     
+mo.rename(columns = { 'ftp_user':'ftp_user'
+                        , 'oid':'OID'
+                        , 'level1_key':'level1_key'
+                        , 'МО_краткое наименование':'MONameSpr64'
+                        , 'MO':'MOName'
+                        , 'MO_полное':'MONameFull'
+                        , 'email':'Email'
+                        , 'active':'IsActive'
+                        }, inplace = True)
     mo.rename(columns = { 'ftp_user':'ftp_user'
                         , 'oid':'OID'
                         , 'level1_key':'level1_key'

@@ -190,6 +190,15 @@ def regiz_razlogenie():
     bot.send_document(user.master(), open(result[1], 'rb'))
     os.remove(result[1])
 
+def regiz_load():
+    #for id in user.group_users_id('info'):
+    #    bot.send_message(id, 'Начинаю раскладывать ошибки РЕГИЗ по папкам' )
+    result = create_tred('regiz_load_to_base',None)
+    #for id in user.group_users_id('info'):
+    #    bot.send_document(id, open(result[1], 'rb'))
+    bot.send_document(user.master(), open(result[1], 'rb'))
+    os.remove(result[1])
+
 def go():
     while True:
         schedule.run_pending()
@@ -199,6 +208,7 @@ schedule.every().day.at("03:00").do(load_1)
 schedule.every().day.at("06:00").do(load_2)
 schedule.every().day.at("07:00").do(otchet_1)
 schedule.every().day.at("07:05").do(regiz_razlogenie)
+schedule.every().day.at("16:05").do(regiz_load_to_base)
 
 t = threading.Thread(target=go, name="Расписание работ")
 t.start()
