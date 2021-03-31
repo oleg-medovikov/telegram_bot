@@ -22,6 +22,14 @@ def send(group,text):
         bot.send_message(id, text)
     return 1
 
+def send_file(group,file):
+    sql = f"SELECT  [id] FROM [robo].[bot_users] where [groups] in ('master','{group}')"
+    df = pd.read_sql(sql,con)
+    ids = df['id'].unique()
+    for id in ids:
+        bot.send_document(id, open(file), 'rb')
+    return 1
+
 def voda(message):
     bot.send_message(message.from_user.id, 'Вы ввели\n' + message.text.lower())
     sql = f"select [full_name],email,cabinet from robo.bot_users where id = '{message.from_user.id}'"

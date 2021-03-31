@@ -6,8 +6,8 @@ from loader import get_dir
 
 base_parus = os.getenv('base_parus')
 
-eng = sqlalchemy.create_engine("oracle+cx_oracle://" + base_parus + "/spb", pool_recycle=120)
-con = eng.connect()
+eng = sqlalchemy.create_engine("oracle+cx_oracle://" + base_parus + "/spb", pool_recycle=25)
+#con = eng.connect()
 
 class my_except(Exception):
     pass
@@ -52,10 +52,9 @@ def o_40_covid_by_date(a):
         )
         ORDER BY day, ROW_INDEX"""
 
-    try:
+    
+    with eng.connect() as con:
         df = pd.read_sql(sql,con)
-    except:
-        raise my_except('Соединение с базой паруса дурит')
     
     df = df.loc[df.tvsp.notnull()]
     df = df.loc[~df.tvsp.isin(['Пункт вакцинации'])]
@@ -210,15 +209,11 @@ def svod_40_cov_19(a):
         )
         ORDER BY ROW_INDEX"""
 
-    try:
-        #with sqlalchemy.create_engine("oracle+cx_oracle://" + base_parus + "/spb").connect() as connection:
+    with eng.connect() as con:
         df = pd.read_sql(sql,con)
         old = pd.read_sql(sql2,con)
-    except:
-        raise my_except('Соединение с базой паруса дурит')
-    
+   
     df = df.loc[~df.tvsp.isin(['Пункт вакцинации'])]
-    print(df.head(3))
     df.apply(pd.to_numeric,errors='ignore') #, downcast='integer')
 
     date_otch = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d_%m_%Y')
@@ -271,10 +266,9 @@ def parus_43_cov_nulls(a):
         GROUP BY r.BDATE,a.AGNABBR,a.AGNNAME
         HAVING sum(CASE WHEN NUMVAL = 0 THEN 1 ELSE 0 END ) > 1
             """
-    try:
+    
+    with eng.connect() as con:
         df = pd.read_sql(sql,con)
-    except:
-        raise my_except('Не удалось прочитать базу')
     df = df.fillna(0)
     table_html = get_dir('temp') + '/table.html'
     table_png  = get_dir('temp') + '/table.png'
@@ -388,11 +382,9 @@ def svod_43_covid_19(a):
                                           '43_covid_09_2' covid_09_2, '43_covid_10_old_2' covid_10_old_2,
                                           '43_covid_10' covid_10, '43_covid_11' covid_11 )
         ) """
-    try:
+    with eng.connect() as con:
         df = pd.read_sql(sql,con)
         df_old = pd.read_sql(sql1,con)
-    except: 
-        raise my_except('Не удалось прочесть базу')
     
     df.index     = range(1,len(df) + 1)
     df_old.index = range(1,len(df_old) + 1)
@@ -450,10 +442,8 @@ def no_save_43(a):
               AND s.SAVE_RESULT = 0    -- кто не сохранил свой отчет    
           ORDER BY a.AGNABBR
                 """
-    try:
+    with eng.connect() as con:
         df = pd.read_sql(sql,con)
-    except:
-        raise my_except('Не удалось прочитать базу')
     df = df.fillna(0)
     table_html = get_dir('temp') + '/table.html'
     table_png  = get_dir('temp') + '/table.png'

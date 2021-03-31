@@ -25,6 +25,7 @@ mo.rename(columns = {'ftp_user':'ftp_user'
                         , 'MO_полное':'MONameFull'
                         , 'email':'Email'
                         , 'active':'IsActive'
+                        , 'ИОГВ' : 'IOGV'
                         }, inplace = True)
 #print(mo.columns)
 mo.to_sql('Organization',con,schema='nsi',if_exists='append',index=False)

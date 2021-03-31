@@ -4,7 +4,7 @@ warnings.filterwarnings('ignore')
 from loader import get_dir
 from sending import send
 from sqlalchemy.orm import sessionmaker
-
+from xlrd import XLRDError
 
 server  = os.getenv('server_parus')
 user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser') # Тут правильный двойной слеш!
@@ -159,6 +159,7 @@ def regiz_load_to_base(a):
     names_new = ['HistoryNumber','OpenDate','IsAmbulant','SnilsDoctor']
     path = get_dir('regiz') + '/ori.regiz*/_Входящие/*.xls' 
     files = glob.glob(path) + glob.glob(path + 'x')
+    #files = glob.glob('/mnt/FTP/ORI/REGIZ/ori.regiz.*/Архив/время_30.03.2021_16-2*')
     list_ = []
     remove_files = []
     stat = pd.DataFrame()
@@ -166,6 +167,7 @@ def regiz_load_to_base(a):
 
     for file in files:
         other_files = str(glob.glob(file.rsplit('/',1)[0] + '/*'))
+        #other_files = 'какие-то файлы'
         
         if len(mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO']): 
             organization = mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO'].values[0]
@@ -173,7 +175,7 @@ def regiz_load_to_base(a):
             organization = 'Не определена'
 
         try:
-            df = pd.read_excel(file,usecols=names)
+            df = pd.read_excel(file,usecols=names,dtype=str)
         except XLRDError: # если это html файл 
             try:
                 df = pd.read_html(file)
@@ -181,6 +183,7 @@ def regiz_load_to_base(a):
                 print(file)
             else:
                 df = pd.concat(df)
+                df = df[names].applymap(str)
                 df.columns=names_new
                 stat = stat.append({'MOName'       : organization,
                                       'NameFile'     : file,
@@ -191,23 +194,24 @@ def regiz_load_to_base(a):
                                       'InOrOut'      : 'IN'}, ignore_index=True)
         except ValueError: # Если не найдены колонки
             try:
-                df = pd.read_excel(file, usecols=names_new)
+                df = pd.read_excel(file, usecols=names_new,dtype=str)
             except:
-                for i in range(10): # Ищем по столбцам 
-                    try:
-                        df = pd.read_excel(file,usecols=names, skiprows =i)
-                    except:
-                        pass
-                    else:
-                        df.columns=names_new
-                        stat = stat.append({'MOName'       : organization,
-                                              'NameFile'     : file,
-                                              'CountRows'    : len(df) ,
-                                              'TextError'    : 'Файл прочитан, но пришлось поискать шапку на строке номер ' + str(i),
-                                              'OtherFiles'   : other_files,
-                                              'DateLoadFile' : datetime.datetime.now(),
-                                              'InOrOut'      : 'IN'}, ignore_index=True)
-                        break
+                if len(pd.read_excel(file).columns) == 4:
+                    for i in range(10): # Ищем по столбцам 
+                        try:
+                            df = pd.read_excel(file,usecols=names, skiprows =i,dtype=str)
+                        except:
+                            pass
+                        else:
+                            df.columns=names_new
+                            stat = stat.append({'MOName'       : organization,
+                                                  'NameFile'     : file,
+                                                  'CountRows'    : len(df) ,
+                                                  'TextError'    : 'Файл прочитан, но пришлось поискать шапку на строке номер ' + str(i),
+                                                  'OtherFiles'   : other_files,
+                                                  'DateLoadFile' : datetime.datetime.now(),
+                                                  'InOrOut'      : 'IN'}, ignore_index=True)
+                            break
                 if not len(df):
                     stat = stat.append({'MOName'       : organization,
                                           'NameFile'     : file,
@@ -258,22 +262,23 @@ def regiz_load_to_base(a):
                         }, inplace = True)
     
     mo.to_sql('Organization',con,schema='nsi',if_exists='append',index=False)
-    statistic.to_sql('JrnLoadFiles',con,schema='logs',if_exists='append',index=False)
+    stat.to_sql('JrnLoadFiles',con,schema='logs',if_exists='append',index=False)
     try:
         svod = pd.concat(list_)
     except ValueError:
         svod_file = get_dir('regiz_svod') + '/' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') +' свод номеров для проверки.xlsx'
         with pd.ExcelWriter(svod_file) as writer:
-            statistic.to_excel(writer,sheet_name='статистика',index=False)
+            stat.to_excel(writer,sheet_name='статистика',index=False)
         return svod_file
     else:
         svod.index = range(1,len(svod)+1)
+        svod = svod.apply(lambda x: x.loc[::].str[:255] )
         svod.to_sql('TempTableFromMO',con,schema='dbo',if_exists='append',index=False)
         sql_execute('EXEC [dbo].[Insert_Table_FileMO]')
         svod_file = get_dir('regiz_svod') + '/' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') +' свод номеров для проверки.xlsx'
         with pd.ExcelWriter(svod_file) as writer:
             svod.to_excel(writer,sheet_name='номера',index=False)
-            statistic.to_excel(writer,sheet_name='статистика',index=False)
+            stat.to_excel(writer,sheet_name='статистика',index=False)
 
         for file in remove_files:
             try:

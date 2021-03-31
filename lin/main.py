@@ -9,7 +9,7 @@ from procedure import svod_unique_patient,svod_vachine_dates
 from reports import fr_deti,short_report,dead_not_mss,dynamics,mg_from_guber
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
 from loader import load_report_vp_and_cv,load_report_guber
-from sending import send,voda
+from sending import send,voda,send_file
 from presentation import generate_pptx
 from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik,delete_old_files,load_snils_comment
 from regiz import regiz_decomposition,regiz_load_to_base
@@ -182,22 +182,20 @@ def otchet_1():
     log_shedule(work, result)
 
 def regiz_razlogenie():
-    #for id in user.group_users_id('info'):
-    #    bot.send_message(id, 'Начинаю раскладывать ошибки РЕГИЗ по папкам' )
+    send('info', 'РЕГИЗ Начинаю раскладывать файлы по папкам')
     result = create_tred('regiz_decomposition',None)
-    #for id in user.group_users_id('info'):
-    #    bot.send_document(id, open(result[1], 'rb'))
-    bot.send_document(user.master(), open(result[1], 'rb'))
+    send_file('info',result[1])
     os.remove(result[1])
+    work = 'РЕГИЗ разложение файлов' 
+    log_shedule(work, result)
 
 def regiz_load():
-    #for id in user.group_users_id('info'):
-    #    bot.send_message(id, 'Начинаю раскладывать ошибки РЕГИЗ по папкам' )
+    send('info', 'РЕГИЗ Начинаю загружать файлы')
     result = create_tred('regiz_load_to_base',None)
-    #for id in user.group_users_id('info'):
-    #    bot.send_document(id, open(result[1], 'rb'))
-    bot.send_document(user.master(), open(result[1], 'rb'))
+    send_file('info',result[1])
     os.remove(result[1])
+    work = 'РЕГИЗ загрузка файлов' 
+    log_shedule(work, result)
 
 def go():
     while True:
