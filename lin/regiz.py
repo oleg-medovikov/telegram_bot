@@ -253,8 +253,8 @@ def regiz_load_to_base(a):
                 df.drop(labels=['LPU_level1_key'], axis=1,inplace = True)
                 df.insert(0, 'LPU_level1_key', key)
                 list_.append(df)
-                new_file = file.rsplit('/',2)[0] + '/Архив/время_'+ datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '.xlsx'
-                df.to_excel(new_file, index=False)
+                #new_file = file.rsplit('/',2)[0] + '/Архив/время_'+ datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '.xlsx'
+                #df.to_excel(new_file, index=False)
                 remove_files.append(file)
         df = df[0:0]
     
@@ -287,10 +287,11 @@ def regiz_load_to_base(a):
         with pd.ExcelWriter(svod_file) as writer:
             svod.to_excel(writer,sheet_name='номера',index=False)
             stat.to_excel(writer,sheet_name='статистика',index=False)
-
+    
         for file in remove_files:
+            new_file = file.rsplit('/',2)[0] + '/Архив/время_' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '.' + file.rsplit('.',1)[1]
             try:
-                os.remove(file)
+                os.replase(file,new_file)
             except:
                pass
         return svod_file 
