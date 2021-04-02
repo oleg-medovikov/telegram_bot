@@ -1,4 +1,4 @@
-import sqlalchemy,cx_Oracle,os,openpyxl,shutil,datetime,subprocess
+import sqlalchemy,cx_Oracle,os,openpyxl,shutil,datetime,subprocess,time
 from openpyxl.utils.dataframe import dataframe_to_rows
 import numpy as np
 import pandas as pd
@@ -6,8 +6,10 @@ from loader import get_dir
 
 base_parus = os.getenv('base_parus')
 
-eng = sqlalchemy.create_engine("oracle+cx_oracle://" + base_parus + "/spb", pool_recycle=25)
-#con = eng.connect()
+
+userName = os.getenv('oracle_user')
+password = os.getenv('oracle_pass')
+userbase = os.getenv('oracle_base')
 
 class my_except(Exception):
     pass
@@ -53,9 +55,9 @@ def o_40_covid_by_date(a):
         ORDER BY day, ROW_INDEX"""
 
     
-    with eng.connect() as con:
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
-    
+
     df = df.loc[df.tvsp.notnull()]
     df = df.loc[~df.tvsp.isin(['Пункт вакцинации'])]
     df.v_1 = pd.to_numeric(df.v_1)
@@ -209,7 +211,7 @@ def svod_40_cov_19(a):
         )
         ORDER BY ROW_INDEX"""
 
-    with eng.connect() as con:
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
         old = pd.read_sql(sql2,con)
    
@@ -267,8 +269,9 @@ def parus_43_cov_nulls(a):
         HAVING sum(CASE WHEN NUMVAL = 0 THEN 1 ELSE 0 END ) > 1
             """
     
-    with eng.connect() as con:
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
+
     df = df.fillna(0)
     table_html = get_dir('temp') + '/table.html'
     table_png  = get_dir('temp') + '/table.png'
@@ -382,7 +385,8 @@ def svod_43_covid_19(a):
                                           '43_covid_09_2' covid_09_2, '43_covid_10_old_2' covid_10_old_2,
                                           '43_covid_10' covid_10, '43_covid_11' covid_11 )
         ) """
-    with eng.connect() as con:
+    
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
         df_old = pd.read_sql(sql1,con)
     
@@ -442,8 +446,9 @@ def no_save_43(a):
               AND s.SAVE_RESULT = 0    -- кто не сохранил свой отчет    
           ORDER BY a.AGNABBR
                 """
-    with eng.connect() as con:
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
+
     df = df.fillna(0)
     table_html = get_dir('temp') + '/table.html'
     table_png  = get_dir('temp') + '/table.png'
@@ -451,3 +456,169 @@ def no_save_43(a):
     df.to_html(table_html,justify='center', index=False)
     subprocess.call('wkhtmltoimage --quiet --encoding utf-8 -f png --width 0 ' +  table_html + ' ' + table_png, shell=True)
     return table_png
+
+def cvod_29_covid(a): 
+    if int(time.strftime("%H")) < 16:
+        n = 1
+        date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d_%m_%Y')
+    else:
+        n = 0
+        date = datetime.datetime.now().strftime('%d_%m_%Y')
+    sql = f"""
+    SELECT  DAY, pok_01, nvl(cast(pok_02 as int),0) pok_02,
+    nvl(cast(pok_03 as int),0) pok_03,nvl(cast(pok_04 as int),0) pok_04,nvl(cast(pok_05 as int),0) pok_05,nvl(cast(pok_06 as int),0) pok_06,
+    nvl(cast(pok_07 as int),0) pok_07,nvl(cast(pok_08 as int),0) pok_08,nvl(cast(pok_09 as int),0) pok_09,nvl(cast(pok_10 as int),0) pok_10,
+    nvl(cast(pok_11 as int),0) pok_11,nvl(cast(pok_12 as int),0) pok_12,nvl(cast(pok_13 as int),0) pok_13,nvl(cast(pok_14 as int),0) pok_14,
+    nvl(cast(pok_15 as int),0) pok_15,nvl(cast(pok_16 as int),0) pok_16,nvl(cast(pok_17 as int),0) pok_17,nvl(cast(pok_18 as int),0) pok_18,
+    nvl(cast(pok_19 as int),0) pok_19,nvl(cast(pok_20 as int),0) pok_20,nvl(cast(pok_21 as int),0) pok_21,nvl(cast(pok_22 as int),0) pok_22,
+    nvl(cast(pok_23 as int),0) pok_23,nvl(cast(pok_24 as int),0) pok_24,nvl(cast(pok_25 as int),0) pok_25,nvl(cast(pok_26 as int),0) pok_26,
+    nvl(cast(pok_27 as int),0) pok_27,nvl(cast(pok_28 as int),0) pok_28,nvl(cast(pok_29 as int),0) pok_29,nvl(cast(pok_30 as int),0) pok_30,
+    nvl(cast(pok_31 as int),0) pok_31,nvl(cast(pok_32 as int),0) pok_32,nvl(cast(pok_33 as int),0) pok_33,nvl(cast(pok_34 as int),0) pok_34,
+    nvl(cast(pok_35 as int),0) pok_35,nvl(cast(pok_36 as int),0) pok_36,nvl(cast(pok_37 as int),0) pok_37,nvl(cast(pok_38 as int),0) pok_38,
+    nvl(cast(pok_39 as int),0) pok_39,nvl(cast(pok_40 as int),0) pok_40,nvl(cast(pok_41 as int),0) pok_41,nvl(cast(pok_42 as int),0) pok_42,
+    nvl(cast(pok_43 as int),0) pok_43,
+    nvl(cast(pok_44 as float),0) pok_44,nvl(cast(pok_45 as float),0) pok_45,nvl(cast(pok_46 as float),0) pok_46,
+    nvl(cast(pok_47 as float),0) pok_47,nvl(cast(pok_48 as float),0) pok_48,nvl(cast(pok_49 as float),0) pok_49,nvl(cast(pok_50 as float),0) pok_50,
+    nvl(cast(pok_51 as float),0) pok_51,nvl(cast(pok_52 as float),0) pok_52,nvl(cast(pok_53 as float),0) pok_53,
+    nvl(cast(pok_54 as int),0) pok_54,nvl(cast(pok_55 as float),0) pok_55
+    FROM (
+    SELECT 
+            to_char(r.BDATE, 'DD.MM.YYYY')  day,
+            a.AGNNAME ORGANIZATION ,
+            rf.CODE  otchet,
+            bi.CODE  pokazatel,
+        CASE WHEN STRVAL IS NOT NULL THEN STRVAL 
+             WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
+                 WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
+            ELSE NULL END value
+    FROM PARUS.BLINDEXVALUES  d
+    INNER JOIN PARUS.BLSUBREPORTS s
+    ON (d.PRN = s.RN)
+    INNER JOIN PARUS.BLREPORTS r
+    ON(s.PRN = r.RN)
+    INNER JOIN PARUS.AGNLIST a 
+    on(r.AGENT = a.rn)
+    INNER JOIN PARUS.BLREPFORMED pf 		
+    on(r.BLREPFORMED = pf.RN)
+    INNER JOIN PARUS.BLREPFORM rf 
+    on(pf.PRN = rf.RN)
+    INNER JOIN PARUS.BALANCEINDEXES bi 
+    on(d.BALANCEINDEX = bi.RN)
+    WHERE rf.CODE = '29 COVID 19' 
+    and r.BDATE =  trunc(SYSDATE-{n})
+    and bi.CODE LIKE '29_covid_0%'
+    order by  d.BALANCEINDEX 
+    )
+    pivot
+    (
+    MIN(value)
+    FOR POKAZATEL IN ('29_covid_001' pok_01,'29_covid_002' pok_02,'29_covid_003' pok_03,'29_covid_004' pok_04,
+    '29_covid_005' pok_05,'29_covid_006' pok_06,'29_covid_007' pok_07,'29_covid_008' pok_08,
+    '29_covid_009' pok_09,'29_covid_010' pok_10,'29_covid_011' pok_11,'29_covid_012' pok_12,
+    '29_covid_013' pok_13,'29_covid_014' pok_14,'29_covid_015' pok_15,'29_covid_016' pok_16,
+    '29_covid_017' pok_17,'29_covid_018' pok_18,'29_covid_019' pok_19,'29_covid_020' pok_20,
+    '29_covid_021' pok_21,'29_covid_022' pok_22,'29_covid_023' pok_23,'29_covid_024' pok_24,
+    '29_covid_025' pok_25,'29_covid_026' pok_26,'29_covid_027' pok_27,'29_covid_028' pok_28,
+    '29_covid_029' pok_29,'29_covid_030' pok_30,'29_covid_031' pok_31,'29_covid_032' pok_32,
+    '29_covid_033' pok_33,'29_covid_034' pok_34,'29_covid_035' pok_35,'29_covid_036' pok_36,
+    '29_covid_037' pok_37,'29_covid_038' pok_38,'29_covid_039' pok_39,'29_covid_040' pok_40,
+    '29_covid_041' pok_41,'29_covid_042' pok_42,'29_covid_043' pok_43,'29_covid_044' pok_44,
+    '29_covid_045' pok_45,'29_covid_046' pok_46,'29_covid_047' pok_47,'29_covid_048' pok_48,
+    '29_covid_049' pok_49,'29_covid_050' pok_50,'29_covid_051' pok_51,'29_covid_052' pok_52,
+    '29_covid_053' pok_53,'29_covid_054' pok_54,'29_covid_055' pok_55)
+    )
+    WHERE POK_01 IS NOT NULL 
+    ORDER BY POK_01
+    """
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql,con)
+
+    new_name = date + '_29_COVID_19_cvod.xlsx'
+    shablon_path = get_dir('help')
+
+    shutil.copyfile(shablon_path + '/29_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    ws = wb['Для заполнения']
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,3):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    wb.save( shablon_path  + '/' + new_name) 
+
+    return  shablon_path  + '/' + new_name
+
+def cvod_33_covid(a):
+    sql = """
+    SELECT  Trp_17_MO, Trp_18_dist,
+            nvl(cast(Trp_01 as int),0) Trp_01, nvl(cast(Trp_02 as int),0) Trp_02,
+            nvl(cast(Trp_03 as int),0) Trp_03, nvl(cast(Trp_04 as int),0) Trp_04,
+            nvl(cast(Trp_05 as int),0) Trp_05, nvl(cast(Trp_06 as int),0) Trp_06,
+            nvl(cast(Trp_07 as int),0) Trp_07, nvl(cast(Trp_07 as int),0) Trp_07,
+            nvl(cast(Trp_08 as int),0) Trp_08, nvl(cast(Trp_09 as int),0) Trp_09,
+            nvl(cast(Trp_10 as int),0) Trp_10, nvl(cast(Trp_11 as int),0) Trp_11,
+            nvl(cast(Trp_12 as int),0) Trp_12, nvl(cast(Trp_13 as int),0) Trp_13,
+            nvl(cast(Trp_14 as int),0) Trp_14, nvl(cast(Trp_15 as int),0) Trp_15,
+            nvl(cast(Trp_16 as int),0) Trp_16
+    FROM (
+    SELECT 
+            to_char(r.BDATE, 'DD.MM.YYYY') day,
+            i.CODE pokazatel,
+            ro.NUMB row_index ,
+            CASE WHEN STRVAL  IS NOT NULL THEN STRVAL 
+                     WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
+                     WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
+                    ELSE NULL END value
+    FROM PARUS.BLTBLVALUES v
+    INNER JOIN PARUS.BLTABLESIND si 
+    on(v.BLTABLESIND = si.RN)
+    INNER JOIN PARUS.BALANCEINDEXES i 
+    on(si.BALANCEINDEXES = i.RN)
+    INNER JOIN PARUS.BLTBLROWS ro 
+    on(v.PRN = ro.RN)
+    INNER JOIN PARUS.BLSUBREPORTS s 
+    on(ro.PRN = s.RN)
+    INNER JOIN PARUS.BLREPORTS r 
+    on(s.PRN = r.RN)
+    INNER JOIN PARUS.AGNLIST a
+    on(r.AGENT = a.RN)
+    INNER JOIN PARUS.BLREPFORMED rd
+    on(r.BLREPFORMED = rd.RN)
+    INNER JOIN PARUS.BLREPFORM rf
+    on(rd.PRN = rf.RN)
+    WHERE rf.code = '33 COVID 19'
+    and r.BDATE = trunc(sysdate -1) 
+    AND i.CODE IN ('Trp_17_MO', 'Trp_18_dist', 'Trp_01', 'Trp_02', 'Trp_03', 'Trp_04', 'Trp_05', 'Trp_06',
+            'Trp_07', 'Trp_08','Trp_09', 'Trp_10', 'Trp_11', 'Trp_12', 'Trp_13', 'Trp_14', 'Trp_15', 'Trp_16' )
+    )
+    pivot
+    (
+    MIN(value)
+    FOR POKAZATEL IN (  'Trp_17_MO' Trp_17_MO, 'Trp_18_dist' Trp_18_dist, 'Trp_01' Trp_01, 'Trp_02' Trp_02,
+                                            'Trp_03' Trp_03, 'Trp_04' Trp_04, 'Trp_05' Trp_05 , 'Trp_06' Trp_06,
+                                    'Trp_07' Trp_07, 'Trp_08' Trp_08, 'Trp_09' Trp_09, 'Trp_10' Trp_10, 'Trp_11' Trp_11,
+                                    'Trp_12' Trp_12, 'Trp_13' Trp_13, 'Trp_14' Trp_14, 'Trp_15' Trp_15, 'Trp_16' Trp_16 )    			
+    )
+    WHERE Trp_17_MO IS NOT NULL 
+    ORDER BY Trp_18_dist
+    """
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql,con)
+
+    date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d_%m_%Y')
+    new_name = date + '_33_COVID_19_cvod.xlsx'
+    shablon_path = get_dir('help')
+
+    shutil.copyfile(shablon_path + '/33_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    ws = wb['Свод']
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):  
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    wb.save( shablon_path  + '/' + new_name) 
+
+    return  shablon_path  + '/' + new_name
+

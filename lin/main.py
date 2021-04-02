@@ -13,7 +13,7 @@ from sending import send,voda,send_file
 from presentation import generate_pptx
 from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik,delete_old_files,load_snils_comment
 from regiz import regiz_decomposition,regiz_load_to_base
-from parus import o_40_covid_by_date,svod_40_cov_19,parus_43_cov_nulls,svod_43_covid_19,no_save_43
+from parus import o_40_covid_by_date,svod_40_cov_19,parus_43_cov_nulls,svod_43_covid_19,no_save_43,cvod_29_covid,cvod_33_covid
 #from send_ODLI import send_bundle_to_ODLI
 import telebot_calendar
 from telebot_calendar import CallbackData

@@ -2,7 +2,7 @@ import pandas as pd
 import datetime,warnings,shutil,sqlalchemy,os,glob
 warnings.filterwarnings('ignore')
 from loader import get_dir
-from sending import send
+from sending import send,send_file
 from sqlalchemy.orm import sessionmaker
 from xlrd import XLRDError
 
@@ -47,16 +47,22 @@ def regiz_decomposition(a):
                 try:
                     otvet.to_excel(writer,sheet_name='номера',index=False)
                 except PermissionError:
-                    pass
+                    statistic = statistic.append({'MOName' : lpu_name,
+                                          'NameFile' : path_otvet.split('/')[-1],
+                                          'CountRows' : len(otvet),
+                                          'TextError' : 'Не удалось положить файл из-за ошибки доступа',
+                                          'OtherFiles' : '',
+                                          'DateLoadFile' : datetime.datetime.now(),
+                                          'InOrOut' : 'Out' }, ignore_index=True)
+                else:
+                    statistic = statistic.append({'MOName' : lpu_name,
+                                          'NameFile' : path_otvet.split('/')[-1],
+                                          'CountRows' : len(otvet),
+                                          'TextError' : '',
+                                          'OtherFiles' : '',
+                                          'DateLoadFile' : datetime.datetime.now(),
+                                          'InOrOut' : 'Out' }, ignore_index=True)
 
-            k = len(statistic)
-            statistic.loc[k,'MOName'] = lpu_name
-            statistic.loc[k,'NameFile'] = path_otvet.split('/')[-1]
-            statistic.loc[k,'CountRows'] = len(otvet)
-            statistic.loc[k,'TextError'] = ''
-            statistic.loc[k,'OtherFiles'] = ''
-            statistic.loc[k,'DateLoadFile'] = datetime.datetime.now()
-            statistic.loc[k,'InOrOut'] = 'Out'
 
         path_log = get_dir('regiz_svod')+'/'+ str(datetime.datetime.now().date()) + ' лог разложения.xlsx'
 
@@ -72,6 +78,7 @@ def regiz_decomposition(a):
                     index=False
             )
         send('info','Загружены логи')
+        #send_file('info',path_log)
 
         # Очистка таблиц в базе данных
         from sqlalchemy.orm import sessionmaker
@@ -97,22 +104,24 @@ def regiz_decomposition(a):
         
         send('info','Региз разложен по папкам')
         try:
-            file = open(get_dir('regiz_svod') + '/log.txt', 'a')
+            file = open(get_dir('regiz_svod') + '/log.txt', 'a', encoding='utf-8')
         except:
             send('info', 'Файл лога недоступен!' )
         else:
             with file:
-                file.write("  Региз разложен по папкам " + str(datetime.datetime.now()) + '\n' )
-            return temp_log
+                file.write("  Региз разложен по папкам " + str(datetime.datetime.today()) + '\n' )
+        
+        return temp_log
     else:
         try:
-            file = open(get_dir('regiz_svod') + r'/log.txt', 'a')
+            file = open(get_dir('regiz_svod') + r'/log.txt', 'a', encoding='utf-8')
         except:
             send('info', 'Файл лога недоступен!' )
         else:
             with file:
-                file.write("  РЕГИЗ Нечего раскладывать по папкам " + str(datetime.datetime.now()) + '\n' )
-            raise my_except("Нечего раскладывать по папкам!")
+                file.write("  РЕГИЗ Нечего раскладывать по папкам " + str(datetime.datetime.today()) + '\n' )
+        
+        raise my_except("Нечего раскладывать по папкам!")
 
 # Функция проверки колонок таблицы
 def check_table(path_to_excel, names):
@@ -147,7 +156,6 @@ def check_table(path_to_excel, names):
         else:
             break
     return error,error_text,collum, head-1
-
 
 def regiz_load_to_base(a):
     sql_execute("""
@@ -285,7 +293,7 @@ def regiz_load_to_base(a):
                 os.remove(file)
             except:
                pass
-        return svod_file
+        return svod_file 
 
 def regiz_load_to_base_new_old(a):
     sql_execute("""
