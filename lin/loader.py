@@ -1,6 +1,6 @@
 #Работа с базами данных
 import pandas as pd
-import glob,warnings,datetime,os,xlrd,csv,openpyxl,shutil,threading,time,numpy,sqlalchemy
+import subprocess,glob,warnings,datetime,os,xlrd,csv,openpyxl,shutil,threading,time,numpy,sqlalchemy
 from sending import send
 from sqlalchemy.orm import sessionmaker
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -8,6 +8,7 @@ from reports import short_report
 from multiprocessing import Process
 from multiprocessing.pool import ThreadPool
 from reports import short_report
+from pyexcelerate import Workbook
 
 warnings.filterwarnings('ignore')
 
@@ -109,68 +110,46 @@ def check_file(file,category):
     return check,error_text,collum, head - 1
 
 def slojit_fr(a):
-    def read_part_df(excel,number):
-        nameSheetShablon = "Sheet1"
-        df = pd.read_excel(excel, sheet_name= nameSheetShablon, dtype = str, skiprows = 1, head= 1)
-        send('epid','прочтен файлик номер '+ list_numbers[number])
-        return df
-    def file_1(svod):
-        with pd.ExcelWriter(new_fedreg) as writer:
-            svod.to_excel(writer,index=False)
+    def file_write(df, file):
+        values = [df.columns] + list(df.values)
+        wb = Workbook()
+        wb.new_sheet('Федеральный регистр', data=values)
+        wb.save(file)
         return 1
-    def file_2(svod):
-        df = svod
-        del df['СНИЛС']
-        del df['ФИО']
-        with pd.ExcelWriter(new_iach) as writer:
-            df.to_excel(writer,index=False)
-        return 1
-    pathFolderFedRegParts = get_dir('path_robot') + '/_ФР_по_частям'
+
+    path = get_dir('path_robot') + '/_new_fr_parts'
     date = datetime.datetime.today().strftime("%Y_%m_%d")
     _list = []
-    list_numbers = ['раз', 'двас', 'трис']
-    pool = ThreadPool(processes=2)
-    i = 0
-    for excel in glob.glob(pathFolderFedRegParts + '/Федеральный регистр*.xlsx'):
-        thread = pool.apply_async(read_part_df,(excel,i)).get()
-        _list.append(thread)
-        i+=1
+    
+    for csv in glob.glob(path + '/*.csv'):
+        os.remove(csv)
 
-    svod = pd.DataFrame() 
+    for xlsx in glob.glob(path + '/*.xlsx'):
+        csv = xlsx[:-4] + 'csv'
+        subprocess.call('xlsx2csv ' + xlsx.replace( ' ', '\ ' ) + ' ' + csv.replace( ' ', '\ ' ), shell=True)
+        send('epid','конвертирован файл ' + csv.rsplit('/',1)[-1])
+
+
+    for csv in glob.glob(path + '/*.csv'):
+        df = pd.read_csv(csv,skiprows=1)
+        _list.append(df)
+    
+    send('epid','Прочел файлы')
     svod = pd.concat(_list)
 
     svod = svod[svod["Дата создания РЗ"].notnull()] 
     svod["п/н"] = range(1, len(svod)+1)
     
-    new_fedreg = pathFolderFedRegParts + '/Федеральный регистр лиц, больных COVID-19 - ' + date + '.xlsx'
-    new_iach   = pathFolderFedRegParts + '/Федеральный регистр лиц, больных COVID-19 - ' + date + '_ИАЦ.xlsx'
-#    shutil.copyfile(pathFolderFedRegParts + r'\ФР.xlsx', new_fedreg)
-#    shutil.copyfile(pathFolderFedRegParts + r'\ФР_ИАЦ.xlsx', new_iach)
-#    wb= openpyxl.load_workbook(new_fedreg)
-#    ws = wb[nameSheetShablon]
-#    rows = dataframe_to_rows(svod, index=False, header=False)
-#    for r_idx, row in enumerate(rows, 1):
-#        for c_idx, value in enumerate(row, 1):
-#            ws.cell(row=r_idx, column=c_idx, value=value)
-#    wb.save(new_fedreg)
-#    svod = svod.drop(['СНИЛС', 'ФИО'], axis=1)
-#    wb= openpyxl.load_workbook(new_iach)
-#    ws = wb[nameSheetShablon]
-#    rows = dataframe_to_rows(svod, index=False, header=False)
+    new_fedreg      = path + '/Федеральный регистр лиц, больных - ' + date + '.xlsx'
+    new_fedreg_temp = get_dir('temp') + '/Федеральный регистр лиц, больных - ' + date + '.xlsx'
+    new_iach        = path + '/Федеральный регистр лиц, больных - ' + date + '_ИАЦ.xlsx'
+    new_iach_temp   = get_dir('temp') + '/Федеральный регистр лиц, больных - ' + date + '_ИАЦ.xlsx'
     try:
         del df['Unnamed: 24']
     except:
         pass
 
-    pool = ThreadPool(processes=2)
-    pool.apply_async(file_1,(svod,)).get()
-    pool.apply_async(file_2,(svod,)).get()
-
-#    for r_idx, row in enumerate(rows, 3):
-#        for c_idx, value in enumerate(row, 1):
-#            ws.cell(row=r_idx, column=c_idx, value=value)
-#    wb.save(new_iach)
-
+    
     NumberForMG = len(svod[svod['Диагноз'].isin(['U07.1']) \
                     & svod['Исход заболевания'].isnull() \
                     & svod['Вид лечения'].isin(['Стационарное лечение'])])
@@ -207,7 +186,18 @@ def slojit_fr(a):
             + 'Сейчас на стационаром лечении: ' + str(NumberFor4) + '\n' \
             + 'Сейчас на стационаром лечении старше 60: ' + str(NumberFor5) + '\n' \
             + 'Сейчас на стационаром лечении старше 70: ' + str(NumberFor6) 
-    return otvet
+    
+    send('epid',otvet)
+
+    file_write(svod,new_fedreg_temp)
+    shutil.copyfile(new_fedreg_temp,new_fedreg)
+    send('epid','Записан файл фед регистра')
+    del svod['СНИЛС']
+    del svod['ФИО']
+    file_write(svod,new_iach_temp)
+    shutil.copyfile(new_iach_temp,new_iach)
+    send('epid','Записан файл иац')
+    return 'Фух, закончил'
 
 def excel_to_csv_old(file_excel):
     file_csv = file_excel[:-4] + 'csv'

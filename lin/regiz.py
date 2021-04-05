@@ -64,11 +64,11 @@ def regiz_decomposition(a):
                                           'InOrOut' : 'Out' }, ignore_index=True)
 
 
-        path_log = get_dir('regiz_svod')+'/'+ str(datetime.datetime.now().date()) + ' лог разложения.xlsx'
+        path_log = get_dir('regiz_svod')+'/'+ datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '_лог_разложения.xlsx'
 
         with pd.ExcelWriter(path_log) as writer:
             statistic.to_excel(writer,sheet_name='логи',index=False)
-        temp_log = get_dir('temp') + '/' + path_log.split('/')[-1]
+        temp_log = get_dir('temp') + '/' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '_decomposition_log.xlsx'
         shutil.copyfile(path_log,temp_log)
         statistic.to_sql(
                     'JrnLoadFiles',
@@ -78,8 +78,6 @@ def regiz_decomposition(a):
                     index=False
             )
         send('info','Загружены логи')
-        #send_file('info',path_log)
-
         # Очистка таблиц в базе данных
         from sqlalchemy.orm import sessionmaker
 
@@ -101,8 +99,8 @@ def regiz_decomposition(a):
         session.commit()
         session.close()
         
-        
         send('info','Региз разложен по папкам')
+        send_file('info',temp_log)
         try:
             file = open(get_dir('regiz_svod') + '/log.txt', 'a', encoding='utf-8')
         except:
@@ -175,13 +173,11 @@ def regiz_load_to_base(a):
 
     for file in files:
         other_files = str(glob.glob(file.rsplit('/',1)[0] + '/*'))
-        #other_files = 'какие-то файлы'
-        
+       
         if len(mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO']): 
             organization = mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO'].values[0]
         else:
             organization = 'Не определена'
-
         try:
             df = pd.read_excel(file,usecols=names,dtype=str)
         except XLRDError: # если это html файл 
@@ -205,7 +201,7 @@ def regiz_load_to_base(a):
                 df = pd.read_excel(file, usecols=names_new,dtype=str)
             except:
                 if len(pd.read_excel(file).columns) == 4:
-                    for i in range(10): # Ищем по столбцам 
+                    for i in range(10): # Ищем по строкам 
                         try:
                             df = pd.read_excel(file,usecols=names, skiprows =i,dtype=str)
                         except:
@@ -214,7 +210,7 @@ def regiz_load_to_base(a):
                             df.columns=names_new
                             stat = stat.append({'MOName'       : organization,
                                                   'NameFile'     : file,
-                                                  'CountRows'    : len(df) ,
+                                                  'CountRows'    : len(df),
                                                   'TextError'    : 'Файл прочитан, но пришлось поискать шапку на строке номер ' + str(i),
                                                   'OtherFiles'   : other_files,
                                                   'DateLoadFile' : datetime.datetime.now(),
@@ -231,7 +227,7 @@ def regiz_load_to_base(a):
             else:
                 stat = stat.append({'MOName'       : organization,
                                                   'NameFile'     : file,
-                                                  'CountRows'    : len(df) ,
+                                                  'CountRows'    : len(df),
                                                   'TextError'    : 'Файл прочитан, но он уже был когда-то обработан',
                                                   'OtherFiles'   : other_files,
                                                   'DateLoadFile' : datetime.datetime.now(),
@@ -240,7 +236,7 @@ def regiz_load_to_base(a):
             df.columns=names_new
             stat = stat.append({'MOName'       : organization,
                                               'NameFile'     : file,
-                                              'CountRows'    : len(df) ,
+                                              'CountRows'    : len(df),
                                               'TextError'    : 'Файл прочитан без проблем',
                                               'OtherFiles'   : other_files,
                                               'DateLoadFile' : datetime.datetime.now(),
@@ -277,6 +273,7 @@ def regiz_load_to_base(a):
         svod_file = get_dir('regiz_svod') + '/' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') +' свод номеров для проверки.xlsx'
         with pd.ExcelWriter(svod_file) as writer:
             stat.to_excel(writer,sheet_name='статистика',index=False)
+        send_file('info',svod_file)
         return svod_file
     else:
         svod.index = range(1,len(svod)+1)
@@ -288,6 +285,7 @@ def regiz_load_to_base(a):
             svod.to_excel(writer,sheet_name='номера',index=False)
             stat.to_excel(writer,sheet_name='статистика',index=False)
     
+        send_file('info',svod_file)
         for file in remove_files:
             new_file = file.rsplit('/',2)[0] + '/Архив/время_' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '.' + file.rsplit('.',1)[1]
             try:
@@ -623,3 +621,4 @@ def regiz_load_to_base_old(a):
     statistic.to_sql('JrnLoadFiles',con,schema='logs',if_exists='append',index=False)
     return svod_file
 
+#regiz_load_to_base(None)

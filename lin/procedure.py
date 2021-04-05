@@ -670,7 +670,7 @@ def svod_unique_patient(date_global):
         return None
     if date_global.weekday() in [1,2,3,4]:
         date_svod = (date_global - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-        svod = pd.read_excel(get_dir('cov_list') + '/Автосвод ' + date_svod +'.xlsx', shet_name = 'Свод',stype = str)
+        svod = pd.read_excel(get_dir('cov_list') + '/Автосвод ' + date_svod +'.xlsx', sheet_name = 'Свод',dtype = str)
         list_ = []
         date_rpn = date_global.strftime("%d.%m.%Y")
         file  = get_dir('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
@@ -683,16 +683,16 @@ def svod_unique_patient(date_global):
 
     if date_global.weekday() in [0]:
         date_svod = (date_global - datetime.timedelta(days=3)).strftime("%Y-%m-%d")
-        svod = pd.read_excel(get_dir('cov_list') + '/Автосвод ' + date_svod +'.xlsx', shet_name = 'Свод',stype = str)
+        svod = pd.read_excel(get_dir('cov_list') + '/Автосвод ' + date_svod +'.xlsx', sheet_name = 'Свод',dtype = str)
         list_ = []
         for i in range(3):
             date_rpn = (date_global - datetime.timedelta(days=i)).strftime("%d.%m.%Y")
             file  = get_dir('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
             file2 = get_dir('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xls'
             try:
-               excel = pd.read_excel(file,stype = str)
+               excel = pd.read_excel(file,dtype = str)
             except:
-               excel = pd.read_excel(file2,stype = str)
+               excel = pd.read_excel(file2,dtype = str)
             excel['Дата отчета'] = date_rpn
             list_.append(excel)
         rpn = pd.DataFrame

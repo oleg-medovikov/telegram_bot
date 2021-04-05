@@ -44,7 +44,7 @@ def o_40_covid_by_date(a):
         INNER JOIN PARUS.BLREPFORM rf
         on(rd.PRN = rf.RN)
         WHERE rf.code = '40 COVID 19'
-        and r.BDATE > TO_DATE('30-01-2021','DD-MM-YYYY') 
+        and r.BDATE BETWEEN TO_DATE('30-01-2021','DD-MM-YYYY')  and trunc(sysdate)
         and i.CODE in ('Vaccin_TVSP','Vaccin_tvsp_18', 'Vaccin_tvsp_19_day' )
         )
         pivot
@@ -58,13 +58,13 @@ def o_40_covid_by_date(a):
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
 
-    df = df.loc[df.tvsp.notnull()]
-    df = df.loc[~df.tvsp.isin(['Пункт вакцинации'])]
-    df.v_1 = pd.to_numeric(df.v_1)
-    df.v_2 = pd.to_numeric(df.v_2)
-    df.day = df.day.dt.date
-    res = df.pivot_table(index=['dist','tvsp'], columns=['day'], values=['v_1','v_2'],fill_value=0, aggfunc=np.sum)
-    summ = df.pivot_table(index=['dist'], columns=['day'], values=['v_1','v_2'],fill_value=0, aggfunc=np.sum)
+    df = df.loc[df.TVSP.notnull()]
+    df = df.loc[~df.TVSP.isin(['Пункт вакцинации'])]
+    df.V_1 = pd.to_numeric(df.V_1)
+    df.V_2 = pd.to_numeric(df.V_2)
+    df.DAY = df.DAY.dt.date
+    res = df.pivot_table(index=['DIST','TVSP'], columns=['DAY'], values=['V_1','V_2'],fill_value=0, aggfunc=np.sum)
+    summ = df.pivot_table(index=['DIST'], columns=['DAY'], values=['V_1','V_2'],fill_value=0, aggfunc=np.sum)
     total = pd.DataFrame(summ.sum()).T
 
     res['Район'] = res.index.get_level_values(0)
@@ -80,8 +80,8 @@ def o_40_covid_by_date(a):
     
     file = get_dir('temp') + '/Вакцинация по датам.xlsx'
     with pd.ExcelWriter(file) as writer:
-        itog.v_1.to_excel(writer,sheet_name='Первый компонент вакцины')
-        itog.v_2.to_excel(writer,sheet_name='Второй компонент вакцины')
+        itog.V_1.to_excel(writer,sheet_name='Первый компонент вакцины')
+        itog.V_2.to_excel(writer,sheet_name='Второй компонент вакцины')
     return file 
 
 def svod_40_cov_19(a):
@@ -213,9 +213,10 @@ def svod_40_cov_19(a):
 
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         old = pd.read_sql(sql2,con)
    
-    df = df.loc[~df.tvsp.isin(['Пункт вакцинации'])]
+    df = df.loc[~df.TVSP.isin(['Пункт вакцинации'])]
     df.apply(pd.to_numeric,errors='ignore') #, downcast='integer')
 
     date_otch = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d_%m_%Y')
@@ -622,3 +623,266 @@ def cvod_33_covid(a):
 
     return  shablon_path  + '/' + new_name
 
+def cvod_36_covid(a):
+    sql = """
+    SELECT distinct DAY, Distr_doc_19_MO, Distr_doc_20_Dist,
+            nvl(cast(Distr_doc_01 as int),0) Distr_doc_01, nvl(cast(Distr_doc_02 as int),0) Distr_doc_02,
+            nvl(cast(Distr_doc_03 as int),0) Distr_doc_03, nvl(cast(Distr_doc_04 as int),0) Distr_doc_04,
+            nvl(cast(Distr_doc_05 as int),0) Distr_doc_05, nvl(cast(Distr_doc_06 as int),0) Distr_doc_06,
+            nvl(cast(Distr_doc_07 as int),0) Distr_doc_07, nvl(cast(Distr_doc_08 as int),0) Distr_doc_08,
+            nvl(cast(Distr_doc_09 as int),0) Distr_doc_09, nvl(cast(Distr_doc_10 as int),0) Distr_doc_10,
+            nvl(cast(Distr_doc_11 as int),0) Distr_doc_11, nvl(cast(Distr_doc_12 as int),0) Distr_doc_12,
+            nvl(cast(Distr_doc_13 as int),0) Distr_doc_13, nvl(cast(Distr_doc_14 as int),0) Distr_doc_14,
+            nvl(cast(Distr_doc_15 as int),0) Distr_doc_15, nvl(cast(Distr_doc_16 as int),0) Distr_doc_16,
+            nvl(cast(Distr_doc_17 as int),0) Distr_doc_17, nvl(cast(Distr_doc_18 as int),0) Distr_doc_18
+    FROM (
+    SELECT 
+            to_char(r.BDATE, 'DD.MM.YYYY') day,
+        i.CODE pokazatel,
+        ro.NUMB row_index ,
+            CASE WHEN STRVAL  IS NOT NULL THEN STRVAL 
+                     WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
+                     WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
+                    ELSE NULL END value
+    FROM PARUS.BLTBLVALUES v
+    INNER JOIN PARUS.BLTABLESIND si 
+    on(v.BLTABLESIND = si.RN)
+    INNER JOIN PARUS.BALANCEINDEXES i 
+    on(si.BALANCEINDEXES = i.RN)
+    INNER JOIN PARUS.BLTBLROWS ro 
+    on(v.PRN = ro.RN)
+    INNER JOIN PARUS.BLSUBREPORTS s 
+    on(ro.PRN = s.RN)
+    INNER JOIN PARUS.BLREPORTS r 
+    on(s.PRN = r.RN)
+    INNER JOIN PARUS.AGNLIST a
+    on(r.AGENT = a.RN)
+    INNER JOIN PARUS.BLREPFORMED rd
+    on(r.BLREPFORMED = rd.RN)
+    INNER JOIN PARUS.BLREPFORM rf
+    on(rd.PRN = rf.RN)
+    WHERE rf.code = '36 COVID 19'
+    AND i.CODE IN ('Distr_doc_19_MO', 'Distr_doc_20_Dist', 'Distr_doc_01', 'Distr_doc_02', 'Distr_doc_03',
+                                    'Distr_doc_04', 'Distr_doc_05', 'Distr_doc_06','Distr_doc_07', 'Distr_doc_08','Distr_doc_09',
+                                    'Distr_doc_10', 'Distr_doc_11', 'Distr_doc_12', 'Distr_doc_13', 'Distr_doc_14', 
+                                    'Distr_doc_15', 'Distr_doc_16', 'Distr_doc_17', 'Distr_doc_18' )
+    and r.BDATE = (SELECT max(r.BDATE) FROM PARUS.BLTBLVALUES v
+                                    INNER JOIN PARUS.BLTBLROWS ro 
+                                    on(v.PRN = ro.RN)
+                                    INNER JOIN PARUS.BLSUBREPORTS s 
+                                    on(ro.PRN = s.RN)
+                                    INNER JOIN PARUS.BLREPORTS r
+                                    on(s.PRN = r.RN)
+                                    INNER JOIN PARUS.BLREPFORMED rd
+                                    on(r.BLREPFORMED = rd.RN)
+                                    INNER JOIN PARUS.BLREPFORM rf
+                                    on(rd.PRN = rf.RN)
+                                    WHERE rf.code = '36 COVID 19')
+    )
+    pivot
+    (
+    MIN(value)
+    FOR POKAZATEL IN (  'Distr_doc_19_MO' Distr_doc_19_MO, 'Distr_doc_20_Dist' Distr_doc_20_Dist, 'Distr_doc_01' Distr_doc_01,
+                                            'Distr_doc_02' Distr_doc_02, 'Distr_doc_03' Distr_doc_03, 'Distr_doc_04' Distr_doc_04, 'Distr_doc_05' Distr_doc_05,
+                                            'Distr_doc_06' Distr_doc_06, 'Distr_doc_07' Distr_doc_07, 'Distr_doc_08' Distr_doc_08, 'Distr_doc_09' Distr_doc_09,
+                                            'Distr_doc_10' Distr_doc_10, 'Distr_doc_11' Distr_doc_11, 'Distr_doc_12' Distr_doc_12, 'Distr_doc_13' Distr_doc_13,
+                                            'Distr_doc_14' Distr_doc_14, 'Distr_doc_15' Distr_doc_15, 'Distr_doc_16' Distr_doc_16, 'Distr_doc_17' Distr_doc_17,
+                                            'Distr_doc_18' Distr_doc_18)    			
+    )
+    WHERE Distr_doc_19_MO IS NOT NULL 
+    ORDER BY Distr_doc_20_Dist
+    """
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql,con)
+
+    date = df['DAY'].unique()[0]
+    del df['DAY']
+    new_name = date + '_36_COVID_19_cvod.xlsx'
+    shablon_path = get_dir('help')
+
+    shutil.copyfile(shablon_path + '/36_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    ws = wb['Свод']
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,7):  
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    wb.save( shablon_path  + '/' + new_name) 
+
+    return  shablon_path  + '/' + new_name
+
+def cvod_37_covid(a):
+    sql = """
+    SELECT distinct DAY, Polic_ats_MO, Polic_ats_dist,
+            nvl(cast(Polic_ats_01 as int),0) Polic_ats_01, nvl(cast(Polic_ats_02 as int),0) Polic_ats_02,
+            nvl(cast(Polic_ats_03 as int),0) Polic_ats_03, nvl(cast(Polic_ats_04 as int),0) Polic_ats_04,
+            nvl(cast(Polic_ats_05 as int),0) Polic_ats_05, nvl(cast(Polic_ats_06 as int),0) Polic_ats_06,
+            Polic_ats_07, Polic_ats_08, Polic_ats_09, Polic_ats_10, Polic_ats_11, Polic_ats_12, Polic_ats_13,
+            nvl(cast(Polic_ats_14 as int),0) Polic_ats_14,nvl(cast(Polic_ats_15 as int),0) Polic_ats_15,
+            nvl(cast(Polic_ats_16 as int),0) Polic_ats_16,
+            nvl(cast(Polic_ats_17 as float),0) Polic_ats_17, nvl(cast(Polic_ats_18 as float),0) Polic_ats_18
+    FROM (
+    SELECT 
+            to_char(r.BDATE, 'DD.MM.YYYY') day,
+        i.CODE pokazatel,
+        ro.NUMB row_index ,
+            CASE WHEN STRVAL  IS NOT NULL THEN STRVAL 
+                     WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
+                     WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
+                    ELSE NULL END value
+    FROM PARUS.BLTBLVALUES v
+    INNER JOIN PARUS.BLTABLESIND si 
+    on(v.BLTABLESIND = si.RN)
+    INNER JOIN PARUS.BALANCEINDEXES i 
+    on(si.BALANCEINDEXES = i.RN)
+    INNER JOIN PARUS.BLTBLROWS ro 
+    on(v.PRN = ro.RN)
+    INNER JOIN PARUS.BLSUBREPORTS s 
+    on(ro.PRN = s.RN)
+    INNER JOIN PARUS.BLREPORTS r 
+    on(s.PRN = r.RN)
+    INNER JOIN PARUS.AGNLIST a
+    on(r.AGENT = a.RN)
+    INNER JOIN PARUS.BLREPFORMED rd
+    on(r.BLREPFORMED = rd.RN)
+    INNER JOIN PARUS.BLREPFORM rf
+    on(rd.PRN = rf.RN)
+    WHERE rf.code = '37 COVID 19'
+    AND i.CODE IN ('Polic_ats_MO', 'Polic_ats_dist', 'Polic_ats_01', 'Polic_ats_02', 'Polic_ats_03',
+                                    'Polic_ats_04', 'Polic_ats_05', 'Polic_ats_06','Polic_ats_07', 'Polic_ats_08','Polic_ats_09',
+                                    'Polic_ats_10', 'Polic_ats_11', 'Polic_ats_12', 'Polic_ats_13', 'Polic_ats_14', 
+                                    'Polic_ats_15', 'Polic_ats_16', 'Polic_ats_17', 'Polic_ats_18' )
+    and r.BDATE = (SELECT max(r.BDATE) FROM PARUS.BLTBLVALUES v
+                                    INNER JOIN PARUS.BLTBLROWS ro 
+                                    on(v.PRN = ro.RN)
+                                    INNER JOIN PARUS.BLSUBREPORTS s 
+                                    on(ro.PRN = s.RN)
+                                    INNER JOIN PARUS.BLREPORTS r
+                                    on(s.PRN = r.RN)
+                                    INNER JOIN PARUS.BLREPFORMED rd
+                                    on(r.BLREPFORMED = rd.RN)
+                                    INNER JOIN PARUS.BLREPFORM rf
+                                    on(rd.PRN = rf.RN)
+                                    WHERE rf.code = '37 COVID 19')
+    )
+    pivot
+    (
+    MIN(value)
+    FOR POKAZATEL IN (  'Polic_ats_MO' Polic_ats_MO, 'Polic_ats_dist' Polic_ats_dist, 'Polic_ats_01' Polic_ats_01,
+                                            'Polic_ats_02' Polic_ats_02, 'Polic_ats_03' Polic_ats_03, 'Polic_ats_04' Polic_ats_04, 'Polic_ats_05' Polic_ats_05,
+                                            'Polic_ats_06' Polic_ats_06, 'Polic_ats_07' Polic_ats_07, 'Polic_ats_08' Polic_ats_08, 'Polic_ats_09' Polic_ats_09,
+                                            'Polic_ats_10' Polic_ats_10, 'Polic_ats_11' Polic_ats_11, 'Polic_ats_12' Polic_ats_12, 'Polic_ats_13' Polic_ats_13,
+                                            'Polic_ats_14' Polic_ats_14, 'Polic_ats_15' Polic_ats_15, 'Polic_ats_16' Polic_ats_16, 'Polic_ats_17' Polic_ats_17,
+                                            'Polic_ats_18' Polic_ats_18)    			
+    )
+    WHERE Polic_ats_MO IS NOT NULL 
+    ORDER BY Polic_ats_dist
+    """
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql,con)
+
+    date = df['DAY'].unique()[0]
+    del df['DAY']
+    new_name = date + '_37_COVID_19_cvod.xlsx'
+    shablon_path = get_dir('help')
+
+    shutil.copyfile(shablon_path + '/37_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    ws = wb['Свод']
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,6):  
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    wb.save( shablon_path  + '/' + new_name) 
+
+    return  shablon_path  + '/' + new_name
+
+def cvod_38_covid(a):
+    sql = """
+    SELECT distinct DAY, Step_risk_15_MO, Step_risk_16_dist,
+            nvl(cast(Step_risk_01 as int),0) Step_risk_01, nvl(cast(Step_risk_02 as int),0) Step_risk_02,
+            nvl(cast(Step_risk_03 as int),0) Step_risk_03, nvl(cast(Step_risk_04 as int),0) Step_risk_04,
+            nvl(cast(Step_risk_05 as int),0) Step_risk_05, nvl(cast(Step_risk_06 as int),0) Step_risk_06,
+            nvl(cast(Step_risk_07 as int),0) Step_risk_07, nvl(cast(Step_risk_08 as int),0) Step_risk_08,
+            nvl(cast(Step_risk_09 as int),0) Step_risk_09, nvl(cast(Step_risk_10 as int),0) Step_risk_10,
+            nvl(cast(Step_risk_11 as int),0) Step_risk_11, nvl(cast(Step_risk_12 as int),0) Step_risk_12,
+            nvl(cast(Step_risk_13 as int),0) Step_risk_13, nvl(cast(Step_risk_14 as int),0) Step_risk_14
+    FROM (
+    SELECT 
+            to_char(r.BDATE, 'DD.MM.YYYY') day,
+        i.CODE pokazatel,
+        ro.NUMB row_index ,
+            CASE WHEN STRVAL  IS NOT NULL THEN STRVAL 
+                     WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
+                     WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
+                    ELSE NULL END value
+    FROM PARUS.BLTBLVALUES v
+    INNER JOIN PARUS.BLTABLESIND si 
+    on(v.BLTABLESIND = si.RN)
+    INNER JOIN PARUS.BALANCEINDEXES i 
+    on(si.BALANCEINDEXES = i.RN)
+    INNER JOIN PARUS.BLTBLROWS ro 
+    on(v.PRN = ro.RN)
+    INNER JOIN PARUS.BLSUBREPORTS s 
+    on(ro.PRN = s.RN)
+    INNER JOIN PARUS.BLREPORTS r 
+    on(s.PRN = r.RN)
+    INNER JOIN PARUS.AGNLIST a
+    on(r.AGENT = a.RN)
+    INNER JOIN PARUS.BLREPFORMED rd
+    on(r.BLREPFORMED = rd.RN)
+    INNER JOIN PARUS.BLREPFORM rf
+    on(rd.PRN = rf.RN)
+    WHERE rf.code = '38 COVID 19'
+    AND i.CODE IN ('Step_risk_15_MO', 'Step_risk_16_dist', 'Step_risk_01', 'Step_risk_02', 'Step_risk_03',
+                                    'Step_risk_04', 'Step_risk_05', 'Step_risk_06','Step_risk_07', 'Step_risk_08','Step_risk_09',
+                                    'Step_risk_10', 'Step_risk_11', 'Step_risk_12', 'Step_risk_13', 'Step_risk_14')
+    and r.BDATE = (SELECT max(r.BDATE) FROM PARUS.BLTBLVALUES v
+                                    INNER JOIN PARUS.BLTBLROWS ro 
+                                    on(v.PRN = ro.RN)
+                                    INNER JOIN PARUS.BLSUBREPORTS s 
+                                    on(ro.PRN = s.RN)
+                                    INNER JOIN PARUS.BLREPORTS r
+                                    on(s.PRN = r.RN)
+                                    INNER JOIN PARUS.BLREPFORMED rd
+                                    on(r.BLREPFORMED = rd.RN)
+                                    INNER JOIN PARUS.BLREPFORM rf
+                                    on(rd.PRN = rf.RN)
+                                    WHERE rf.code = '38 COVID 19')
+    )
+    pivot
+    (
+    MIN(value)
+    FOR POKAZATEL IN (  'Step_risk_15_MO' Step_risk_15_MO, 'Step_risk_16_dist' Step_risk_16_dist, 'Step_risk_01' Step_risk_01,
+                                            'Step_risk_02' Step_risk_02, 'Step_risk_03' Step_risk_03, 'Step_risk_04' Step_risk_04, 'Step_risk_05' Step_risk_05,
+                                            'Step_risk_06' Step_risk_06, 'Step_risk_07' Step_risk_07, 'Step_risk_08' Step_risk_08, 'Step_risk_09' Step_risk_09,
+                                            'Step_risk_10' Step_risk_10, 'Step_risk_11' Step_risk_11, 'Step_risk_12' Step_risk_12, 'Step_risk_13' Step_risk_13,
+                                            'Step_risk_14' Step_risk_14)    			
+    )
+    WHERE Step_risk_15_MO IS NOT NULL 
+    ORDER BY Step_risk_16_dist
+    """
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql,con)
+
+    date = df['DAY'].unique()[0]
+    del df['DAY']
+    new_name = date + '_38_COVID_19_cvod.xlsx'
+    shablon_path = get_dir('help')
+
+    shutil.copyfile(shablon_path + '/38_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    ws = wb['Свод']
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,8):  
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    wb.save( shablon_path  + '/' + new_name) 
+
+    return  shablon_path  + '/' + new_name

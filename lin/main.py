@@ -13,7 +13,7 @@ from sending import send,voda,send_file
 from presentation import generate_pptx
 from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik,delete_old_files,load_snils_comment
 from regiz import regiz_decomposition,regiz_load_to_base
-from parus import o_40_covid_by_date,svod_40_cov_19,parus_43_cov_nulls,svod_43_covid_19,no_save_43,cvod_29_covid,cvod_33_covid
+from parus import o_40_covid_by_date,svod_40_cov_19,parus_43_cov_nulls,svod_43_covid_19,no_save_43,cvod_29_covid,cvod_33_covid,cvod_36_covid,cvod_37_covid,cvod_38_covid
 #from send_ODLI import send_bundle_to_ODLI
 import telebot_calendar
 from telebot_calendar import CallbackData
@@ -184,18 +184,18 @@ def otchet_1():
 def regiz_razlogenie():
     send('info', 'РЕГИЗ Начинаю раскладывать файлы по папкам')
     result = create_tred('regiz_decomposition',None)
-    send_file('info',result[1])
-    os.remove(result[1])
     work = 'РЕГИЗ разложение файлов' 
     log_shedule(work, result)
+    if not result[0]:
+        send('info', result[1])
 
 def regiz_load():
     send('info', 'РЕГИЗ Начинаю загружать файлы')
     result = create_tred('regiz_load_to_base',None)
-    send_file('info',result[1])
-    os.remove(result[1])
     work = 'РЕГИЗ загрузка файлов' 
     log_shedule(work, result)
+    if not result[0]:
+        send('info', result[1])
 
 def go():
     while True:
@@ -306,5 +306,6 @@ def get_text_messages(message):
         bot.send_message(message.from_user.id,'Я вас не знаю!')
         bot.send_message(user.master(),'Мне написал неизвесный пользователь!')
         bot.send_message(user.master(),str(message.from_user.id))
+        bot.send_message(user.master(),str(message.from_user.username))
 
 bot.polling(none_stop=True)

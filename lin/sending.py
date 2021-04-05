@@ -27,7 +27,7 @@ def send_file(group,file):
     df = pd.read_sql(sql,con)
     ids = df['id'].unique()
     for id in ids:
-        bot.send_document(id, open(file), 'rb')
+        bot.send_document(id, open(file, 'rb'))
     return 1
 
 def voda(message):
