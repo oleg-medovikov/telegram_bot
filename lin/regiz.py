@@ -173,7 +173,7 @@ def regiz_load_to_base(a):
 
     for file in files:
         other_files = str(glob.glob(file.rsplit('/',1)[0] + '/*'))
-       
+        print(file)       
         if len(mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO']): 
             organization = mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO'].values[0]
         else:

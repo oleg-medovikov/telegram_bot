@@ -183,7 +183,7 @@ def otchet_1():
 
 def regiz_razlogenie():
     send('info', 'РЕГИЗ Начинаю раскладывать файлы по папкам')
-    result = create_tred('regiz_decomposition',None)
+    result = create_tred('regiz_decomposition', None )
     work = 'РЕГИЗ разложение файлов' 
     log_shedule(work, result)
     if not result[0]:
@@ -191,7 +191,7 @@ def regiz_razlogenie():
 
 def regiz_load():
     send('info', 'РЕГИЗ Начинаю загружать файлы')
-    result = create_tred('regiz_load_to_base',None)
+    result = create_tred('regiz_load_to_base', 5 )
     work = 'РЕГИЗ загрузка файлов' 
     log_shedule(work, result)
     if not result[0]:

@@ -588,7 +588,7 @@ def cvod_33_covid(a):
     INNER JOIN PARUS.BLREPFORM rf
     on(rd.PRN = rf.RN)
     WHERE rf.code = '33 COVID 19'
-    and r.BDATE = trunc(sysdate -1) 
+    and r.BDATE = trunc(sysdate) 
     AND i.CODE IN ('Trp_17_MO', 'Trp_18_dist', 'Trp_01', 'Trp_02', 'Trp_03', 'Trp_04', 'Trp_05', 'Trp_06',
             'Trp_07', 'Trp_08','Trp_09', 'Trp_10', 'Trp_11', 'Trp_12', 'Trp_13', 'Trp_14', 'Trp_15', 'Trp_16' )
     )

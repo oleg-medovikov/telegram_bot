@@ -676,9 +676,9 @@ def svod_unique_patient(date_global):
         file  = get_dir('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
         file2 = get_dir('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xls'
         try:
-            rpn = pd.read_excel(file,stype = str)
+            rpn = pd.read_excel(file,dtype = str)
         except:
-            rpn = pd.read_excel(file2,stype = str)
+            rpn = pd.read_excel(file2,dtype = str)
         rpn['Дата отчета'] = date_rpn
 
     if date_global.weekday() in [0]:
