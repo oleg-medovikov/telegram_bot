@@ -5,8 +5,6 @@ import pandas as pd
 from loader import get_dir
 
 base_parus = os.getenv('base_parus')
-
-
 userName = os.getenv('oracle_user')
 password = os.getenv('oracle_pass')
 userbase = os.getenv('oracle_base')
@@ -588,7 +586,18 @@ def cvod_33_covid(a):
     INNER JOIN PARUS.BLREPFORM rf
     on(rd.PRN = rf.RN)
     WHERE rf.code = '33 COVID 19'
-    and r.BDATE = trunc(sysdate) 
+    and r.BDATE = (SELECT max(r.BDATE) FROM PARUS.BLTBLVALUES v
+				INNER JOIN PARUS.BLTBLROWS ro 
+				on(v.PRN = ro.RN)
+				INNER JOIN PARUS.BLSUBREPORTS s 
+				on(ro.PRN = s.RN)
+				INNER JOIN PARUS.BLREPORTS r
+				on(s.PRN = r.RN)
+				INNER JOIN PARUS.BLREPFORMED rd
+				on(r.BLREPFORMED = rd.RN)
+				INNER JOIN PARUS.BLREPFORM rf
+				on(rd.PRN = rf.RN)
+				WHERE rf.code = '33 COVID 19') 
     AND i.CODE IN ('Trp_17_MO', 'Trp_18_dist', 'Trp_01', 'Trp_02', 'Trp_03', 'Trp_04', 'Trp_05', 'Trp_06',
             'Trp_07', 'Trp_08','Trp_09', 'Trp_10', 'Trp_11', 'Trp_12', 'Trp_13', 'Trp_14', 'Trp_15', 'Trp_16' )
     )
