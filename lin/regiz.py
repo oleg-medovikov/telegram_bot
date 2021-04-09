@@ -165,7 +165,6 @@ def regiz_load_to_base(a):
     names_new = ['HistoryNumber','OpenDate','IsAmbulant','SnilsDoctor']
     path = get_dir('regiz') + '/ori.regiz*/_Входящие/*.xls' 
     files = glob.glob(path) + glob.glob(path + 'x')
-    #files = glob.glob('/mnt/FTP/ORI/REGIZ/ori.regiz.*/Архив/время_30.03.2021_16-2*')
     list_ = []
     remove_files = []
     stat = pd.DataFrame()
@@ -266,9 +265,9 @@ def regiz_load_to_base(a):
                 df.drop(labels=['LPU_level1_key'], axis=1,inplace = True)
                 df.insert(0, 'LPU_level1_key', key)
                 list_.append(df)
+                remove_files.append(file)
                 #new_file = file.rsplit('/',2)[0] + '/Архив/время_'+ datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '.xlsx'
                 #df.to_excel(new_file, index=False)
-                remove_files.append(file)
         df = df[0:0]
     
     mo.rename(columns = { 'ftp_user':'ftp_user'
