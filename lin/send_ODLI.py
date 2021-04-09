@@ -1,4 +1,4 @@
-import requests,json,os,pyodbc,base64,random,codecs
+import requests,json,os,base64,random,codecs
 from collections import namedtuple
 from pylatex import Document, PageStyle, Head, Foot, MiniPage, Package, Section, NewLine, HFill, \
                    StandAloneGraphic, MultiColumn, Tabu, LongTabu, LargeText, MediumText, TextColor, \
@@ -8,8 +8,8 @@ from pylatex.base_classes import Environment, Arguments
 from loader import get_dir
 
 # создаем подключение
-conn = pyodbc.connect(os.getenv('sql_conn'))
-cursor = conn.cursor()
+#conn = pyodbc.connect(os.getenv('sql_conn'))
+#cursor = conn.cursor()
 
 # формируем запрос к базе
 sql_files = """SELECT 

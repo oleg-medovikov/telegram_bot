@@ -191,7 +191,7 @@ def regiz_razlogenie():
 
 def regiz_load():
     send('info', 'РЕГИЗ Начинаю загружать файлы')
-    result = create_tred('regiz_load_to_base', 5 )
+    result = create_tred('regiz_load_to_base',None)
     work = 'РЕГИЗ загрузка файлов' 
     log_shedule(work, result)
     if not result[0]:
@@ -206,7 +206,7 @@ schedule.every().day.at("03:00").do(load_1)
 schedule.every().day.at("06:00").do(load_2)
 schedule.every().day.at("07:00").do(otchet_1)
 schedule.every().day.at("07:05").do(regiz_razlogenie)
-schedule.every().day.at("16:05").do(regiz_load_to_base)
+schedule.every().day.at("16:05").do(regiz_load)
 
 t = threading.Thread(target=go, name="Расписание работ")
 t.start()

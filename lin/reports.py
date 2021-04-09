@@ -1,4 +1,4 @@
-import os,pyodbc,subprocess,datetime,shutil,glob,sqlalchemy
+import os,subprocess,datetime,shutil,glob,sqlalchemy
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 
@@ -47,8 +47,14 @@ def short_report(textsql):
     table_png  = get_dir('temp') + '/table.png'
 
     df.to_html(table_html,index=False,justify='center')
-    subprocess.call('wkhtmltoimage --quiet --encoding utf-8 -f png --width 0 ' +  table_html + ' ' + table_png, shell=True)
-    return table_png
+
+    command = "/usr/bin/wkhtmltoimage --encoding utf-8 -f png --width 0 " +  table_html + " " + table_png
+    try:
+        subprocess.check_call(command,  shell=True)
+    except:
+        raise my_except('Не удалось сделать файл\n' +  subprocess.check_output(command,  shell=True))
+    else:
+        return table_png
 
 def dead_not_mss(a):
     frNotMss = pd.read_sql('EXEC dbo.p_FedRegNotMss',con)

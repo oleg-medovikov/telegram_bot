@@ -8,7 +8,7 @@ from reports import short_report
 from multiprocessing import Process
 from multiprocessing.pool import ThreadPool
 from reports import short_report
-from pyexcelerate import Workbook
+#from pyexcelerate import Workbook
 
 warnings.filterwarnings('ignore')
 

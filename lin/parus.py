@@ -1,4 +1,4 @@
-import sqlalchemy,cx_Oracle,os,openpyxl,shutil,datetime,subprocess,time
+import sqlalchemy,cx_Oracle,os,openpyxl,shutil,datetime,subprocess,time,imgkit
 from openpyxl.utils.dataframe import dataframe_to_rows
 import numpy as np
 import pandas as pd
@@ -51,7 +51,6 @@ def o_40_covid_by_date(a):
         FOR POKAZATEL IN ('Vaccin_TVSP' tvsp,'Vaccin_tvsp_18' V_1, 'Vaccin_tvsp_19_day' V_2 )
         )
         ORDER BY day, ROW_INDEX"""
-
     
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
@@ -276,8 +275,14 @@ def parus_43_cov_nulls(a):
     table_png  = get_dir('temp') + '/table.png'
 
     df.to_html(table_html,justify='center', index=False)
-    subprocess.call('wkhtmltoimage --quiet --encoding utf-8 -f png --width 0 ' +  table_html + ' ' + table_png, shell=True)
-    return table_png
+
+    command = "/usr/bin/wkhtmltoimage --encoding utf-8 -f png --width 0 " +  table_html + " " + table_png
+    try:
+        subprocess.check_call(command,  shell=True)
+    except:
+        raise my_except('Не удалось сделать файл\n' +  subprocess.check_output(command,  shell=True))
+    else:
+        return table_png
 
 def svod_43_covid_19(a):
     sql = """
@@ -453,8 +458,13 @@ def no_save_43(a):
     table_png  = get_dir('temp') + '/table.png'
 
     df.to_html(table_html,justify='center', index=False)
-    subprocess.call('wkhtmltoimage --quiet --encoding utf-8 -f png --width 0 ' +  table_html + ' ' + table_png, shell=True)
-    return table_png
+    command = "/usr/bin/wkhtmltoimage --encoding utf-8 -f png --width 0 " +  table_html + " " + table_png
+    try:
+        subprocess.check_call(command,  shell=True)
+    except:
+        raise my_except('Не удалось сделать файл\n' +  subprocess.check_output(command,  shell=True))
+    else:
+        return table_png
 
 def cvod_29_covid(a): 
     if int(time.strftime("%H")) < 16:

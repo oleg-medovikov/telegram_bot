@@ -184,7 +184,7 @@ def regiz_load_to_base(a):
             try:
                 df = pd.read_html(file)
             except ValueError: # если не удалось распарсить html
-                print(file)
+                send('',file)
             else:
                 df = pd.concat(df)
                 df = df[names].applymap(str)
@@ -196,36 +196,53 @@ def regiz_load_to_base(a):
                                       'OtherFiles'   : other_files,
                                       'DateLoadFile' : datetime.datetime.now(),
                                       'InOrOut'      : 'IN'}, ignore_index=True)
-        except ValueError: # Если не найдены колонки
-            try:
-                df = pd.read_excel(file, usecols=names_new,dtype=str)
-            except:
-                if len(pd.read_excel(file).columns) == 4:
-                    for i in range(10): # Ищем по строкам 
-                        try:
-                            df = pd.read_excel(file,usecols=names, skiprows =i,dtype=str)
-                        except:
-                            pass
-                        else:
-                            df.columns=names_new
-                            stat = stat.append({'MOName'       : organization,
-                                                  'NameFile'     : file,
-                                                  'CountRows'    : len(df),
-                                                  'TextError'    : 'Файл прочитан, но пришлось поискать шапку на строке номер ' + str(i),
-                                                  'OtherFiles'   : other_files,
-                                                  'DateLoadFile' : datetime.datetime.now(),
-                                                  'InOrOut'      : 'IN'}, ignore_index=True)
-                            break
-                if not len(df):
+        except ValueError as exc: # Если не найдены колонки
+            if str(exc) == r"File is not a recognized excel file":
+                try:
+                    df = pd.read_html(file)
+                except ValueError: # если не удалось распарсить html
+                    send('',file)
+                else:
+                    df = pd.concat(df)
+                    df = df[names].applymap(str)
+                    df.columns=names_new
                     stat = stat.append({'MOName'       : organization,
                                           'NameFile'     : file,
-                                          'CountRows'    : 0,
-                                          'TextError'    : 'Файл не удалось прочитать',
+                                          'CountRows'    : len(df),
+                                          'TextError'    : 'Файл HTMl удачно распарсен',
                                           'OtherFiles'   : other_files,
                                           'DateLoadFile' : datetime.datetime.now(),
                                           'InOrOut'      : 'IN'}, ignore_index=True)
             else:
-                stat = stat.append({'MOName'       : organization,
+                try:
+                    df = pd.read_excel(file, usecols=names_new,dtype=str)
+                except:
+                    if len(pd.read_excel(file).columns) == 4:
+                        for i in range(10): # Ищем по строкам 
+                            try:
+                                df = pd.read_excel(file,usecols=names, skiprows =i,dtype=str)
+                            except:
+                                pass
+                            else:
+                                df.columns=names_new
+                                stat = stat.append({'MOName'       : organization,
+                                                      'NameFile'     : file,
+                                                      'CountRows'    : len(df),
+                                                      'TextError'    : 'Файл прочитан, но пришлось поискать шапку на строке номер ' + str(i),
+                                                      'OtherFiles'   : other_files,
+                                                      'DateLoadFile' : datetime.datetime.now(),
+                                                      'InOrOut'      : 'IN'}, ignore_index=True)
+                                break
+                    if not len(df):
+                        stat = stat.append({'MOName'       : organization,
+                                              'NameFile'     : file,
+                                              'CountRows'    : 0,
+                                              'TextError'    : 'Файл не удалось прочитать',
+                                              'OtherFiles'   : other_files,
+                                              'DateLoadFile' : datetime.datetime.now(),
+                                              'InOrOut'      : 'IN'}, ignore_index=True)
+                else:
+                    stat = stat.append({'MOName'       : organization,
                                                   'NameFile'     : file,
                                                   'CountRows'    : len(df),
                                                   'TextError'    : 'Файл прочитан, но он уже был когда-то обработан',
