@@ -305,7 +305,7 @@ def regiz_load_to_base(a):
         for file in remove_files:
             new_file = file.rsplit('/',2)[0] + '/Архив/время_' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '.' + file.rsplit('.',1)[1]
             try:
-                os.replase(file,new_file)
+                os.replace(file,new_file)
             except:
                pass
         return svod_file 
