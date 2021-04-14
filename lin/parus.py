@@ -83,257 +83,257 @@ def o_40_covid_by_date(a):
 
 def svod_40_cov_19(a):
     sql = """SELECT     ORGANIZATION, 'Пункт вакцинации' type, 
-			    substr(tvsp ,1,INSTR(tvsp , ' ')-1) dist,
-			    REPLACE(substr(tvsp ,INSTR(tvsp , ' ')+1, length(tvsp)),'район','') tvsp, 
-			    CAST(Vaccin_tvsp_03 AS int) Vaccin_tvsp_03 , CAST(Vaccin_tvsp_04 AS int) Vaccin_tvsp_04, 
-			    CAST(Vaccin_tvsp_04_day AS int) Vaccin_tvsp_04_day, CAST(Vaccin_tvsp_05 AS int) Vaccin_tvsp_05,
-			    CAST(Vaccin_tvsp_06 AS int) Vaccin_tvsp_06, CAST(Vaccin_tvsp_07 AS int) Vaccin_tvsp_07, CAST(Vaccin_tvsp_08 AS int) Vaccin_tvsp_08,
-			    CAST(Vaccin_tvsp_09 AS int) Vaccin_tvsp_09, CAST(Vaccin_tvsp_10 AS int) Vaccin_tvsp_10,
-			    CAST(Vaccin_tvsp_11 AS int) Vaccin_tvsp_11, CAST(Vaccin_tvsp_12 AS int) Vaccin_tvsp_12, 
-			    CAST(Vaccin_tvsp_20 AS int) Vaccin_tvsp_20, CAST(Vaccin_tvsp_20_day AS int) Vaccin_tvsp_20_day,
-			    CAST(Vaccin_tvsp_13 AS int) Vaccin_tvsp_13, CAST(Vaccin_tvsp_14 AS int) Vaccin_tvsp_14, CAST(Vaccin_tvsp_15 AS int) Vaccin_tvsp_15,
-			    CAST(Vaccin_tvsp_16 AS int) Vaccin_tvsp_16, CAST(Vaccin_tvsp_17 AS int) Vaccin_tvsp_17,
-			    CAST(Vaccin_tvsp_18 AS int) Vaccin_tvsp_18, CAST(Vaccin_tvsp_19 AS int) Vaccin_tvsp_19, CAST(Vaccin_tvsp_19_day AS int) Vaccin_tvsp_19_day,
-			    CAST(Vaccin_tvsp_21 AS int) Vaccin_tvsp_21, CAST(Vaccin_tvsp_21_day AS int) Vaccin_tvsp_21_day, CAST(Vaccin_tvsp_23 AS int) Vaccin_tvsp_23 
-	    FROM (
-	    SELECT
-		    r.BDATE day,
-		    a.AGNNAME organization,
-		i.CODE pokazatel,
-		ro.NUMB row_index ,
-		    CASE WHEN STRVAL  IS NOT NULL THEN STRVAL
-			     WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
-			     WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
-			    ELSE NULL END value
-	    FROM PARUS.BLTBLVALUES v
-	    INNER JOIN PARUS.BLTABLESIND si
-	    on(v.BLTABLESIND = si.RN)
-	    INNER JOIN PARUS.BALANCEINDEXES i
-	    on(si.BALANCEINDEXES = i.RN)
-	    INNER JOIN PARUS.BLTBLROWS ro
-	    on(v.PRN = ro.RN)
-	    INNER JOIN PARUS.BLSUBREPORTS s
-	    on(ro.PRN = s.RN)
-	    INNER JOIN PARUS.BLREPORTS r
-	    on(s.PRN = r.RN)
-	    INNER JOIN PARUS.AGNLIST a
-	    on(r.AGENT = a.RN)
-	    INNER JOIN PARUS.BLREPFORMED rd
-	    on(r.BLREPFORMED = rd.RN)
-	    INNER JOIN PARUS.BLREPFORM rf
-	    on(rd.PRN = rf.RN)
-	    WHERE rf.code = '40 COVID 19'
-	    and r.BDATE =  trunc(SYSDATE-1)
-	    and i.CODE in ('Vaccin_TVSP','Vaccin_tvsp_03','Vaccin_tvsp_04','Vaccin_tvsp_04_day','Vaccin_tvsp_05',
-					    'Vaccin_tvsp_06','Vaccin_tvsp_07','Vaccin_tvsp_08', 'Vaccin_tvsp_09', 'Vaccin_tvsp_10',
-					    'Vaccin_tvsp_11', 'Vaccin_tvsp_12', 'Vaccin_tvsp_20','Vaccin_tvsp_20_day',
-					    'Vaccin_tvsp_13','Vaccin_tvsp_14','Vaccin_tvsp_15', 'Vaccin_tvsp_16', 'Vaccin_tvsp_17',
-					    'Vaccin_tvsp_18', 'Vaccin_tvsp_19', 'Vaccin_tvsp_19_day','Vaccin_tvsp_21', 'Vaccin_tvsp_21_day'
-					    , 'Vaccin_tvsp_23')
-	    )
-	    pivot
-	    (
-	    max(value)
-	    FOR POKAZATEL IN ('Vaccin_TVSP' tvsp,'Vaccin_tvsp_03' Vaccin_tvsp_03,'Vaccin_tvsp_04' Vaccin_tvsp_04,'Vaccin_tvsp_04_day' Vaccin_tvsp_04_day,
-					    'Vaccin_tvsp_05' Vaccin_tvsp_05, 'Vaccin_tvsp_06' Vaccin_tvsp_06,'Vaccin_tvsp_07' Vaccin_tvsp_07,
-					    'Vaccin_tvsp_08' Vaccin_tvsp_08, 'Vaccin_tvsp_09' Vaccin_tvsp_09, 'Vaccin_tvsp_10' Vaccin_tvsp_10,
-					    'Vaccin_tvsp_11' Vaccin_tvsp_11, 'Vaccin_tvsp_12' Vaccin_tvsp_12, 'Vaccin_tvsp_20' Vaccin_tvsp_20,
-					    'Vaccin_tvsp_20_day' Vaccin_tvsp_20_day,'Vaccin_tvsp_13' Vaccin_tvsp_13,'Vaccin_tvsp_14' Vaccin_tvsp_14,
-					    'Vaccin_tvsp_15' Vaccin_tvsp_15, 'Vaccin_tvsp_16' Vaccin_tvsp_16, 'Vaccin_tvsp_17' Vaccin_tvsp_17,
-					    'Vaccin_tvsp_18' Vaccin_tvsp_18, 'Vaccin_tvsp_19' Vaccin_tvsp_19, 'Vaccin_tvsp_19_day' Vaccin_tvsp_19_day,
-					    'Vaccin_tvsp_21' Vaccin_tvsp_21, 'Vaccin_tvsp_21_day' Vaccin_tvsp_21_day, 'Vaccin_tvsp_23' Vaccin_tvsp_23)
-	    )
-	    WHERE tvsp IS NOt NULL
-            and ORGANIZATION NOT LIKE 'Администр%'
-    UNION ALL
-	    SELECT    			ORGANIZATION,	'Медицинская организация' type, 
-			    REPLACE(dist,' район','') dist,
-			    case when tvsp is null then organization else tvsp end tvsp, 
-			    CAST(Vaccin_03 AS int) Vaccin_03 , CAST(Vaccin_04 AS int) Vaccin_04, 
-			    CAST(Vaccin_04_day AS int) Vaccin_04_day, CAST(Vaccin_05 AS int) Vaccin_05,
-			    CAST(Vaccin_06 AS int) Vaccin_06, CAST(Vaccin_07 AS int) Vaccin_07, CAST(Vaccin_08 AS int) Vaccin_08,
-			    CAST(Vaccin_09 AS int) Vaccin_09, CAST(Vaccin_10 AS int) Vaccin_10,
-			    CAST(Vaccin_11 AS int) Vaccin_11, CAST(Vaccin_12 AS int) Vaccin_12, 
-			    CAST(Vaccin_20 AS int) Vaccin_20, CAST(Vaccin_20_day AS int) Vaccin_20_day,
-			    CAST(Vaccin_13 AS int) Vaccin_13, CAST(Vaccin_14 AS int) Vaccin_14, CAST(Vaccin_15 AS int) Vaccin_15,
-			    CAST(Vaccin_16 AS int) Vaccin_16, CAST(Vaccin_17 AS int) Vaccin_17,
-			    CAST(Vaccin_18 AS int) Vaccin_18, CAST(Vaccin_19 AS int) Vaccin_19, CAST(Vaccin_19_day AS int) Vaccin_19_day,
-			    CAST(Vaccin_21 AS int) Vaccin_21, CAST(Vaccin_21_day AS int) Vaccin_21_day, CAST(Vaccin_23 AS int) Vaccin_23 
-	    FROM (
-	    SELECT
-		    r.BDATE,
-		    a.AGNNAME ORGANIZATION ,
-		    rf.CODE  otchet,
-		    bi.CODE  pokazatel,
-	    CASE WHEN STRVAL IS NOT NULL THEN STRVAL 
-	     WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
-		 WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
-		    ELSE NULL END value
-		    FROM PARUS.BLINDEXVALUES  d
-		    INNER JOIN PARUS.BLSUBREPORTS s
-		    ON (d.PRN = s.RN)
-		    INNER JOIN PARUS.BLREPORTS r
-		    ON(s.PRN = r.RN)
-		    INNER JOIN PARUS.AGNLIST a 
-		    on(r.AGENT = a.rn)
-		    INNER JOIN PARUS.BLREPFORMED pf 		
-		    on(r.BLREPFORMED = pf.RN)
-		    INNER JOIN PARUS.BLREPFORM rf 
-		    on(pf.PRN = rf.RN)
-		    INNER JOIN PARUS.BALANCEINDEXES bi 
-		    on(d.BALANCEINDEX = bi.RN)
-	    WHERE rf.code = '40 COVID 19'
-	     and  r.BDATE =  trunc(SYSDATE-1)
-	    and bi.CODE in ('Vaccin_TVSP','Vaccin_DISTR','Vaccin_03','Vaccin_04','Vaccin_04_day','Vaccin_05',
-					    'Vaccin_06','Vaccin_07','Vaccin_08', 'Vaccin_09', 'Vaccin_10',
-					    'Vaccin_11', 'Vaccin_12', 'Vaccin_20','Vaccin_20_day',
-					    'Vaccin_13','Vaccin_14','Vaccin_15', 'Vaccin_16', 'Vaccin_17',
-					    'Vaccin_18', 'Vaccin_19', 'Vaccin_19_day','Vaccin_21', 'Vaccin_21_day'
-					    , 'Vaccin_23')
-	    )
-	    pivot
-	    (
-	    max(value)
-	    FOR POKAZATEL IN ('Vaccin_TVSP' tvsp,'Vaccin_DISTR' dist,'Vaccin_03' Vaccin_03,'Vaccin_04' Vaccin_04,'Vaccin_04_day' Vaccin_04_day,
-					    'Vaccin_05' Vaccin_05, 'Vaccin_06' Vaccin_06,'Vaccin_07' Vaccin_07,
-					    'Vaccin_08' Vaccin_08, 'Vaccin_09' Vaccin_09, 'Vaccin_10' Vaccin_10,
-					    'Vaccin_11' Vaccin_11, 'Vaccin_12' Vaccin_12, 'Vaccin_20' Vaccin_20,
-					    'Vaccin_20_day' Vaccin_20_day,'Vaccin_13' Vaccin_13,'Vaccin_14' Vaccin_14,
-					    'Vaccin_15' Vaccin_15, 'Vaccin_16' Vaccin_16, 'Vaccin_17' Vaccin_17,
-					    'Vaccin_18' Vaccin_18, 'Vaccin_19' Vaccin_19, 'Vaccin_19_day' Vaccin_19_day,
-					    'Vaccin_21' Vaccin_21, 'Vaccin_21_day' Vaccin_21_day, 'Vaccin_23' Vaccin_23)
-	    )
-    WHERE ORGANIZATION NOT LIKE 'Администр%'
-    ORDER BY ORGANIZATION,TYPE
-"""
+                substr(tvsp ,1,INSTR(tvsp , ' ')-1) dist,
+                TRIM(LEADING ' ' from REPLACE(substr(tvsp ,INSTR(tvsp , ' ')+1, length(tvsp)),'район ','') ) tvsp, 
+                CAST(Vaccin_tvsp_03 AS int) Vaccin_tvsp_03 , CAST(Vaccin_tvsp_04 AS int) Vaccin_tvsp_04, 
+                CAST(Vaccin_tvsp_04_day AS int) Vaccin_tvsp_04_day, CAST(Vaccin_tvsp_05 AS int) Vaccin_tvsp_05,
+                CAST(Vaccin_tvsp_06 AS int) Vaccin_tvsp_06, CAST(Vaccin_tvsp_07 AS int) Vaccin_tvsp_07, CAST(Vaccin_tvsp_08 AS int) Vaccin_tvsp_08,
+                CAST(Vaccin_tvsp_09 AS int) Vaccin_tvsp_09, CAST(Vaccin_tvsp_10 AS int) Vaccin_tvsp_10,
+                CAST(Vaccin_tvsp_11 AS int) Vaccin_tvsp_11, CAST(Vaccin_tvsp_12 AS int) Vaccin_tvsp_12, 
+                CAST(Vaccin_tvsp_20 AS int) Vaccin_tvsp_20, CAST(Vaccin_tvsp_20_day AS int) Vaccin_tvsp_20_day,
+                CAST(Vaccin_tvsp_13 AS int) Vaccin_tvsp_13, CAST(Vaccin_tvsp_14 AS int) Vaccin_tvsp_14, CAST(Vaccin_tvsp_15 AS int) Vaccin_tvsp_15,
+                CAST(Vaccin_tvsp_16 AS int) Vaccin_tvsp_16, CAST(Vaccin_tvsp_17 AS int) Vaccin_tvsp_17,
+                CAST(Vaccin_tvsp_18 AS int) Vaccin_tvsp_18, CAST(Vaccin_tvsp_19 AS int) Vaccin_tvsp_19, CAST(Vaccin_tvsp_19_day AS int) Vaccin_tvsp_19_day,
+                CAST(Vaccin_tvsp_21 AS int) Vaccin_tvsp_21, CAST(Vaccin_tvsp_21_day AS int) Vaccin_tvsp_21_day, CAST(Vaccin_tvsp_23 AS int) Vaccin_tvsp_23 
+        FROM (
+                SELECT
+                        r.BDATE day,
+                        a.AGNNAME organization,
+                    i.CODE pokazatel,
+                    ro.NUMB row_index ,
+                        CASE WHEN STRVAL  IS NOT NULL THEN STRVAL
+                                 WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
+                                 WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
+                                ELSE NULL END value
+                FROM PARUS.BLTBLVALUES v
+                INNER JOIN PARUS.BLTABLESIND si
+                on(v.BLTABLESIND = si.RN)
+                INNER JOIN PARUS.BALANCEINDEXES i
+                on(si.BALANCEINDEXES = i.RN)
+                INNER JOIN PARUS.BLTBLROWS ro
+                on(v.PRN = ro.RN)
+                INNER JOIN PARUS.BLSUBREPORTS s
+                on(ro.PRN = s.RN)
+                INNER JOIN PARUS.BLREPORTS r
+                on(s.PRN = r.RN)
+                INNER JOIN PARUS.AGNLIST a
+                on(r.AGENT = a.RN)
+                INNER JOIN PARUS.BLREPFORMED rd
+                on(r.BLREPFORMED = rd.RN)
+                INNER JOIN PARUS.BLREPFORM rf
+                on(rd.PRN = rf.RN)
+                WHERE rf.code = '40 COVID 19'
+                and r.BDATE =  trunc(SYSDATE-1)
+                and i.CODE in ('Vaccin_TVSP','Vaccin_tvsp_03','Vaccin_tvsp_04','Vaccin_tvsp_04_day','Vaccin_tvsp_05',
+                                                'Vaccin_tvsp_06','Vaccin_tvsp_07','Vaccin_tvsp_08', 'Vaccin_tvsp_09', 'Vaccin_tvsp_10',
+                                                'Vaccin_tvsp_11', 'Vaccin_tvsp_12', 'Vaccin_tvsp_20','Vaccin_tvsp_20_day',
+                                                'Vaccin_tvsp_13','Vaccin_tvsp_14','Vaccin_tvsp_15', 'Vaccin_tvsp_16', 'Vaccin_tvsp_17',
+                                                'Vaccin_tvsp_18', 'Vaccin_tvsp_19', 'Vaccin_tvsp_19_day','Vaccin_tvsp_21', 'Vaccin_tvsp_21_day'
+                                                , 'Vaccin_tvsp_23')
+                )
+                pivot
+                (
+                max(value)
+                FOR POKAZATEL IN ('Vaccin_TVSP' tvsp,'Vaccin_tvsp_03' Vaccin_tvsp_03,'Vaccin_tvsp_04' Vaccin_tvsp_04,'Vaccin_tvsp_04_day' Vaccin_tvsp_04_day,
+                                                'Vaccin_tvsp_05' Vaccin_tvsp_05, 'Vaccin_tvsp_06' Vaccin_tvsp_06,'Vaccin_tvsp_07' Vaccin_tvsp_07,
+                                                'Vaccin_tvsp_08' Vaccin_tvsp_08, 'Vaccin_tvsp_09' Vaccin_tvsp_09, 'Vaccin_tvsp_10' Vaccin_tvsp_10,
+                                                'Vaccin_tvsp_11' Vaccin_tvsp_11, 'Vaccin_tvsp_12' Vaccin_tvsp_12, 'Vaccin_tvsp_20' Vaccin_tvsp_20,
+                                                'Vaccin_tvsp_20_day' Vaccin_tvsp_20_day,'Vaccin_tvsp_13' Vaccin_tvsp_13,'Vaccin_tvsp_14' Vaccin_tvsp_14,
+                                                'Vaccin_tvsp_15' Vaccin_tvsp_15, 'Vaccin_tvsp_16' Vaccin_tvsp_16, 'Vaccin_tvsp_17' Vaccin_tvsp_17,
+                                                'Vaccin_tvsp_18' Vaccin_tvsp_18, 'Vaccin_tvsp_19' Vaccin_tvsp_19, 'Vaccin_tvsp_19_day' Vaccin_tvsp_19_day,
+                                                'Vaccin_tvsp_21' Vaccin_tvsp_21, 'Vaccin_tvsp_21_day' Vaccin_tvsp_21_day, 'Vaccin_tvsp_23' Vaccin_tvsp_23)
+                )
+                WHERE tvsp IS NOt NULL
+                and ORGANIZATION NOT LIKE 'Администр%'
+        UNION ALL
+                SELECT    			ORGANIZATION,	'Медицинская организация' type, 
+                                REPLACE(dist,' район ','') dist,
+                                case when tvsp is null then organization else tvsp end tvsp, 
+                                CAST(Vaccin_03 AS int) Vaccin_03 , CAST(Vaccin_04 AS int) Vaccin_04, 
+                                CAST(Vaccin_04_day AS int) Vaccin_04_day, CAST(Vaccin_05 AS int) Vaccin_05,
+                                CAST(Vaccin_06 AS int) Vaccin_06, CAST(Vaccin_07 AS int) Vaccin_07, CAST(Vaccin_08 AS int) Vaccin_08,
+                                CAST(Vaccin_09 AS int) Vaccin_09, CAST(Vaccin_10 AS int) Vaccin_10,
+                                CAST(Vaccin_11 AS int) Vaccin_11, CAST(Vaccin_12 AS int) Vaccin_12, 
+                                CAST(Vaccin_20 AS int) Vaccin_20, CAST(Vaccin_20_day AS int) Vaccin_20_day,
+                                CAST(Vaccin_13 AS int) Vaccin_13, CAST(Vaccin_14 AS int) Vaccin_14, CAST(Vaccin_15 AS int) Vaccin_15,
+                                CAST(Vaccin_16 AS int) Vaccin_16, CAST(Vaccin_17 AS int) Vaccin_17,
+                                CAST(Vaccin_18 AS int) Vaccin_18, CAST(Vaccin_19 AS int) Vaccin_19, CAST(Vaccin_19_day AS int) Vaccin_19_day,
+                                CAST(Vaccin_21 AS int) Vaccin_21, CAST(Vaccin_21_day AS int) Vaccin_21_day, CAST(Vaccin_23 AS int) Vaccin_23 
+                FROM (
+                SELECT
+                        r.BDATE,
+                        a.AGNNAME ORGANIZATION ,
+                        rf.CODE  otchet,
+                        bi.CODE  pokazatel,
+                CASE WHEN STRVAL IS NOT NULL THEN STRVAL 
+                 WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
+                     WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
+                        ELSE NULL END value
+                        FROM PARUS.BLINDEXVALUES  d
+                        INNER JOIN PARUS.BLSUBREPORTS s
+                        ON (d.PRN = s.RN)
+                        INNER JOIN PARUS.BLREPORTS r
+                        ON(s.PRN = r.RN)
+                        INNER JOIN PARUS.AGNLIST a 
+                        on(r.AGENT = a.rn)
+                        INNER JOIN PARUS.BLREPFORMED pf 		
+                        on(r.BLREPFORMED = pf.RN)
+                        INNER JOIN PARUS.BLREPFORM rf 
+                        on(pf.PRN = rf.RN)
+                        INNER JOIN PARUS.BALANCEINDEXES bi 
+                        on(d.BALANCEINDEX = bi.RN)
+                WHERE rf.code = '40 COVID 19'
+                 and  r.BDATE =  trunc(SYSDATE-1)
+                and bi.CODE in ('Vaccin_TVSP','Vaccin_DISTR','Vaccin_03','Vaccin_04','Vaccin_04_day','Vaccin_05',
+                                                'Vaccin_06','Vaccin_07','Vaccin_08', 'Vaccin_09', 'Vaccin_10',
+                                                'Vaccin_11', 'Vaccin_12', 'Vaccin_20','Vaccin_20_day',
+                                                'Vaccin_13','Vaccin_14','Vaccin_15', 'Vaccin_16', 'Vaccin_17',
+                                                'Vaccin_18', 'Vaccin_19', 'Vaccin_19_day','Vaccin_21', 'Vaccin_21_day'
+                                                , 'Vaccin_23')
+                )
+                pivot
+                (
+                max(value)
+                FOR POKAZATEL IN ('Vaccin_TVSP' tvsp,'Vaccin_DISTR' dist,'Vaccin_03' Vaccin_03,'Vaccin_04' Vaccin_04,'Vaccin_04_day' Vaccin_04_day,
+                                                'Vaccin_05' Vaccin_05, 'Vaccin_06' Vaccin_06,'Vaccin_07' Vaccin_07,
+                                                'Vaccin_08' Vaccin_08, 'Vaccin_09' Vaccin_09, 'Vaccin_10' Vaccin_10,
+                                                'Vaccin_11' Vaccin_11, 'Vaccin_12' Vaccin_12, 'Vaccin_20' Vaccin_20,
+                                                'Vaccin_20_day' Vaccin_20_day,'Vaccin_13' Vaccin_13,'Vaccin_14' Vaccin_14,
+                                                'Vaccin_15' Vaccin_15, 'Vaccin_16' Vaccin_16, 'Vaccin_17' Vaccin_17,
+                                                'Vaccin_18' Vaccin_18, 'Vaccin_19' Vaccin_19, 'Vaccin_19_day' Vaccin_19_day,
+                                                'Vaccin_21' Vaccin_21, 'Vaccin_21_day' Vaccin_21_day, 'Vaccin_23' Vaccin_23)
+                )
+        WHERE ORGANIZATION NOT LIKE 'Администр%'
+        ORDER BY ORGANIZATION,TYPE
+        """
     
     sql2 = """SELECT  ORGANIZATION, 'Пункт вакцинации' type, 
-			    substr(tvsp ,1,INSTR(tvsp , ' ')-1) dist,
-			    REPLACE(substr(tvsp ,INSTR(tvsp , ' ')+1, length(tvsp)),'район','') tvsp, 
-			    CAST(Vaccin_tvsp_03 AS int) Vaccin_tvsp_03 , CAST(Vaccin_tvsp_04 AS int) Vaccin_tvsp_04, 
-			    CAST(Vaccin_tvsp_04_day AS int) Vaccin_tvsp_04_day, CAST(Vaccin_tvsp_05 AS int) Vaccin_tvsp_05,
-			    CAST(Vaccin_tvsp_06 AS int) Vaccin_tvsp_06, CAST(Vaccin_tvsp_07 AS int) Vaccin_tvsp_07, CAST(Vaccin_tvsp_08 AS int) Vaccin_tvsp_08,
-			    CAST(Vaccin_tvsp_09 AS int) Vaccin_tvsp_09, CAST(Vaccin_tvsp_10 AS int) Vaccin_tvsp_10,
-			    CAST(Vaccin_tvsp_11 AS int) Vaccin_tvsp_11, CAST(Vaccin_tvsp_12 AS int) Vaccin_tvsp_12, 
-			    CAST(Vaccin_tvsp_20 AS int) Vaccin_tvsp_20, CAST(Vaccin_tvsp_20_day AS int) Vaccin_tvsp_20_day,
-			    CAST(Vaccin_tvsp_13 AS int) Vaccin_tvsp_13, CAST(Vaccin_tvsp_14 AS int) Vaccin_tvsp_14, CAST(Vaccin_tvsp_15 AS int) Vaccin_tvsp_15,
-			    CAST(Vaccin_tvsp_16 AS int) Vaccin_tvsp_16, CAST(Vaccin_tvsp_17 AS int) Vaccin_tvsp_17,
-			    CAST(Vaccin_tvsp_18 AS int) Vaccin_tvsp_18, CAST(Vaccin_tvsp_19 AS int) Vaccin_tvsp_19, CAST(Vaccin_tvsp_19_day AS int) Vaccin_tvsp_19_day,
-			    CAST(Vaccin_tvsp_21 AS int) Vaccin_tvsp_21, CAST(Vaccin_tvsp_21_day AS int) Vaccin_tvsp_21_day, CAST(Vaccin_tvsp_23 AS int) Vaccin_tvsp_23 
-	    FROM (
-	    SELECT
-		    r.BDATE day,
-		    a.AGNNAME organization,
-		i.CODE pokazatel,
-		ro.NUMB row_index ,
-		    CASE WHEN STRVAL  IS NOT NULL THEN STRVAL
-			     WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
-			     WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
-			    ELSE NULL END value
-	    FROM PARUS.BLTBLVALUES v
-	    INNER JOIN PARUS.BLTABLESIND si
-	    on(v.BLTABLESIND = si.RN)
-	    INNER JOIN PARUS.BALANCEINDEXES i
-	    on(si.BALANCEINDEXES = i.RN)
-	    INNER JOIN PARUS.BLTBLROWS ro
-	    on(v.PRN = ro.RN)
-	    INNER JOIN PARUS.BLSUBREPORTS s
-	    on(ro.PRN = s.RN)
-	    INNER JOIN PARUS.BLREPORTS r
-	    on(s.PRN = r.RN)
-	    INNER JOIN PARUS.AGNLIST a
-	    on(r.AGENT = a.RN)
-	    INNER JOIN PARUS.BLREPFORMED rd
-	    on(r.BLREPFORMED = rd.RN)
-	    INNER JOIN PARUS.BLREPFORM rf
-	    on(rd.PRN = rf.RN)
-	    WHERE rf.code = '40 COVID 19'
-	    and r.BDATE =  trunc(SYSDATE-2)
-	    and i.CODE in ('Vaccin_TVSP','Vaccin_tvsp_03','Vaccin_tvsp_04','Vaccin_tvsp_04_day','Vaccin_tvsp_05',
-					    'Vaccin_tvsp_06','Vaccin_tvsp_07','Vaccin_tvsp_08', 'Vaccin_tvsp_09', 'Vaccin_tvsp_10',
-					    'Vaccin_tvsp_11', 'Vaccin_tvsp_12', 'Vaccin_tvsp_20','Vaccin_tvsp_20_day',
-					    'Vaccin_tvsp_13','Vaccin_tvsp_14','Vaccin_tvsp_15', 'Vaccin_tvsp_16', 'Vaccin_tvsp_17',
-					    'Vaccin_tvsp_18', 'Vaccin_tvsp_19', 'Vaccin_tvsp_19_day','Vaccin_tvsp_21', 'Vaccin_tvsp_21_day'
-					    , 'Vaccin_tvsp_23')
-	    )
-	    pivot
-	    (
-	    max(value)
-	    FOR POKAZATEL IN ('Vaccin_TVSP' tvsp,'Vaccin_tvsp_03' Vaccin_tvsp_03,'Vaccin_tvsp_04' Vaccin_tvsp_04,'Vaccin_tvsp_04_day' Vaccin_tvsp_04_day,
-					    'Vaccin_tvsp_05' Vaccin_tvsp_05, 'Vaccin_tvsp_06' Vaccin_tvsp_06,'Vaccin_tvsp_07' Vaccin_tvsp_07,
-					    'Vaccin_tvsp_08' Vaccin_tvsp_08, 'Vaccin_tvsp_09' Vaccin_tvsp_09, 'Vaccin_tvsp_10' Vaccin_tvsp_10,
-					    'Vaccin_tvsp_11' Vaccin_tvsp_11, 'Vaccin_tvsp_12' Vaccin_tvsp_12, 'Vaccin_tvsp_20' Vaccin_tvsp_20,
-					    'Vaccin_tvsp_20_day' Vaccin_tvsp_20_day,'Vaccin_tvsp_13' Vaccin_tvsp_13,'Vaccin_tvsp_14' Vaccin_tvsp_14,
-					    'Vaccin_tvsp_15' Vaccin_tvsp_15, 'Vaccin_tvsp_16' Vaccin_tvsp_16, 'Vaccin_tvsp_17' Vaccin_tvsp_17,
-					    'Vaccin_tvsp_18' Vaccin_tvsp_18, 'Vaccin_tvsp_19' Vaccin_tvsp_19, 'Vaccin_tvsp_19_day' Vaccin_tvsp_19_day,
-					    'Vaccin_tvsp_21' Vaccin_tvsp_21, 'Vaccin_tvsp_21_day' Vaccin_tvsp_21_day, 'Vaccin_tvsp_23' Vaccin_tvsp_23)
-	    )
-	    WHERE tvsp IS NOt NULL
-            and ORGANIZATION NOT LIKE 'Администр%'
-    UNION ALL
-	    SELECT    			ORGANIZATION,	'Медицинская организация' type, 
-			    REPLACE(dist,' район','') dist,
-			    case when tvsp is null then organization else tvsp end tvsp, 
-			    CAST(Vaccin_03 AS int) Vaccin_03 , CAST(Vaccin_04 AS int) Vaccin_04, 
-			    CAST(Vaccin_04_day AS int) Vaccin_04_day, CAST(Vaccin_05 AS int) Vaccin_05,
-			    CAST(Vaccin_06 AS int) Vaccin_06, CAST(Vaccin_07 AS int) Vaccin_07, CAST(Vaccin_08 AS int) Vaccin_08,
-			    CAST(Vaccin_09 AS int) Vaccin_09, CAST(Vaccin_10 AS int) Vaccin_10,
-			    CAST(Vaccin_11 AS int) Vaccin_11, CAST(Vaccin_12 AS int) Vaccin_12, 
-			    CAST(Vaccin_20 AS int) Vaccin_20, CAST(Vaccin_20_day AS int) Vaccin_20_day,
-			    CAST(Vaccin_13 AS int) Vaccin_13, CAST(Vaccin_14 AS int) Vaccin_14, CAST(Vaccin_15 AS int) Vaccin_15,
-			    CAST(Vaccin_16 AS int) Vaccin_16, CAST(Vaccin_17 AS int) Vaccin_17,
-			    CAST(Vaccin_18 AS int) Vaccin_18, CAST(Vaccin_19 AS int) Vaccin_19, CAST(Vaccin_19_day AS int) Vaccin_19_day,
-			    CAST(Vaccin_21 AS int) Vaccin_21, CAST(Vaccin_21_day AS int) Vaccin_21_day, CAST(Vaccin_23 AS int) Vaccin_23 
-	    FROM (
-	    SELECT
-		    r.BDATE,
-		    a.AGNNAME ORGANIZATION ,
-		    rf.CODE  otchet,
-		    bi.CODE  pokazatel,
-	    CASE WHEN STRVAL IS NOT NULL THEN STRVAL 
-	     WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
-		 WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
-		    ELSE NULL END value
-		    FROM PARUS.BLINDEXVALUES  d
-		    INNER JOIN PARUS.BLSUBREPORTS s
-		    ON (d.PRN = s.RN)
-		    INNER JOIN PARUS.BLREPORTS r
-		    ON(s.PRN = r.RN)
-		    INNER JOIN PARUS.AGNLIST a 
-		    on(r.AGENT = a.rn)
-		    INNER JOIN PARUS.BLREPFORMED pf 		
-		    on(r.BLREPFORMED = pf.RN)
-		    INNER JOIN PARUS.BLREPFORM rf 
-		    on(pf.PRN = rf.RN)
-		    INNER JOIN PARUS.BALANCEINDEXES bi 
-		    on(d.BALANCEINDEX = bi.RN)
-	    WHERE rf.code = '40 COVID 19'
-	     and  r.BDATE =  trunc(SYSDATE-2)
-	    and bi.CODE in ('Vaccin_TVSP','Vaccin_DISTR','Vaccin_03','Vaccin_04','Vaccin_04_day','Vaccin_05',
-					    'Vaccin_06','Vaccin_07','Vaccin_08', 'Vaccin_09', 'Vaccin_10',
-					    'Vaccin_11', 'Vaccin_12', 'Vaccin_20','Vaccin_20_day',
-					    'Vaccin_13','Vaccin_14','Vaccin_15', 'Vaccin_16', 'Vaccin_17',
-					    'Vaccin_18', 'Vaccin_19', 'Vaccin_19_day','Vaccin_21', 'Vaccin_21_day'
-					    , 'Vaccin_23')
-	    )
-	    pivot
-	    (
-	    max(value)
-	    FOR POKAZATEL IN ('Vaccin_TVSP' tvsp,'Vaccin_DISTR' dist,'Vaccin_03' Vaccin_03,'Vaccin_04' Vaccin_04,'Vaccin_04_day' Vaccin_04_day,
-					    'Vaccin_05' Vaccin_05, 'Vaccin_06' Vaccin_06,'Vaccin_07' Vaccin_07,
-					    'Vaccin_08' Vaccin_08, 'Vaccin_09' Vaccin_09, 'Vaccin_10' Vaccin_10,
-					    'Vaccin_11' Vaccin_11, 'Vaccin_12' Vaccin_12, 'Vaccin_20' Vaccin_20,
-					    'Vaccin_20_day' Vaccin_20_day,'Vaccin_13' Vaccin_13,'Vaccin_14' Vaccin_14,
-					    'Vaccin_15' Vaccin_15, 'Vaccin_16' Vaccin_16, 'Vaccin_17' Vaccin_17,
-					    'Vaccin_18' Vaccin_18, 'Vaccin_19' Vaccin_19, 'Vaccin_19_day' Vaccin_19_day,
-					    'Vaccin_21' Vaccin_21, 'Vaccin_21_day' Vaccin_21_day, 'Vaccin_23' Vaccin_23)
-	    )
-    WHERE ORGANIZATION NOT LIKE '%Администр%'
-    ORDER BY ORGANIZATION,TYPE
+                                substr(tvsp ,1,INSTR(tvsp , ' ')-1) dist,
+                                TRIM(LEADING ' ' from REPLACE(substr(tvsp ,INSTR(tvsp , ' ')+1, length(tvsp)),'район ','') ) tvsp, 
+                                CAST(Vaccin_tvsp_03 AS int) Vaccin_tvsp_03 , CAST(Vaccin_tvsp_04 AS int) Vaccin_tvsp_04, 
+                                CAST(Vaccin_tvsp_04_day AS int) Vaccin_tvsp_04_day, CAST(Vaccin_tvsp_05 AS int) Vaccin_tvsp_05,
+                                CAST(Vaccin_tvsp_06 AS int) Vaccin_tvsp_06, CAST(Vaccin_tvsp_07 AS int) Vaccin_tvsp_07, CAST(Vaccin_tvsp_08 AS int) Vaccin_tvsp_08,
+                                CAST(Vaccin_tvsp_09 AS int) Vaccin_tvsp_09, CAST(Vaccin_tvsp_10 AS int) Vaccin_tvsp_10,
+                                CAST(Vaccin_tvsp_11 AS int) Vaccin_tvsp_11, CAST(Vaccin_tvsp_12 AS int) Vaccin_tvsp_12, 
+                                CAST(Vaccin_tvsp_20 AS int) Vaccin_tvsp_20, CAST(Vaccin_tvsp_20_day AS int) Vaccin_tvsp_20_day,
+                                CAST(Vaccin_tvsp_13 AS int) Vaccin_tvsp_13, CAST(Vaccin_tvsp_14 AS int) Vaccin_tvsp_14, CAST(Vaccin_tvsp_15 AS int) Vaccin_tvsp_15,
+                                CAST(Vaccin_tvsp_16 AS int) Vaccin_tvsp_16, CAST(Vaccin_tvsp_17 AS int) Vaccin_tvsp_17,
+                                CAST(Vaccin_tvsp_18 AS int) Vaccin_tvsp_18, CAST(Vaccin_tvsp_19 AS int) Vaccin_tvsp_19, CAST(Vaccin_tvsp_19_day AS int) Vaccin_tvsp_19_day,
+                                CAST(Vaccin_tvsp_21 AS int) Vaccin_tvsp_21, CAST(Vaccin_tvsp_21_day AS int) Vaccin_tvsp_21_day, CAST(Vaccin_tvsp_23 AS int) Vaccin_tvsp_23 
+                FROM (
+                SELECT
+                        r.BDATE day,
+                        a.AGNNAME organization,
+                    i.CODE pokazatel,
+                    ro.NUMB row_index ,
+                        CASE WHEN STRVAL  IS NOT NULL THEN STRVAL
+                                 WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
+                                 WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
+                                ELSE NULL END value
+                FROM PARUS.BLTBLVALUES v
+                INNER JOIN PARUS.BLTABLESIND si
+                on(v.BLTABLESIND = si.RN)
+                INNER JOIN PARUS.BALANCEINDEXES i
+                on(si.BALANCEINDEXES = i.RN)
+                INNER JOIN PARUS.BLTBLROWS ro
+                on(v.PRN = ro.RN)
+                INNER JOIN PARUS.BLSUBREPORTS s
+                on(ro.PRN = s.RN)
+                INNER JOIN PARUS.BLREPORTS r
+                on(s.PRN = r.RN)
+                INNER JOIN PARUS.AGNLIST a
+                on(r.AGENT = a.RN)
+                INNER JOIN PARUS.BLREPFORMED rd
+                on(r.BLREPFORMED = rd.RN)
+                INNER JOIN PARUS.BLREPFORM rf
+                on(rd.PRN = rf.RN)
+                WHERE rf.code = '40 COVID 19'
+                and r.BDATE =  trunc(SYSDATE-2)
+                and i.CODE in ('Vaccin_TVSP','Vaccin_tvsp_03','Vaccin_tvsp_04','Vaccin_tvsp_04_day','Vaccin_tvsp_05',
+                                                'Vaccin_tvsp_06','Vaccin_tvsp_07','Vaccin_tvsp_08', 'Vaccin_tvsp_09', 'Vaccin_tvsp_10',
+                                                'Vaccin_tvsp_11', 'Vaccin_tvsp_12', 'Vaccin_tvsp_20','Vaccin_tvsp_20_day',
+                                                'Vaccin_tvsp_13','Vaccin_tvsp_14','Vaccin_tvsp_15', 'Vaccin_tvsp_16', 'Vaccin_tvsp_17',
+                                                'Vaccin_tvsp_18', 'Vaccin_tvsp_19', 'Vaccin_tvsp_19_day','Vaccin_tvsp_21', 'Vaccin_tvsp_21_day'
+                                                , 'Vaccin_tvsp_23')
+                )
+                pivot
+                (
+                max(value)
+                FOR POKAZATEL IN ('Vaccin_TVSP' tvsp,'Vaccin_tvsp_03' Vaccin_tvsp_03,'Vaccin_tvsp_04' Vaccin_tvsp_04,'Vaccin_tvsp_04_day' Vaccin_tvsp_04_day,
+                                                'Vaccin_tvsp_05' Vaccin_tvsp_05, 'Vaccin_tvsp_06' Vaccin_tvsp_06,'Vaccin_tvsp_07' Vaccin_tvsp_07,
+                                                'Vaccin_tvsp_08' Vaccin_tvsp_08, 'Vaccin_tvsp_09' Vaccin_tvsp_09, 'Vaccin_tvsp_10' Vaccin_tvsp_10,
+                                                'Vaccin_tvsp_11' Vaccin_tvsp_11, 'Vaccin_tvsp_12' Vaccin_tvsp_12, 'Vaccin_tvsp_20' Vaccin_tvsp_20,
+                                                'Vaccin_tvsp_20_day' Vaccin_tvsp_20_day,'Vaccin_tvsp_13' Vaccin_tvsp_13,'Vaccin_tvsp_14' Vaccin_tvsp_14,
+                                                'Vaccin_tvsp_15' Vaccin_tvsp_15, 'Vaccin_tvsp_16' Vaccin_tvsp_16, 'Vaccin_tvsp_17' Vaccin_tvsp_17,
+                                                'Vaccin_tvsp_18' Vaccin_tvsp_18, 'Vaccin_tvsp_19' Vaccin_tvsp_19, 'Vaccin_tvsp_19_day' Vaccin_tvsp_19_day,
+                                                'Vaccin_tvsp_21' Vaccin_tvsp_21, 'Vaccin_tvsp_21_day' Vaccin_tvsp_21_day, 'Vaccin_tvsp_23' Vaccin_tvsp_23)
+                )
+                WHERE tvsp IS NOt NULL
+                and ORGANIZATION NOT LIKE 'Администр%'
+            UNION ALL
+                SELECT    			ORGANIZATION,	'Медицинская организация' type, 
+                                dist,
+                                case when tvsp is null then organization else tvsp end tvsp, 
+                                CAST(Vaccin_03 AS int) Vaccin_03 , CAST(Vaccin_04 AS int) Vaccin_04, 
+                                CAST(Vaccin_04_day AS int) Vaccin_04_day, CAST(Vaccin_05 AS int) Vaccin_05,
+                                CAST(Vaccin_06 AS int) Vaccin_06, CAST(Vaccin_07 AS int) Vaccin_07, CAST(Vaccin_08 AS int) Vaccin_08,
+                                CAST(Vaccin_09 AS int) Vaccin_09, CAST(Vaccin_10 AS int) Vaccin_10,
+                                CAST(Vaccin_11 AS int) Vaccin_11, CAST(Vaccin_12 AS int) Vaccin_12, 
+                                CAST(Vaccin_20 AS int) Vaccin_20, CAST(Vaccin_20_day AS int) Vaccin_20_day,
+                                CAST(Vaccin_13 AS int) Vaccin_13, CAST(Vaccin_14 AS int) Vaccin_14, CAST(Vaccin_15 AS int) Vaccin_15,
+                                CAST(Vaccin_16 AS int) Vaccin_16, CAST(Vaccin_17 AS int) Vaccin_17,
+                                CAST(Vaccin_18 AS int) Vaccin_18, CAST(Vaccin_19 AS int) Vaccin_19, CAST(Vaccin_19_day AS int) Vaccin_19_day,
+                                CAST(Vaccin_21 AS int) Vaccin_21, CAST(Vaccin_21_day AS int) Vaccin_21_day, CAST(Vaccin_23 AS int) Vaccin_23 
+                FROM (
+                SELECT
+                        r.BDATE,
+                        a.AGNNAME ORGANIZATION ,
+                        rf.CODE  otchet,
+                        bi.CODE  pokazatel,
+                CASE WHEN STRVAL IS NOT NULL THEN STRVAL 
+                 WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
+                     WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
+                        ELSE NULL END value
+                        FROM PARUS.BLINDEXVALUES  d
+                        INNER JOIN PARUS.BLSUBREPORTS s
+                        ON (d.PRN = s.RN)
+                        INNER JOIN PARUS.BLREPORTS r
+                        ON(s.PRN = r.RN)
+                        INNER JOIN PARUS.AGNLIST a 
+                        on(r.AGENT = a.rn)
+                        INNER JOIN PARUS.BLREPFORMED pf 		
+                        on(r.BLREPFORMED = pf.RN)
+                        INNER JOIN PARUS.BLREPFORM rf 
+                        on(pf.PRN = rf.RN)
+                        INNER JOIN PARUS.BALANCEINDEXES bi 
+                        on(d.BALANCEINDEX = bi.RN)
+                WHERE rf.code = '40 COVID 19'
+                 and  r.BDATE =  trunc(SYSDATE-2)
+                and bi.CODE in ('Vaccin_TVSP','Vaccin_DISTR','Vaccin_03','Vaccin_04','Vaccin_04_day','Vaccin_05',
+                                                'Vaccin_06','Vaccin_07','Vaccin_08', 'Vaccin_09', 'Vaccin_10',
+                                                'Vaccin_11', 'Vaccin_12', 'Vaccin_20','Vaccin_20_day',
+                                                'Vaccin_13','Vaccin_14','Vaccin_15', 'Vaccin_16', 'Vaccin_17',
+                                                'Vaccin_18', 'Vaccin_19', 'Vaccin_19_day','Vaccin_21', 'Vaccin_21_day'
+                                                , 'Vaccin_23')
+                )
+                pivot
+                (
+                max(value)
+                FOR POKAZATEL IN ('Vaccin_TVSP' tvsp,'Vaccin_DISTR' dist,'Vaccin_03' Vaccin_03,'Vaccin_04' Vaccin_04,'Vaccin_04_day' Vaccin_04_day,
+                                                'Vaccin_05' Vaccin_05, 'Vaccin_06' Vaccin_06,'Vaccin_07' Vaccin_07,
+                                                'Vaccin_08' Vaccin_08, 'Vaccin_09' Vaccin_09, 'Vaccin_10' Vaccin_10,
+                                                'Vaccin_11' Vaccin_11, 'Vaccin_12' Vaccin_12, 'Vaccin_20' Vaccin_20,
+                                                'Vaccin_20_day' Vaccin_20_day,'Vaccin_13' Vaccin_13,'Vaccin_14' Vaccin_14,
+                                                'Vaccin_15' Vaccin_15, 'Vaccin_16' Vaccin_16, 'Vaccin_17' Vaccin_17,
+                                                'Vaccin_18' Vaccin_18, 'Vaccin_19' Vaccin_19, 'Vaccin_19_day' Vaccin_19_day,
+                                                'Vaccin_21' Vaccin_21, 'Vaccin_21_day' Vaccin_21_day, 'Vaccin_23' Vaccin_23)
+                )
+        WHERE ORGANIZATION NOT LIKE '%Администр%'
+        ORDER BY ORGANIZATION,TYPE
     """
 
     sql3 = """SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(EVC_TVSP_2_02 ,1,INSTR(EVC_TVSP_2_02 , ' ')-1) dist, 
-    REPLACE(substr(EVC_TVSP_2_02 ,INSTR(EVC_TVSP_2_02 , ' ')+1, length(EVC_TVSP_2_02)),'район','') EVC_TVSP_2_02,
+    TRIM(LEADING ' ' from REPLACE(substr(EVC_TVSP_2_02 ,INSTR(EVC_TVSP_2_02 , ' ')+1, length(EVC_TVSP_2_02)),'район ','')) EVC_TVSP_2_02,
     nvl(cast(EVC_TVSP_2_04 as int),0)  EVC_TVSP_2_04,
     nvl(cast(EVC_TVSP_2_05_z as int),0)  EVC_TVSP_2_05_z,nvl(cast(EVC_TVSP_2_06 as int),0)  EVC_TVSP_2_06,
     nvl(cast(EVC_TVSP_2_07_z as int),0)  EVC_TVSP_2_07_z,
@@ -409,7 +409,7 @@ def svod_40_cov_19(a):
 	    )
             where ORGANIZATION NOT LIKE 'Администр%'
     UNION all
-    SELECT ORGANIZATION, 'Медицинская организация' TYPE, REPLACE (EVC_TVSP_01,' район','') dist, EVC_TVSP_02,
+    SELECT ORGANIZATION, 'Медицинская организация' TYPE, EVC_TVSP_01 dist, EVC_TVSP_02,
     nvl(cast(EVC_TVSP_04 as int),0)  EVC_TVSP_04,nvl(cast(EVC_TVSP_05_z as int),0)  EVC_TVSP_05_z,
     nvl(cast(EVC_TVSP_06 as int),0)  EVC_TVSP_06,nvl(cast(EVC_TVSP_07_z as int),0)  EVC_TVSP_07_z,
     nvl(cast(EVC_TVSP_08 as int),0)  EVC_TVSP_08,nvl(cast(EVC_TVSP_09_z as int),0)  EVC_TVSP_09_z,
@@ -564,18 +564,29 @@ def parus_43_cov_nulls(a):
         return table_png
 
 def svod_43_covid_19(a):
-    sql = """
-        SELECT  
-                --DAY, organization,
-                covid_02, covid_03,
-                        cast(covid_04 AS int) covid_04 , cast(covid_05 AS int) covid_05,
-                        cast(covid_06_old_2 AS int) covid_06_old_2 ,
-                        cast(covid_06 AS int) covid_06 , cast(covid_07 AS int) covid_07,
+    sql = """ SELECT  covid_02, covid_03,
+                        cast(covid_04 AS int) covid_04, 
+                        CASE 
+                          WHEN (covid_03 = 'СПб ГБУЗ "Александровская больница"') AND (cast(covid_05 AS int) < 277)
+                            THEN 277
+                            ELSE cast(covid_05 AS int) 
+                        END covid_05, cast(covid_06_old_2 AS int) covid_06_old_2 ,
+                        cast(covid_06 AS int) covid_06 , 
+                        CASE 
+                          WHEN (covid_03 = 'СПб ГБУЗ "Александровская больница"') AND (cast(covid_07 AS int) < 252)
+                            THEN 252
+                            ELSE cast(covid_07 AS int) 
+                        END covid_07,
                         cast(covid_08_old_2 AS int) covid_08_old_2, 
-                        cast(covid_08 AS int) covid_08 , cast(covid_09 AS int) covid_09,
-                        cast(covid_09_2 AS int) covid_09_2, cast(covid_10_old_2 AS int) covid_10_old_2,
+                        cast(covid_08 AS int) covid_08 , cast(covid_09 AS int) covid_09, 
+                        CASE 
+                          WHEN (covid_03 = 'СПб ГБУЗ "Александровская больница"') AND (cast(covid_09_2 AS int) < 1020)
+                            THEN 1020
+                            ELSE cast(covid_09_2 AS int) 
+                        END covid_09_2, 
+                        cast(covid_10_old_2 AS int) covid_10_old_2,
                         cast(covid_10 AS int) covid_10 , cast(covid_11 AS int) covid_11
-        FROM (
+	FROM (
         SELECT 
                 CAST(r.BDATE AS varchar(30))  day,
                 a.AGNABBR  organization,
@@ -611,8 +622,7 @@ def svod_43_covid_19(a):
                                           '43_covid_06' covid_06, '43_covid_07' covid_07,'43_covid_08_old_2' covid_08_old_2,
                                           '43_covid_08' covid_08, '43_covid_09' covid_09,
                                           '43_covid_09_2' covid_09_2, '43_covid_10_old_2' covid_10_old_2,
-                                          '43_covid_10' covid_10, '43_covid_11' covid_11 )
-        ) """
+                                          '43_covid_10' covid_10, '43_covid_11' covid_11 )) """
 
     if datetime.datetime.today().weekday() == 0:
         n = 3
@@ -620,15 +630,27 @@ def svod_43_covid_19(a):
         n = 1
 
     sql1 = f"""
-        SELECT  
-                --DAY, organization,
-                covid_02, covid_03,
-                        cast(covid_04 AS int) covid_04 , cast(covid_05 AS int) covid_05,
-                        cast(covid_06_old_2 AS int) covid_06_old_2 ,
-                        cast(covid_06 AS int) covid_06 , cast(covid_07 AS int) covid_07,
+        SELECT  covid_02, covid_03,
+                        cast(covid_04 AS int) covid_04, 
+                        CASE 
+                          WHEN (covid_03 = 'СПб ГБУЗ "Александровская больница"') AND (cast(covid_05 AS int) < 277)
+                            THEN 277
+                            ELSE cast(covid_05 AS int) 
+                        END covid_05, cast(covid_06_old_2 AS int) covid_06_old_2 ,
+                        cast(covid_06 AS int) covid_06 , 
+                        CASE 
+                          WHEN (covid_03 = 'СПб ГБУЗ "Александровская больница"') AND (cast(covid_07 AS int) < 252)
+                            THEN 252
+                            ELSE cast(covid_07 AS int) 
+                        END covid_07,
                         cast(covid_08_old_2 AS int) covid_08_old_2, 
-                        cast(covid_08 AS int) covid_08 , cast(covid_09 AS int) covid_09,
-                        cast(covid_09_2 AS int) covid_09_2, cast(covid_10_old_2 AS int) covid_10_old_2,
+                        cast(covid_08 AS int) covid_08 , cast(covid_09 AS int) covid_09, 
+                        CASE 
+                          WHEN (covid_03 = 'СПб ГБУЗ "Александровская больница"') AND (cast(covid_09_2 AS int) < 1020)
+                            THEN 1020
+                            ELSE cast(covid_09_2 AS int) 
+                        END covid_09_2, 
+                        cast(covid_10_old_2 AS int) covid_10_old_2,
                         cast(covid_10 AS int) covid_10 , cast(covid_11 AS int) covid_11
         FROM (
         SELECT 
@@ -679,7 +701,6 @@ def svod_43_covid_19(a):
     date_otch = datetime.datetime.now().strftime('%d_%m_%Y')
     new_name = date_otch + '_43_COVID_19_cvod.xlsx'
     shablon_path = get_dir('help')
-
     shutil.copyfile(shablon_path + '/43 COVID 19.xlsx', shablon_path  + '/' + new_name)
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
@@ -689,16 +710,15 @@ def svod_43_covid_19(a):
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
     wb.save( shablon_path  + '/' + new_name) 
-
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
     ws = wb['Вчера']
     rows = dataframe_to_rows(df_old,index=True, header=False)
     for r_idx, row in enumerate(rows,4):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name) 
-
+    wb.save( shablon_path  + '/' + new_name)
     return  shablon_path  + '/' + new_name
+
 
 def no_save_43(a):
     sql="""
@@ -744,6 +764,7 @@ def no_save_43(a):
         raise my_except('Не удалось сделать файл\n' +  subprocess.check_output(command,  shell=True))
     else:
         return table_png
+
 
 def cvod_29_covid(a): 
     if int(time.strftime("%H")) < 16:
@@ -832,9 +853,9 @@ def cvod_29_covid(a):
     for r_idx, row in enumerate(rows,3):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name) 
-
+    wb.save( shablon_path  + '/' + new_name)
     return  shablon_path  + '/' + new_name
+
 
 def cvod_33_covid(a):
     sql = """
@@ -917,13 +938,12 @@ def cvod_33_covid(a):
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 2):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name) 
-
+    wb.save( shablon_path  + '/' + new_name)
     return  shablon_path  + '/' + new_name
 
+
 def cvod_36_covid(a):
-    sql = """
-    SELECT distinct DAY, Distr_doc_19_MO, Distr_doc_20_Dist,
+    sql = """SELECT distinct DAY, Distr_doc_19_MO, Distr_doc_20_Dist,
             nvl(cast(Distr_doc_01 as int),0) Distr_doc_01, nvl(cast(Distr_doc_02 as int),0) Distr_doc_02,
             nvl(cast(Distr_doc_03 as int),0) Distr_doc_03, nvl(cast(Distr_doc_04 as int),0) Distr_doc_04,
             nvl(cast(Distr_doc_05 as int),0) Distr_doc_05, nvl(cast(Distr_doc_06 as int),0) Distr_doc_06,
@@ -1006,10 +1026,10 @@ def cvod_36_covid(a):
     rows = dataframe_to_rows(df,index=False, header=False)
     for r_idx, row in enumerate(rows,7):  
         for c_idx, value in enumerate(row, 2):
-            ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name) 
-
+             ws.cell(row=r_idx, column=c_idx, value=value)
+    wb.save( shablon_path  + '/' + new_name)
     return  shablon_path  + '/' + new_name
+
 
 def cvod_37_covid(a):
     sql = """
@@ -1095,9 +1115,9 @@ def cvod_37_covid(a):
     for r_idx, row in enumerate(rows,6):  
         for c_idx, value in enumerate(row, 2):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name) 
-
+    wb.save( shablon_path  + '/' + new_name)
     return  shablon_path  + '/' + new_name
+
 
 def cvod_38_covid(a):
     sql = """
@@ -1181,6 +1201,7 @@ def cvod_38_covid(a):
     for r_idx, row in enumerate(rows,8):  
         for c_idx, value in enumerate(row, 2):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name) 
-
+    wb.save( shablon_path  + '/' + new_name)
     return  shablon_path  + '/' + new_name
+
+

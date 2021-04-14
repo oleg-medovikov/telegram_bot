@@ -156,6 +156,24 @@ def check_table(path_to_excel, names):
     return error,error_text,collum, head-1
 
 def regiz_load_to_base(a):
+    def org_mis(ftp):
+        sql = f"""SELECT LEFT([NameMIS], LEN([NameMIS]) - 1)
+            FROM (
+                SELECT mis.[NameMIS] + ', '
+                    FROM [PNK_NCRN].[nsi].[MISMO] as mis
+                    inner join [nsi].[Organization] as org
+                    on (mis.[level1_key] = org.level1_key)
+                where org.ftp_user = '{ftp}'
+            FOR XML PATH ('')
+          ) c ([NameMIS])
+        """
+        try:
+            mis = pd.read_sql(sql,con).iat[0,0]
+        except:
+            return 'Не удалось узнать МИС'
+        else:
+            return mis
+
     sql_execute("""
                 TRUNCATE TABLE dbo.TempTableFromMO
                 TRUNCATE TABLE nsi.Organization
@@ -193,6 +211,7 @@ def regiz_load_to_base(a):
                                       'CountRows'    : len(df),
                                       'TextError'    : 'Файл HTMl удачно распарсен',
                                       'OtherFiles'   : other_files,
+                                      'mis'          : org_mis(file.split('/')[5]),
                                       'DateLoadFile' : datetime.datetime.now(),
                                       'InOrOut'      : 'IN'}, ignore_index=True)
         except ValueError as exc: # Если не найдены колонки
@@ -210,6 +229,7 @@ def regiz_load_to_base(a):
                                           'CountRows'    : len(df),
                                           'TextError'    : 'Файл HTMl удачно распарсен',
                                           'OtherFiles'   : other_files,
+                                          'mis'          : org_mis(file.split('/')[5]),
                                           'DateLoadFile' : datetime.datetime.now(),
                                           'InOrOut'      : 'IN'}, ignore_index=True)
             else:
@@ -221,7 +241,17 @@ def regiz_load_to_base(a):
                             try:
                                 df = pd.read_excel(file,usecols=names, skiprows =i,dtype=str)
                             except:
-                                pass
+                                if i == 9:
+                                    stat = stat.append({'MOName'       : organization,
+                                                      'NameFile'     : file,
+                                                      'CountRows'    : 0,
+                                                      'TextError'    : 'Не найдена одна из колонок',
+                                                      'OtherFiles'   : other_files,
+                                                      'mis'          : org_mis(file.split('/')[5]),
+                                                      'DateLoadFile' : datetime.datetime.now(),
+                                                      'InOrOut'      : 'IN'}, ignore_index=True)
+                                else:
+                                    pass
                             else:
                                 df.columns=names_new
                                 stat = stat.append({'MOName'       : organization,
@@ -229,6 +259,7 @@ def regiz_load_to_base(a):
                                                       'CountRows'    : len(df),
                                                       'TextError'    : 'Файл прочитан, но пришлось поискать шапку на строке номер ' + str(i),
                                                       'OtherFiles'   : other_files,
+                                                      'mis'          : org_mis(file.split('/')[5]),
                                                       'DateLoadFile' : datetime.datetime.now(),
                                                       'InOrOut'      : 'IN'}, ignore_index=True)
                                 break
@@ -238,6 +269,7 @@ def regiz_load_to_base(a):
                                               'CountRows'    : 0,
                                               'TextError'    : 'Файл не удалось прочитать',
                                               'OtherFiles'   : other_files,
+                                              'mis'          : org_mis(file.split('/')[5]),
                                               'DateLoadFile' : datetime.datetime.now(),
                                               'InOrOut'      : 'IN'}, ignore_index=True)
                 else:
@@ -246,6 +278,7 @@ def regiz_load_to_base(a):
                                                   'CountRows'    : len(df),
                                                   'TextError'    : 'Файл прочитан, но он уже был когда-то обработан',
                                                   'OtherFiles'   : other_files,
+                                                  'mis'          : org_mis(file.split('/')[5]),
                                                   'DateLoadFile' : datetime.datetime.now(),
                                                   'InOrOut'      : 'IN'}, ignore_index=True)
         else:
@@ -255,6 +288,7 @@ def regiz_load_to_base(a):
                                               'CountRows'    : len(df),
                                               'TextError'    : 'Файл прочитан без проблем',
                                               'OtherFiles'   : other_files,
+                                              'mis'          : org_mis(file.split('/')[5]),
                                               'DateLoadFile' : datetime.datetime.now(),
                                               'InOrOut'      : 'IN'}, ignore_index=True)
     
