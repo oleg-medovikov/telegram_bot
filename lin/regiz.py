@@ -163,22 +163,33 @@ def regiz_load_to_base(a):
                     FROM [PNK_NCRN].[nsi].[MISMO] as mis
                     inner join [nsi].[Organization] as org
                     on (mis.[level1_key] = org.level1_key)
-                where org.ftp_user = '{ftp}'
+               where org.ftp_user = '{ftp}'
             FOR XML PATH ('')
-          ) c ([NameMIS])
-        """
+          ) c ([NameMIS])"""
         try:
             mis = pd.read_sql(sql,con).iat[0,0]
         except:
             return 'Не удалось узнать МИС'
         else:
-            return mis
+            return str(mis)
 
     sql_execute("""
                 TRUNCATE TABLE dbo.TempTableFromMO
                 TRUNCATE TABLE nsi.Organization
             """)
     mo = pd.read_excel(get_dir('regiz_svod') + '/mo_directory.xlsx')
+    mo1 = mo.rename(columns = { 'ftp_user':'ftp_user'
+                        , 'oid':'OID'
+                        , 'level1_key':'level1_key'
+                        , 'МО_краткое наименование':'MONameSpr64'
+                        , 'MO':'MOName'
+                        , 'MO_полное':'MONameFull'
+                        , 'email':'Email'
+                        , 'active':'IsActive'
+                        , 'ИОГВ' : 'IOGV'
+                        })
+    
+    mo1.to_sql('Organization',con,schema='nsi',if_exists='append',index=False)
     names = ['Номер истории болезни','Дата открытия СМО','Признак амбулаторного СМО','СНИЛС врача']
     names_new = ['HistoryNumber','OpenDate','IsAmbulant','SnilsDoctor']
     path = get_dir('regiz') + '/ori.regiz*/_Входящие/*.xls' 
@@ -190,18 +201,20 @@ def regiz_load_to_base(a):
 
     for file in files:
         other_files = str(glob.glob(file.rsplit('/',1)[0] + '/*'))
-        print(file)       
+        send('',file)       
         if len(mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO']): 
             organization = mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO'].values[0]
         else:
             organization = 'Не определена'
+
         try:
             df = pd.read_excel(file,usecols=names,dtype=str)
         except XLRDError: # если это html файл 
             try:
                 df = pd.read_html(file)
             except ValueError: # если не удалось распарсить html
-                send('',file)
+                pass
+                #send('',file)
             else:
                 df = pd.concat(df)
                 df = df[names].applymap(str)
@@ -221,17 +234,27 @@ def regiz_load_to_base(a):
                 except ValueError: # если не удалось распарсить html
                     send('',file)
                 else:
-                    df = pd.concat(df)
-                    df = df[names].applymap(str)
-                    df.columns=names_new
-                    stat = stat.append({'MOName'       : organization,
-                                          'NameFile'     : file,
-                                          'CountRows'    : len(df),
-                                          'TextError'    : 'Файл HTMl удачно распарсен',
-                                          'OtherFiles'   : other_files,
-                                          'mis'          : org_mis(file.split('/')[5]),
-                                          'DateLoadFile' : datetime.datetime.now(),
-                                          'InOrOut'      : 'IN'}, ignore_index=True)
+                    if len(df) > 0:
+                        df = pd.concat(df)
+                        df = df[names].applymap(str)
+                        df.columns=names_new
+                        stat = stat.append({'MOName'       : organization,
+                                              'NameFile'     : file,
+                                              'CountRows'    : len(df),
+                                              'TextError'    : 'Файл HTMl удачно распарсен',
+                                              'OtherFiles'   : other_files,
+                                              'mis'          : org_mis(file.split('/')[5]),
+                                              'DateLoadFile' : datetime.datetime.now(),
+                                              'InOrOut'      : 'IN'}, ignore_index=True)
+                    else:
+                        stat = stat.append({'MOName'       : organization,
+                                              'NameFile'     : file,
+                                              'CountRows'    : 0,
+                                              'TextError'    : 'Файл HTMl не удалось распарсить',
+                                              'OtherFiles'   : other_files,
+                                              'mis'          : org_mis(file.split('/')[5]),
+                                              'DateLoadFile' : datetime.datetime.now(),
+                                              'InOrOut'      : 'IN'}, ignore_index=True)
             else:
                 try:
                     df = pd.read_excel(file, usecols=names_new,dtype=str)
@@ -304,18 +327,6 @@ def regiz_load_to_base(a):
                 #df.to_excel(new_file, index=False)
         df = df[0:0]
     
-    mo.rename(columns = { 'ftp_user':'ftp_user'
-                        , 'oid':'OID'
-                        , 'level1_key':'level1_key'
-                        , 'МО_краткое наименование':'MONameSpr64'
-                        , 'MO':'MOName'
-                        , 'MO_полное':'MONameFull'
-                        , 'email':'Email'
-                        , 'active':'IsActive'
-                        , 'ИОГВ' : 'IOGV'
-                        }, inplace = True)
-    
-    mo.to_sql('Organization',con,schema='nsi',if_exists='append',index=False)
     stat.to_sql('JrnLoadFiles',con,schema='logs',if_exists='append',index=False)
     try:
         svod = pd.concat(list_)

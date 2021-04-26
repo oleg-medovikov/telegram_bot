@@ -215,7 +215,6 @@ def generate_pptx(date):
 	    where 
 	    DATEDIFF(day,[Дата создания РЗ],getdate() ) < 31
 	    and (DATEDIFF(day,[Дата создания РЗ],[Диагноз установлен] ) > 7 or DATEDIFF(day,[Дата создания РЗ],[Диагноз установлен] ) < -7 )
-
             """, con)
 
 
@@ -224,7 +223,18 @@ def generate_pptx(date):
     p.font.color.rgb = RGBColor(255,0,0)
     p.font.size = Pt(30)
 
+    df = pd.read_sql("""
+	    select count(*)
+	    from cv_fedreg 
+	    where 
+	    (DATEDIFF(day,[Дата создания РЗ],[Диагноз установлен] ) > 7 or DATEDIFF(day,[Дата создания РЗ],[Диагноз установлен] ) < -7 )
+            """, con)
+
     p = tf.add_paragraph()
+    p.text = 'за всё время: ' + str(df.iat[0,0]) + ' УНРЗ'
+    p.font.color.rgb = RGBColor(255,0,0)
+    p.font.size = Pt(30)
+
     p = tf.add_paragraph()
     p = tf.add_paragraph()
     p.text = 'Срок создания регистровой записи (УНРЗ) не соответствует дате установки диагноза: разница более 7 дней после даты установки диагноза, количество взято за последний месяц'

@@ -110,45 +110,41 @@ def check_file(file,category):
     return check,error_text,collum, head - 1
 
 def slojit_fr(a):
-    def file_write(df, file):
-        values = [df.columns] + list(df.values)
-        wb = Workbook()
-        wb.new_sheet('Федеральный регистр', data=values)
-        wb.save(file)
-        return 1
+    import xlrd
+    xlrd.xlsx.ensure_elementtree_imported(False, None)
+    xlrd.xlsx.Element_has_iter = True
 
-    path = get_dir('path_robot') + '/_new_fr_parts'
+    file = '/mnt/COVID-списки/Входящие списки/для загрузки/Robot/_ФР_по_частям/Федеральный регистр лиц, больных COVID-19 - 2021-04-18T203626.396.xlsx'
+    names = ['п/н','Дата создания РЗ','УНРЗ','Дата изменения РЗ','СНИЛС','ФИО','Пол','Дата рождения','Диагноз','Диагноз установлен','Осложнение основного диагноза',
+             'Субъект РФ','Медицинская организация','Ведомственная принадлежность','Вид лечения','Дата исхода заболевания','Исход заболевания','Степень тяжести',
+             'Посмертный диагноз','ИВЛ','ОРИТ','МО прикрепления','Медицинский работник']  
+
+    path = get_dir('path_robot') + '/_ФР_по_частям'
     date = datetime.datetime.today().strftime("%Y_%m_%d")
+    nameSheetShablon = "Sheet1"
     _list = []
     
-    for csv in glob.glob(path + '/*.csv'):
-        os.remove(csv)
+    files = glob.glob(path + '/*.xlsx')
+    if not len(files):
+        raise my_except('В папке нет файлов!')
 
-    for xlsx in glob.glob(path + '/*.xlsx'):
-        csv = xlsx[:-4] + 'csv'
-        subprocess.call('xlsx2csv ' + xlsx.replace( ' ', '\ ' ) + ' ' + csv.replace( ' ', '\ ' ), shell=True)
-        send('epid','конвертирован файл ' + csv.rsplit('/',1)[-1])
-
-
-    for csv in glob.glob(path + '/*.csv'):
-        df = pd.read_csv(csv,skiprows=1)
+    for excel in files:
+        try:
+            df = pd.read_excel(excel,  header= 1, usecols=names,  engine='xlrd',skipfooter=1 )
+        except:
+            raise my_except('Какой-то непонятный файл ' + excel.rsplit('/',1)[-1])
+        send('epid','прочтён файл ' + excel.rsplit('/',1)[-1])
         _list.append(df)
     
-    send('epid','Прочел файлы')
     svod = pd.concat(_list)
 
-    svod = svod[svod["Дата создания РЗ"].notnull()] 
+    #svod = svod[svod["Дата создания РЗ"].notnull()] 
     svod["п/н"] = range(1, len(svod)+1)
     
     new_fedreg      = path + '/Федеральный регистр лиц, больных - ' + date + '.xlsx'
     new_fedreg_temp = get_dir('temp') + '/Федеральный регистр лиц, больных - ' + date + '.xlsx'
     new_iach        = path + '/Федеральный регистр лиц, больных - ' + date + '_ИАЦ.xlsx'
     new_iach_temp   = get_dir('temp') + '/Федеральный регистр лиц, больных - ' + date + '_ИАЦ.xlsx'
-    try:
-        del df['Unnamed: 24']
-    except:
-        pass
-
     
     NumberForMG = len(svod[svod['Диагноз'].isin(['U07.1']) \
                     & svod['Исход заболевания'].isnull() \
@@ -178,7 +174,7 @@ def slojit_fr(a):
             & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
             & (svod['Вид лечения'].isin(['Стационарное лечение']))])
 
-    otvet = 'Вроде все получилось \n' + 'По цифрам\n' \
+    otvet = 'По цифрам\n' \
             + 'На стационарном лечении: ' + str(NumberForMG) + '\n' \
             + 'Всего заболело: ' + str(NumberFor1) +'\n' \
             + 'Всего умерло: '+ str(NumberFor2) + '\n' \
@@ -188,14 +184,18 @@ def slojit_fr(a):
             + 'Сейчас на стационаром лечении старше 70: ' + str(NumberFor6) 
     
     send('epid',otvet)
+    send('epid','Начинаю записывать файлы')
 
-    file_write(svod,new_fedreg_temp)
-    shutil.copyfile(new_fedreg_temp,new_fedreg)
+    with pd.ExcelWriter(new_fedreg_temp) as writer:
+        svod.to_excel(writer,index=False)
+    shutil.move(new_fedreg_temp,new_fedreg)
     send('epid','Записан файл фед регистра')
+
     del svod['СНИЛС']
     del svod['ФИО']
-    file_write(svod,new_iach_temp)
-    shutil.copyfile(new_iach_temp,new_iach)
+    with pd.ExcelWriter(new_iach_temp) as writer:
+        svod.to_excel(writer,index=False)
+    shutil.move(new_iach_temp,new_iach)
     send('epid','Записан файл иац')
     return 'Фух, закончил'
 
