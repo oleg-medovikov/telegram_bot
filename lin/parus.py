@@ -94,7 +94,7 @@ def svod_40_cov_19(a):
                 CAST(Vaccin_tvsp_13 AS int) Vaccin_tvsp_13, CAST(Vaccin_tvsp_14 AS int) Vaccin_tvsp_14, CAST(Vaccin_tvsp_15 AS int) Vaccin_tvsp_15,
                 CAST(Vaccin_tvsp_16 AS int) Vaccin_tvsp_16, CAST(Vaccin_tvsp_17 AS int) Vaccin_tvsp_17,
                 CAST(Vaccin_tvsp_18 AS int) Vaccin_tvsp_18, CAST(Vaccin_tvsp_19 AS int) Vaccin_tvsp_19, CAST(Vaccin_tvsp_19_day AS int) Vaccin_tvsp_19_day,
-                CAST(Vaccin_tvsp_21 AS int) Vaccin_tvsp_21, CAST(Vaccin_tvsp_21_day AS int) Vaccin_tvsp_21_day, '' sr_rash,
+                CAST(Vaccin_tvsp_21 AS int) Vaccin_tvsp_21, CAST(Vaccin_tvsp_21_day AS int) Vaccin_tvsp_21_day,
                 CAST(Vaccin_tvsp_23 AS int) Vaccin_tvsp_23 
         FROM (
                 SELECT
@@ -159,7 +159,7 @@ def svod_40_cov_19(a):
                                 CAST(Vaccin_13 AS int) Vaccin_13, CAST(Vaccin_14 AS int) Vaccin_14, CAST(Vaccin_15 AS int) Vaccin_15,
                                 CAST(Vaccin_16 AS int) Vaccin_16, CAST(Vaccin_17 AS int) Vaccin_17,
                                 CAST(Vaccin_18 AS int) Vaccin_18, CAST(Vaccin_19 AS int) Vaccin_19, CAST(Vaccin_19_day AS int) Vaccin_19_day,
-                                CAST(Vaccin_21 AS int) Vaccin_21, CAST(Vaccin_21_day AS int) Vaccin_21_day,'' sr_rash,
+                                CAST(Vaccin_21 AS int) Vaccin_21, CAST(Vaccin_21_day AS int) Vaccin_21_day,
                                 CAST(Vaccin_23 AS int) Vaccin_23 
                 FROM (
                 SELECT
@@ -347,7 +347,7 @@ def svod_40_cov_19(a):
         nvl(cast(EVC_TVSP_2_20 as int),0)  EVC_TVSP_2_20,nvl(cast(EVC_TVSP_2_21 as int),0)  EVC_TVSP_2_21,
         nvl(cast(EVC_TVSP_2_22 as int),0)  EVC_TVSP_2_22,nvl(cast(EVC_TVSP_2_23_z as int),0)  EVC_TVSP_2_23_z, 
         nvl(cast(EVC_TVSP_2_24 as int),0)  EVC_TVSP_2_24,nvl(cast(EVC_TVSP_2_25 as int),0)  EVC_TVSP_2_25,
-        '' sr_rashod, nvl(cast(EVC_TVSP_2_27 as int),0)  EVC_TVSP_2_27
+        nvl(cast(EVC_TVSP_2_27 as int),0)  EVC_TVSP_2_27
                 FROM (
                 SELECT
                         r.BDATE day,
@@ -419,7 +419,7 @@ def svod_40_cov_19(a):
         nvl(cast(EVC_TVSP_20 as int),0)  EVC_TVSP_20,nvl(cast(EVC_TVSP_21   as int),0)  EVC_TVSP_21,
         nvl(cast(EVC_TVSP_22 as int),0)  EVC_TVSP_22,nvl(cast(EVC_TVSP_23_z as int),0)  EVC_TVSP_23_z,
         nvl(cast(EVC_TVSP_24 as int),0)  EVC_TVSP_24,nvl(cast(EVC_TVSP_25 as int),0)  EVC_TVSP_25,
-        '' sr_rashod,nvl(cast(EVC_TVSP_27 as int),0)  EVC_TVSP_27
+        nvl(cast(EVC_TVSP_27 as int),0)  EVC_TVSP_27
                 FROM (
                 SELECT
                 to_char(r.BDATE, 'DD.MM.YYYY') day,
@@ -625,45 +625,63 @@ def svod_40_cov_19(a):
     del epivak_old ['ORGANIZATION']
 
     date_otch = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d_%m_%Y')
-    new_name = date_otch + '_40_COVID_19_svod.xlsx'
+    new_name_pred ='40_COVID_19_Боткина_' + date_otch + '_предварительный.xlsx'
+    new_name_osn  ='40_COVID_19_Боткина_' + date_otch + '_основной.xlsx'
     shablon_path = get_dir('help')
 
-    shutil.copyfile(shablon_path + '/40_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
+    shutil.copyfile(shablon_path + '/40_COVID_19_pred.xlsx' , shablon_path  + '/' + new_name_pred)
+    shutil.copyfile(shablon_path + '/40_COVID_19_osn.xlsx'  , shablon_path  + '/' + new_name_osn)
 
-    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_pred)
     ws = wb['Спутник-V']
     rows = dataframe_to_rows(df,index=False, header=False)
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name) 
+    wb.save( shablon_path  + '/' + new_name_pred) 
 
-
-    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_pred)
     ws = wb['Вчера_Спутник']
     rows = dataframe_to_rows(old,index=False, header=False)
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name) 
+    wb.save( shablon_path  + '/' + new_name_pred) 
 
-    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_pred)
     ws = wb['ЭпиВакКорона']
     rows = dataframe_to_rows(epivak,index=False, header=False)
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name) 
+    wb.save( shablon_path  + '/' + new_name_pred) 
     
-    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_pred)
     ws = wb['Вчера_ЭпиВак']
     rows = dataframe_to_rows(epivak_old,index=False, header=False)
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name) 
+    wb.save( shablon_path  + '/' + new_name_pred) 
 
-    return(shablon_path  + '/' + new_name)
+    # основной отчет
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_osn)
+    ws = wb['Спутник-V']
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    wb.save( shablon_path  + '/' + new_name_osn) 
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_osn)
+    ws = wb['ЭпиВакКорона']
+    rows = dataframe_to_rows(epivak,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    wb.save( shablon_path  + '/' + new_name_osn) 
+    return(shablon_path  + '/' + new_name_pred + ';' + shablon_path  + '/' + new_name_osn)
 
 def parus_43_cov_nulls(a):
     sql="""

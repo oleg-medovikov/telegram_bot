@@ -358,6 +358,25 @@ def sbor_death_week_svod(a):
         list_.append(chast)
     df = pd.concat(list_)
     df['Ndays'] = (pd.to_datetime(df['Дата госпитализации'],errors='coerce') - pd.to_datetime(df['Дата начала заболевания'],errors='coerce')).dt.days
+    df = df.loc[~df['ФИО'].isnull()]
+    df.index = range(len(df))
+    cheak_diagnoz = df[['ФИО','Дата рождения','Посмертный диагноз']].to_sql('cheak_diagnoz',con,schema='tmp',if_exists='replace',index=True)
+    
+    sql = """select c.*,fr.[Посмертный диагноз] as 'Посмертный диагноз новый' from (
+    select * from tmp.cheak_diagnoz ) as c
+    left join (select * from dbo.cv_fedreg where [Исход заболевания] = 'Смерть') as fr
+    on (c.[ФИО] = fr.[ФИО] and c.[Дата рождения] = fr.[Дата рождения])
+    where  c.[Посмертный диагноз] <> fr.[Посмертный диагноз]
+    order by [index]
+    """
+    
+    cheak = pd.read_sql(sql,con)
+
+    for i in range(len(cheak)):
+        index = int(cheak.at[i,'index'])
+        diagnoz = cheak.at[i,'Посмертный диагноз новый']
+        df.loc[index,'Посмертный диагноз'] = diagnoz
+
     svod = pd.read_sql(f"exec robo.death_week_value'{date_start}','{date_end}'", con)
     svod = svod.fillna(0)
 
@@ -655,6 +674,7 @@ def sbor_death_week_svod(a):
         svod.to_excel(writer,sheet_name='Свод по МО',index=False)
         sp.to_excel(writer,sheet_name='Проценты',index=False)
         zone.to_excel(writer,sheet_name='Умершие по районам',index=False)
+        cheak.to_excel(writer,sheet_name='Изменившиеся диагнозы',index=False)
     try:
         shutil.copyfile(file_svod,new_path + '/свод.xlsx')
     except:
