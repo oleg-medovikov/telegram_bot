@@ -13,7 +13,7 @@ from reports import short_report
 warnings.filterwarnings('ignore')
 
 class my_except(Exception):
-    pass
+     pass
 
 server  = os.getenv('server')
 user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser') # Тут правильный двойной слеш!
@@ -140,11 +140,19 @@ def slojit_fr(a):
 
     #svod = svod[svod["Дата создания РЗ"].notnull()] 
     svod["п/н"] = range(1, len(svod)+1)
+    tumorow = (datetime.datetime.today() + datetime.timedelta(days=1)).strftime("%Y_%m_%d")
     
-    new_fedreg      = path + '/Федеральный регистр лиц, больных - ' + date + '.xlsx'
+    new_fedreg      = get_dir('robot') +'/'+ tumorow + '/Федеральный регистр лиц, больных - ' + date + '.xlsx'
     new_fedreg_temp = get_dir('temp') + '/Федеральный регистр лиц, больных - ' + date + '.xlsx'
-    new_iach        = path + '/Федеральный регистр лиц, больных - ' + date + '_ИАЦ.xlsx'
+    new_iach        = get_dir('covid_iac2') + '/Федеральный регистр лиц, больных - ' + date + '_ИАЦ.xlsx'
     new_iach_temp   = get_dir('temp') + '/Федеральный регистр лиц, больных - ' + date + '_ИАЦ.xlsx'
+    otchet_9        = glob.glob(get_dir('robot') +'/'+ tumorow +'/9. Отчет по пациентам COVID-центр*.xlsx' )
+    if len(otchet_9):
+        otchet_9_new = get_dir('covid_iac2') +'/'+ otchet_9[0].rsplit('/',1)[1]
+        shutil.copyfile(otchet_9[0],otchet_9_new)
+        send('epid','Отчет №9 скопирован в папку иац')
+    else:
+        send('epid','Не удалось найти отчет №9')
     
     NumberForMG = len(svod[svod['Диагноз'].isin(['U07.1']) \
                     & svod['Исход заболевания'].isnull() \
@@ -188,7 +196,11 @@ def slojit_fr(a):
 
     with pd.ExcelWriter(new_fedreg_temp) as writer:
         svod.to_excel(writer,index=False)
-    shutil.move(new_fedreg_temp,new_fedreg)
+    try:
+        shutil.move(new_fedreg_temp,new_fedreg)
+    except:
+        shutil.move(new_fedreg_temp, path +'/' + new_fedreg_temp.rsplit('/',1)[-1])
+
     send('epid','Записан файл фед регистра')
 
     del svod['СНИЛС']
@@ -197,6 +209,9 @@ def slojit_fr(a):
         svod.to_excel(writer,index=False)
     shutil.move(new_iach_temp,new_iach)
     send('epid','Записан файл иац')
+    
+    
+
     return 'Фух, закончил'
 
 def excel_to_csv_old(file_excel):

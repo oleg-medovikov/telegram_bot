@@ -200,6 +200,8 @@ def regiz_load_to_base(a):
     df = pd.DataFrame()
 
     for file in files:
+        if os.path.getsize(file) == 0:
+            continue
         other_files = str(glob.glob(file.rsplit('/',1)[0] + '/*'))
         send('',file)       
         if len(mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO']): 

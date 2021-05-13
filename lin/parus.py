@@ -334,7 +334,7 @@ def svod_40_cov_19(a):
         ORDER BY ORGANIZATION,TYPE"""
 
     sql3 = """SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(EVC_TVSP_2_02 ,1,INSTR(EVC_TVSP_2_02 , ' ')-1) dist, 
-        REPLACE(substr(EVC_TVSP_2_02 ,INSTR(EVC_TVSP_2_02 , ' ')+1, length(EVC_TVSP_2_02)),'район','') EVC_TVSP_2_02,
+        REPLACE(substr(EVC_TVSP_2_02 ,INSTR(EVC_TVSP_2_02 , ' ')+1, length(EVC_TVSP_2_02)),'район ','') EVC_TVSP_2_02,
         nvl(cast(EVC_TVSP_2_04 as int),0)  EVC_TVSP_2_04,
         nvl(cast(EVC_TVSP_2_05_z as int),0)  EVC_TVSP_2_05_z,nvl(cast(EVC_TVSP_2_06 as int),0)  EVC_TVSP_2_06,
         nvl(cast(EVC_TVSP_2_07_z as int),0)  EVC_TVSP_2_07_z,nvl(cast(EVC_TVSP_2_08 as int),0)  EVC_TVSP_2_08,
@@ -383,7 +383,7 @@ def svod_40_cov_19(a):
                                                 'EVC_TVSP_2_12','EVC_TVSP_2_13_z', 'EVC_TVSP_2_14', 
                                                 'EVC_TVSP_2_15_z', 'EVC_TVSP_2_16','EVC_TVSP_2_17_z', 'EVC_TVSP_2_18'
                                                 , 'EVC_TVSP_2_19_z', 'EVC_TVSP_2_20', 'EVC_TVSP_2_21', 'EVC_TVSP_2_22'
-                                                , 'EVC_TVSP_2_23_z', 'EVC_TVSP_2_24', 'EVC_TVSP_2_25', 'EVC_TVSP_2_27')
+                                                , 'EVC_TVSP_2_23_z', 'EVC_TVSP_2_24', 'EVC_TVSP_2_25_z', 'EVC_TVSP_2_27')
                 )
                 pivot
                 (
@@ -403,11 +403,11 @@ def svod_40_cov_19(a):
         'EVC_TVSP_2_19_z'  EVC_TVSP_2_19_z,
         'EVC_TVSP_2_20'  EVC_TVSP_2_20,'EVC_TVSP_2_21'  EVC_TVSP_2_21,
         'EVC_TVSP_2_22'  EVC_TVSP_2_22, 'EVC_TVSP_2_23_z'  EVC_TVSP_2_23_z,
-        'EVC_TVSP_2_24'  EVC_TVSP_2_24,'EVC_TVSP_2_25'  EVC_TVSP_2_25,'EVC_TVSP_2_27'  EVC_TVSP_2_27
+        'EVC_TVSP_2_24'  EVC_TVSP_2_24,'EVC_TVSP_2_25_z'  EVC_TVSP_2_25,'EVC_TVSP_2_27'  EVC_TVSP_2_27
         )
                 )
         UNION
-        SELECT ORGANIZATION, 'Медицинская организация' TYPE, REPLACE (EVC_TVSP_01,' район','') dist, EVC_TVSP_02,
+        SELECT ORGANIZATION, 'Медицинская организация' TYPE, REPLACE (EVC_TVSP_01,' район ','') dist, EVC_TVSP_02,
         nvl(cast(EVC_TVSP_04 as int),0)  EVC_TVSP_04,nvl(cast(EVC_TVSP_05_z as int),0)  EVC_TVSP_05_z,
         nvl(cast(EVC_TVSP_06 as int),0)  EVC_TVSP_06,nvl(cast(EVC_TVSP_07_z as int),0)  EVC_TVSP_07_z,
         nvl(cast(EVC_TVSP_08 as int),0)  EVC_TVSP_08,nvl(cast(EVC_TVSP_09_z as int),0)  EVC_TVSP_09_z,
@@ -451,7 +451,7 @@ def svod_40_cov_19(a):
                                                 'EVC_TVSP_12','EVC_TVSP_13_z', 'EVC_TVSP_14', 
                                                 'EVC_TVSP_15_z', 'EVC_TVSP_16','EVC_TVSP_17_z', 'EVC_TVSP_18'
                                                 , 'EVC_TVSP_19_z', 'EVC_TVSP_20', 'EVC_TVSP_21', 'EVC_TVSP_22'
-                                                , 'EVC_TVSP_23_z', 'EVC_TVSP_24', 'EVC_TVSP_25', 'EVC_TVSP_27')
+                                                , 'EVC_TVSP_23_z', 'EVC_TVSP_24', 'EVC_TVSP_25_z', 'EVC_TVSP_27')
                 )
                 pivot
                 (
@@ -464,14 +464,14 @@ def svod_40_cov_19(a):
         'EVC_TVSP_16'  EVC_TVSP_16,'EVC_TVSP_17_z'  EVC_TVSP_17_z,'EVC_TVSP_18'  EVC_TVSP_18,
         'EVC_TVSP_19_z'  EVC_TVSP_19_z,'EVC_TVSP_20'  EVC_TVSP_20,'EVC_TVSP_21'  EVC_TVSP_21,
         'EVC_TVSP_22'  EVC_TVSP_22,'EVC_TVSP_23_z'  EVC_TVSP_23_z,'EVC_TVSP_24'  EVC_TVSP_24,
-        'EVC_TVSP_25'  EVC_TVSP_25,'EVC_TVSP_27'  EVC_TVSP_27
+        'EVC_TVSP_25_z'  EVC_TVSP_25,'EVC_TVSP_27'  EVC_TVSP_27
         )
                 )
         ORDER BY ORGANIZATION,TYPE"""
 
 
     sql4 = """SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(EVC_TVSP_2_02 ,1,INSTR(EVC_TVSP_2_02 , ' ')-1) dist, 
-        REPLACE(substr(EVC_TVSP_2_02 ,INSTR(EVC_TVSP_2_02 , ' ')+1, length(EVC_TVSP_2_02)),'район','') EVC_TVSP_2_02,
+        REPLACE(substr(EVC_TVSP_2_02 ,INSTR(EVC_TVSP_2_02 , ' ')+1, length(EVC_TVSP_2_02)),'район ','') EVC_TVSP_2_02,
         nvl(cast(EVC_TVSP_2_04 as int),0)  EVC_TVSP_2_04,
         nvl(cast(EVC_TVSP_2_05_z as int),0)  EVC_TVSP_2_05_z,nvl(cast(EVC_TVSP_2_06 as int),0)  EVC_TVSP_2_06,
         nvl(cast(EVC_TVSP_2_07_z as int),0)  EVC_TVSP_2_07_z,nvl(cast(EVC_TVSP_2_08 as int),0)  EVC_TVSP_2_08,
@@ -520,7 +520,7 @@ def svod_40_cov_19(a):
                                                 'EVC_TVSP_2_12','EVC_TVSP_2_13_z', 'EVC_TVSP_2_14', 
                                                 'EVC_TVSP_2_15_z', 'EVC_TVSP_2_16','EVC_TVSP_2_17_z', 'EVC_TVSP_2_18'
                                                 , 'EVC_TVSP_2_19_z', 'EVC_TVSP_2_20', 'EVC_TVSP_2_21', 'EVC_TVSP_2_22'
-                                                , 'EVC_TVSP_2_23_z', 'EVC_TVSP_2_24', 'EVC_TVSP_2_25', 'EVC_TVSP_2_27')
+                                                , 'EVC_TVSP_2_23_z', 'EVC_TVSP_2_24', 'EVC_TVSP_2_25_z', 'EVC_TVSP_2_27')
                 )
                 pivot
                 (
@@ -540,11 +540,11 @@ def svod_40_cov_19(a):
         'EVC_TVSP_2_19_z'  EVC_TVSP_2_19_z,
         'EVC_TVSP_2_20'  EVC_TVSP_2_20,'EVC_TVSP_2_21'  EVC_TVSP_2_21,
         'EVC_TVSP_2_22'  EVC_TVSP_2_22, 'EVC_TVSP_2_23_z'  EVC_TVSP_2_23_z,
-        'EVC_TVSP_2_24'  EVC_TVSP_2_24,'EVC_TVSP_2_25'  EVC_TVSP_2_25,'EVC_TVSP_2_27'  EVC_TVSP_2_27
+        'EVC_TVSP_2_24'  EVC_TVSP_2_24,'EVC_TVSP_2_25_z'  EVC_TVSP_2_25,'EVC_TVSP_2_27'  EVC_TVSP_2_27
         )
                 )
         UNION
-        SELECT ORGANIZATION, 'Медицинская организация' TYPE, REPLACE (EVC_TVSP_01,' район','') dist, EVC_TVSP_02,
+        SELECT ORGANIZATION, 'Медицинская организация' TYPE, REPLACE (EVC_TVSP_01,' район ','') dist, EVC_TVSP_02,
         nvl(cast(EVC_TVSP_04 as int),0)  EVC_TVSP_04,nvl(cast(EVC_TVSP_05_z as int),0)  EVC_TVSP_05_z,
         nvl(cast(EVC_TVSP_06 as int),0)  EVC_TVSP_06,nvl(cast(EVC_TVSP_07_z as int),0)  EVC_TVSP_07_z,
         nvl(cast(EVC_TVSP_08 as int),0)  EVC_TVSP_08,nvl(cast(EVC_TVSP_09_z as int),0)  EVC_TVSP_09_z,
@@ -588,7 +588,7 @@ def svod_40_cov_19(a):
                                                 'EVC_TVSP_12','EVC_TVSP_13_z', 'EVC_TVSP_14', 
                                                 'EVC_TVSP_15_z', 'EVC_TVSP_16','EVC_TVSP_17_z', 'EVC_TVSP_18'
                                                 , 'EVC_TVSP_19_z', 'EVC_TVSP_20', 'EVC_TVSP_21', 'EVC_TVSP_22'
-                                                , 'EVC_TVSP_23_z', 'EVC_TVSP_24', 'EVC_TVSP_25', 'EVC_TVSP_27')
+                                                , 'EVC_TVSP_23_z', 'EVC_TVSP_24', 'EVC_TVSP_25_z', 'EVC_TVSP_27')
                 )
                 pivot
                 (
@@ -601,7 +601,7 @@ def svod_40_cov_19(a):
         'EVC_TVSP_16'  EVC_TVSP_16,'EVC_TVSP_17_z'  EVC_TVSP_17_z,'EVC_TVSP_18'  EVC_TVSP_18,
         'EVC_TVSP_19_z'  EVC_TVSP_19_z,'EVC_TVSP_20'  EVC_TVSP_20,'EVC_TVSP_21'  EVC_TVSP_21,
         'EVC_TVSP_22'  EVC_TVSP_22,'EVC_TVSP_23_z'  EVC_TVSP_23_z,'EVC_TVSP_24'  EVC_TVSP_24,
-        'EVC_TVSP_25'  EVC_TVSP_25,'EVC_TVSP_27'  EVC_TVSP_27
+        'EVC_TVSP_25_z'  EVC_TVSP_25,'EVC_TVSP_27'  EVC_TVSP_27
         )
                 )
         ORDER BY ORGANIZATION,TYPE"""
@@ -624,9 +624,9 @@ def svod_40_cov_19(a):
     del epivak ['ORGANIZATION']
     del epivak_old ['ORGANIZATION']
 
-    date_otch = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d_%m_%Y')
-    new_name_pred ='40_COVID_19_Боткина_' + date_otch + '_предварительный.xlsx'
-    new_name_osn  ='40_COVID_19_Боткина_' + date_otch + '_основной.xlsx'
+    date_otch = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
+    new_name_pred ='40_COVID_19_БОТКИНА_' + date_otch + '_предварительный.xlsx'
+    new_name_osn  ='40_COVID_19_БОТКИНА_' + date_otch + '_основной.xlsx'
     shablon_path = get_dir('help')
 
     shutil.copyfile(shablon_path + '/40_COVID_19_pred.xlsx' , shablon_path  + '/' + new_name_pred)
@@ -665,6 +665,9 @@ def svod_40_cov_19(a):
     wb.save( shablon_path  + '/' + new_name_pred) 
 
     # основной отчет
+    del df[df.columns[-1]]
+    del df[df.columns[-1]]
+    del df[df.columns[-1]]
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_osn)
     ws = wb['Спутник-V']
@@ -673,6 +676,10 @@ def svod_40_cov_19(a):
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
     wb.save( shablon_path  + '/' + new_name_osn) 
+
+    del epivak[epivak.columns[-1]]
+    del epivak[epivak.columns[-1]]
+    del epivak[epivak.columns[-1]]
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_osn)
     ws = wb['ЭпиВакКорона']
@@ -684,9 +691,7 @@ def svod_40_cov_19(a):
     return(shablon_path  + '/' + new_name_pred + ';' + shablon_path  + '/' + new_name_osn)
 
 def parus_43_cov_nulls(a):
-    sql="""
-        SELECT 
-                CAST(r.BDATE AS varchar(30))  day,
+    sql="""SELECT CAST(r.BDATE AS varchar(30))  day,
                 a.AGNABBR code,
                 a.AGNNAME  organization,
                 sum(CASE WHEN NUMVAL = 0 THEN 1 ELSE 0 END ) nulls_in_itog
@@ -707,8 +712,7 @@ def parus_43_cov_nulls(a):
         and bi.CODE in ('43_covid_05','43_covid_07','43_covid_09_2')
         AND r.BDATE IN ( trunc(SYSDATE),  trunc(SYSDATE-1),  trunc(SYSDATE-2))
         GROUP BY r.BDATE,a.AGNABBR,a.AGNNAME
-        HAVING sum(CASE WHEN NUMVAL = 0 THEN 1 ELSE 0 END ) > 1
-            """
+        HAVING sum(CASE WHEN NUMVAL = 0 THEN 1 ELSE 0 END ) > 1"""
     
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
@@ -884,10 +888,7 @@ def svod_43_covid_19(a):
     return  shablon_path  + '/' + new_name
 
 def no_save_43(a):
-    sql="""
-         SELECT 
-             a.AGNNAME "Наименование МО"
-            ,a.AGNABBR "Мнемокод" 
+    sql="""SELECT a.AGNNAME "Наименование МО",a.AGNABBR "Мнемокод" 
             ,CASE 
               WHEN r.SENT =  1
                 THEN 'Да'
@@ -910,8 +911,7 @@ def no_save_43(a):
               AND r.BDATE = trunc(SYSDATE) -- отчет за сегодняшнюю дату
               AND bi.CODE = '43_covid_03' -- тип показателя, в котором указано наименование МО
               AND s.SAVE_RESULT = 0    -- кто не сохранил свой отчет    
-          ORDER BY a.AGNABBR
-                """
+          ORDER BY a.AGNABBR"""
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
 
@@ -1016,9 +1016,9 @@ def cvod_29_covid(a):
     nvl(cast(pok_39 as int),0) pok_39,nvl(cast(pok_40 as int),0) pok_40,nvl(cast(pok_41 as int),0) pok_41,nvl(cast(pok_42 as int),0) pok_42,
     nvl(cast(pok_43 as int),0) pok_43,
     nvl(cast(pok_44 as float),0) pok_44,nvl(cast(pok_45 as float),0) pok_45,nvl(cast(pok_46 as float),0) pok_46,
-    nvl(cast(pok_47 as float),0) pok_47,nvl(cast(pok_48 as float),0) pok_48,nvl(cast(pok_49 as float),0) pok_49,nvl(cast(pok_50 as float),0) pok_50,
-    nvl(cast(pok_51 as float),0) pok_51,nvl(cast(pok_52 as float),0) pok_52,nvl(cast(pok_53 as float),0) pok_53,
-    nvl(cast(pok_54 as int),0) pok_54,nvl(cast(pok_55 as float),0) pok_55
+    nvl(cast(pok_47 as float),0) pok_47,nvl(cast(pok_48 as float),0) pok_48,nvl(cast(pok_49 as float),0) pok_49,nvl(cast(pok_56 as float),0) pok_56,
+    nvl(cast(pok_57 as float),0) pok_57,nvl(cast(pok_58 as float),0) pok_58,nvl(cast(pok_59 as float),0) pok_59,
+    nvl(cast(pok_60 as int),0) pok_60,nvl(cast(pok_61 as float),0) pok_61
     FROM (
     SELECT 
             to_char(r.BDATE, 'DD.MM.YYYY')  day,
@@ -1062,12 +1062,11 @@ def cvod_29_covid(a):
     '29_covid_037' pok_37,'29_covid_038' pok_38,'29_covid_039' pok_39,'29_covid_040' pok_40,
     '29_covid_041' pok_41,'29_covid_042' pok_42,'29_covid_043' pok_43,'29_covid_044' pok_44,
     '29_covid_045' pok_45,'29_covid_046' pok_46,'29_covid_047' pok_47,'29_covid_048' pok_48,
-    '29_covid_049' pok_49,'29_covid_050' pok_50,'29_covid_051' pok_51,'29_covid_052' pok_52,
-    '29_covid_053' pok_53,'29_covid_054' pok_54,'29_covid_055' pok_55)
+    '29_covid_049' pok_49,'29_covid_056' pok_56,'29_covid_057' pok_57,'29_covid_058' pok_58,
+    '29_covid_059' pok_59,'29_covid_060' pok_60,'29_covid_061' pok_61)
     )
     WHERE POK_01 IS NOT NULL 
-    ORDER BY POK_01
-    """
+    ORDER BY POK_01"""
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
 
@@ -1135,7 +1134,9 @@ def cvod_33_covid(a):
 				on(r.BLREPFORMED = rd.RN)
 				INNER JOIN PARUS.BLREPFORM rf
 				on(rd.PRN = rf.RN)
-				WHERE rf.code = '33 COVID 19') 
+				WHERE rf.code = '33 COVID 19'
+                                AND r.Bdate < SYSDATE + 2 
+                                ) 
     AND i.CODE IN ('Trp_17_MO', 'Trp_18_dist', 'Trp_01', 'Trp_02', 'Trp_03', 'Trp_04', 'Trp_05', 'Trp_06',
             'Trp_07', 'Trp_08','Trp_09', 'Trp_10', 'Trp_11', 'Trp_12', 'Trp_13', 'Trp_14', 'Trp_15', 'Trp_16' )
     )
@@ -1180,63 +1181,62 @@ def cvod_36_covid(a):
             nvl(cast(Distr_doc_13 as int),0) Distr_doc_13, nvl(cast(Distr_doc_14 as int),0) Distr_doc_14,
             nvl(cast(Distr_doc_15 as int),0) Distr_doc_15, nvl(cast(Distr_doc_16 as int),0) Distr_doc_16,
             nvl(cast(Distr_doc_17 as int),0) Distr_doc_17, nvl(cast(Distr_doc_18 as int),0) Distr_doc_18
-    FROM (
-    SELECT 
-            to_char(r.BDATE, 'DD.MM.YYYY') day,
-        i.CODE pokazatel,
-        ro.NUMB row_index ,
-            CASE WHEN STRVAL  IS NOT NULL THEN STRVAL 
-                     WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
-                     WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
-                    ELSE NULL END value
-    FROM PARUS.BLTBLVALUES v
-    INNER JOIN PARUS.BLTABLESIND si 
-    on(v.BLTABLESIND = si.RN)
-    INNER JOIN PARUS.BALANCEINDEXES i 
-    on(si.BALANCEINDEXES = i.RN)
-    INNER JOIN PARUS.BLTBLROWS ro 
-    on(v.PRN = ro.RN)
-    INNER JOIN PARUS.BLSUBREPORTS s 
-    on(ro.PRN = s.RN)
-    INNER JOIN PARUS.BLREPORTS r 
-    on(s.PRN = r.RN)
-    INNER JOIN PARUS.AGNLIST a
-    on(r.AGENT = a.RN)
-    INNER JOIN PARUS.BLREPFORMED rd
-    on(r.BLREPFORMED = rd.RN)
-    INNER JOIN PARUS.BLREPFORM rf
-    on(rd.PRN = rf.RN)
-    WHERE rf.code = '36 COVID 19'
-    AND i.CODE IN ('Distr_doc_19_MO', 'Distr_doc_20_Dist', 'Distr_doc_01', 'Distr_doc_02', 'Distr_doc_03',
-                                    'Distr_doc_04', 'Distr_doc_05', 'Distr_doc_06','Distr_doc_07', 'Distr_doc_08','Distr_doc_09',
-                                    'Distr_doc_10', 'Distr_doc_11', 'Distr_doc_12', 'Distr_doc_13', 'Distr_doc_14', 
-                                    'Distr_doc_15', 'Distr_doc_16', 'Distr_doc_17', 'Distr_doc_18' )
-    and r.BDATE = (SELECT max(r.BDATE) FROM PARUS.BLTBLVALUES v
-                                    INNER JOIN PARUS.BLTBLROWS ro 
-                                    on(v.PRN = ro.RN)
-                                    INNER JOIN PARUS.BLSUBREPORTS s 
-                                    on(ro.PRN = s.RN)
-                                    INNER JOIN PARUS.BLREPORTS r
-                                    on(s.PRN = r.RN)
-                                    INNER JOIN PARUS.BLREPFORMED rd
-                                    on(r.BLREPFORMED = rd.RN)
-                                    INNER JOIN PARUS.BLREPFORM rf
-                                    on(rd.PRN = rf.RN)
-                                    WHERE rf.code = '36 COVID 19')
-    )
-    pivot
-    (
-    MIN(value)
-    FOR POKAZATEL IN (  'Distr_doc_19_MO' Distr_doc_19_MO, 'Distr_doc_20_Dist' Distr_doc_20_Dist, 'Distr_doc_01' Distr_doc_01,
-                                            'Distr_doc_02' Distr_doc_02, 'Distr_doc_03' Distr_doc_03, 'Distr_doc_04' Distr_doc_04, 'Distr_doc_05' Distr_doc_05,
-                                            'Distr_doc_06' Distr_doc_06, 'Distr_doc_07' Distr_doc_07, 'Distr_doc_08' Distr_doc_08, 'Distr_doc_09' Distr_doc_09,
-                                            'Distr_doc_10' Distr_doc_10, 'Distr_doc_11' Distr_doc_11, 'Distr_doc_12' Distr_doc_12, 'Distr_doc_13' Distr_doc_13,
-                                            'Distr_doc_14' Distr_doc_14, 'Distr_doc_15' Distr_doc_15, 'Distr_doc_16' Distr_doc_16, 'Distr_doc_17' Distr_doc_17,
-                                            'Distr_doc_18' Distr_doc_18)    			
-    )
-    WHERE Distr_doc_19_MO IS NOT NULL 
-    ORDER BY Distr_doc_20_Dist
-    """
+        FROM (
+        SELECT 
+                to_char(r.BDATE, 'DD.MM.YYYY') day,
+            i.CODE pokazatel,
+            ro.NUMB row_index ,
+                CASE WHEN STRVAL  IS NOT NULL THEN STRVAL 
+                         WHEN NUMVAL  IS NOT NULL THEN CAST(NUMVAL  AS varchar(30))
+                         WHEN DATEVAL IS NOT NULL THEN CAST(DATEVAL AS varchar(30))
+                        ELSE NULL END value
+        FROM PARUS.BLTBLVALUES v
+        INNER JOIN PARUS.BLTABLESIND si 
+        on(v.BLTABLESIND = si.RN)
+        INNER JOIN PARUS.BALANCEINDEXES i 
+        on(si.BALANCEINDEXES = i.RN)
+        INNER JOIN PARUS.BLTBLROWS ro 
+        on(v.PRN = ro.RN)
+        INNER JOIN PARUS.BLSUBREPORTS s 
+        on(ro.PRN = s.RN)
+        INNER JOIN PARUS.BLREPORTS r 
+        on(s.PRN = r.RN)
+        INNER JOIN PARUS.AGNLIST a
+        on(r.AGENT = a.RN)
+        INNER JOIN PARUS.BLREPFORMED rd
+        on(r.BLREPFORMED = rd.RN)
+        INNER JOIN PARUS.BLREPFORM rf
+        on(rd.PRN = rf.RN)
+        WHERE rf.code = '36 COVID 19'
+        AND i.CODE IN ('Distr_doc_19_MO', 'Distr_doc_20_Dist', 'Distr_doc_01', 'Distr_doc_02', 'Distr_doc_03',
+                                        'Distr_doc_04', 'Distr_doc_05', 'Distr_doc_06','Distr_doc_07', 'Distr_doc_08','Distr_doc_09',
+                                        'Distr_doc_10', 'Distr_doc_11', 'Distr_doc_12', 'Distr_doc_13', 'Distr_doc_14', 
+                                        'Distr_doc_15', 'Distr_doc_16', 'Distr_doc_17', 'Distr_doc_18' )
+        and r.BDATE = (SELECT max(r.BDATE) FROM PARUS.BLTBLVALUES v
+                                        INNER JOIN PARUS.BLTBLROWS ro 
+                                        on(v.PRN = ro.RN)
+                                        INNER JOIN PARUS.BLSUBREPORTS s 
+                                        on(ro.PRN = s.RN)
+                                        INNER JOIN PARUS.BLREPORTS r
+                                        on(s.PRN = r.RN)
+                                        INNER JOIN PARUS.BLREPFORMED rd
+                                        on(r.BLREPFORMED = rd.RN)
+                                        INNER JOIN PARUS.BLREPFORM rf
+                                        on(rd.PRN = rf.RN)
+                                        WHERE rf.code = '36 COVID 19'
+                                        AND r.Bdate < SYSDATE + 2))
+        pivot
+        (
+        MIN(value)
+        FOR POKAZATEL IN (  'Distr_doc_19_MO' Distr_doc_19_MO, 'Distr_doc_20_Dist' Distr_doc_20_Dist, 'Distr_doc_01' Distr_doc_01,
+                                                'Distr_doc_02' Distr_doc_02, 'Distr_doc_03' Distr_doc_03, 'Distr_doc_04' Distr_doc_04, 'Distr_doc_05' Distr_doc_05,
+                                                'Distr_doc_06' Distr_doc_06, 'Distr_doc_07' Distr_doc_07, 'Distr_doc_08' Distr_doc_08, 'Distr_doc_09' Distr_doc_09,
+                                                'Distr_doc_10' Distr_doc_10, 'Distr_doc_11' Distr_doc_11, 'Distr_doc_12' Distr_doc_12, 'Distr_doc_13' Distr_doc_13,
+                                                'Distr_doc_14' Distr_doc_14, 'Distr_doc_15' Distr_doc_15, 'Distr_doc_16' Distr_doc_16, 'Distr_doc_17' Distr_doc_17,
+                                                'Distr_doc_18' Distr_doc_18)    			
+        )
+        WHERE Distr_doc_19_MO IS NOT NULL 
+        ORDER BY Distr_doc_20_Dist"""
 
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
@@ -1309,8 +1309,8 @@ def cvod_37_covid(a):
                                     on(r.BLREPFORMED = rd.RN)
                                     INNER JOIN PARUS.BLREPFORM rf
                                     on(rd.PRN = rf.RN)
-                                    WHERE rf.code = '37 COVID 19')
-    )
+                                    WHERE rf.code = '37 COVID 19'
+                                    AND r.Bdate < SYSDATE + 2))
     pivot
     (
     MIN(value)
@@ -1322,9 +1322,8 @@ def cvod_37_covid(a):
                                             'Polic_ats_18' Polic_ats_18)    			
     )
     WHERE Polic_ats_MO IS NOT NULL 
-    ORDER BY Polic_ats_dist
-    """
-
+    ORDER BY Polic_ats_dist"""
+    
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
 
@@ -1395,8 +1394,8 @@ def cvod_38_covid(a):
                                     on(r.BLREPFORMED = rd.RN)
                                     INNER JOIN PARUS.BLREPFORM rf
                                     on(rd.PRN = rf.RN)
-                                    WHERE rf.code = '38 COVID 19')
-    )
+                                    WHERE rf.code = '38 COVID 19'
+                                    AND r.Bdate < SYSDATE + 2 ))
     pivot
     (
     MIN(value)
@@ -1407,8 +1406,7 @@ def cvod_38_covid(a):
                                             'Step_risk_14' Step_risk_14)    			
     )
     WHERE Step_risk_15_MO IS NOT NULL 
-    ORDER BY Step_risk_16_dist
-    """
+    ORDER BY Step_risk_16_dist"""
 
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
