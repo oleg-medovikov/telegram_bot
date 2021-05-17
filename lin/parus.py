@@ -1002,8 +1002,7 @@ def cvod_29_covid(a):
     else:
         n = 0
         date = datetime.datetime.now().strftime('%d_%m_%Y')
-    sql = f"""
-    SELECT  DAY, pok_01, nvl(cast(pok_02 as int),0) pok_02,
+    sql = f"""SELECT  DAY, pok_01, nvl(cast(pok_02 as int),0) pok_02,
     nvl(cast(pok_03 as int),0) pok_03,nvl(cast(pok_04 as int),0) pok_04,nvl(cast(pok_05 as int),0) pok_05,nvl(cast(pok_06 as int),0) pok_06,
     nvl(cast(pok_07 as int),0) pok_07,nvl(cast(pok_08 as int),0) pok_08,nvl(cast(pok_09 as int),0) pok_09,nvl(cast(pok_10 as int),0) pok_10,
     nvl(cast(pok_11 as int),0) pok_11,nvl(cast(pok_12 as int),0) pok_12,nvl(cast(pok_13 as int),0) pok_13,nvl(cast(pok_14 as int),0) pok_14,
@@ -1016,9 +1015,11 @@ def cvod_29_covid(a):
     nvl(cast(pok_39 as int),0) pok_39,nvl(cast(pok_40 as int),0) pok_40,nvl(cast(pok_41 as int),0) pok_41,nvl(cast(pok_42 as int),0) pok_42,
     nvl(cast(pok_43 as int),0) pok_43,
     nvl(cast(pok_44 as float),0) pok_44,nvl(cast(pok_45 as float),0) pok_45,nvl(cast(pok_46 as float),0) pok_46,
-    nvl(cast(pok_47 as float),0) pok_47,nvl(cast(pok_48 as float),0) pok_48,nvl(cast(pok_49 as float),0) pok_49,nvl(cast(pok_56 as float),0) pok_56,
-    nvl(cast(pok_57 as float),0) pok_57,nvl(cast(pok_58 as float),0) pok_58,nvl(cast(pok_59 as float),0) pok_59,
-    nvl(cast(pok_60 as int),0) pok_60,nvl(cast(pok_61 as float),0) pok_61
+    nvl(cast(pok_47 as float),0) pok_47,nvl(cast(pok_48 as float),0) pok_48,nvl(cast(pok_49 as float),0) pok_49,
+    nvl(cast(pok_50 as float),0) pok_50,nvl(cast(pok_51 as float),0) pok_51,nvl(cast(pok_52 as float),0) pok_52,
+    nvl(cast(pok_53 as float),0) pok_53,nvl(cast(pok_54 as float),0) pok_54,nvl(cast(pok_55 as float),0) pok_55,
+    nvl(cast(pok_56 as float),0) pok_56,nvl(cast(pok_57 as float),0) pok_57,nvl(cast(pok_58 as float),0) pok_58,
+    nvl(cast(pok_59 as float),0) pok_59,nvl(cast(pok_60 as int),0) pok_60,nvl(cast(pok_61 as float),0) pok_61
     FROM (
     SELECT 
             to_char(r.BDATE, 'DD.MM.YYYY')  day,
@@ -1043,7 +1044,7 @@ def cvod_29_covid(a):
     INNER JOIN PARUS.BALANCEINDEXES bi 
     on(d.BALANCEINDEX = bi.RN)
     WHERE rf.CODE = '29 COVID 19' 
-    and r.BDATE =  trunc(SYSDATE-{n})
+    and r.BDATE =  trunc(SYSDATE -{n})
     and bi.CODE LIKE '29_covid_0%'
     order by  d.BALANCEINDEX 
     )
@@ -1062,8 +1063,10 @@ def cvod_29_covid(a):
     '29_covid_037' pok_37,'29_covid_038' pok_38,'29_covid_039' pok_39,'29_covid_040' pok_40,
     '29_covid_041' pok_41,'29_covid_042' pok_42,'29_covid_043' pok_43,'29_covid_044' pok_44,
     '29_covid_045' pok_45,'29_covid_046' pok_46,'29_covid_047' pok_47,'29_covid_048' pok_48,
-    '29_covid_049' pok_49,'29_covid_056' pok_56,'29_covid_057' pok_57,'29_covid_058' pok_58,
-    '29_covid_059' pok_59,'29_covid_060' pok_60,'29_covid_061' pok_61)
+    '29_covid_049' pok_49,'29_covid_050' pok_50,'29_covid_051' pok_51,'29_covid_052' pok_52,
+    '29_covid_053' pok_53,'29_covid_054' pok_54,'29_covid_055' pok_55,'29_covid_056' pok_56,
+    '29_covid_057' pok_57,'29_covid_058' pok_58,'29_covid_059' pok_59,'29_covid_060' pok_60,
+    '29_covid_061' pok_61)
     )
     WHERE POK_01 IS NOT NULL 
     ORDER BY POK_01"""
