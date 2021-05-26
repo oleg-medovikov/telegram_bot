@@ -3,6 +3,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 import numpy as np
 import pandas as pd
 from loader import get_dir
+from sending import send
 
 base_parus = os.getenv('base_parus')
 userName = os.getenv('oracle_user')
@@ -48,24 +49,29 @@ def svod_40_cov_19(a):
     sql2 = open('sql/parus/covid_40_spytnic_old.sql','r').read()
     sql3 = open('sql/parus/covid_40_epivak.sql','r').read()
     sql4 = open('sql/parus/covid_40_epivak_old.sql','r').read()
-
+    sql5 = open('sql/parus/covid_40_covivak.sql','r').read()
+    sql6 = open('sql/parus/covid_40_covivak_old.sql','r').read()
+    
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
-        df = pd.read_sql(sql,con)
+        sput = pd.read_sql(sql,con)
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
-        old = pd.read_sql(sql2,con)
+        sput_old = pd.read_sql(sql2,con)
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         epivak = pd.read_sql(sql3,con)
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         epivak_old = pd.read_sql(sql4,con)
-    #df = df.loc[~df.TVSP.isin(['Пункт вакцинации'])]
-    #df.apply(pd.to_numeric,errors='ignore') #, downcast='integer')
-
-    #epivak.sort_values(by=['ORGANIZATION','TYPE'])
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        covivak = pd.read_sql(sql5,con)
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        covivak_old = pd.read_sql(sql6,con)
     
-    del df ['ORGANIZATION']
-    del old ['ORGANIZATION']
+    send('', 'Запросы к базе выполнены')
+    del sput ['ORGANIZATION']
+    del sput_old ['ORGANIZATION']
     del epivak ['ORGANIZATION']
     del epivak_old ['ORGANIZATION']
+    del covivak ['ORGANIZATION']
+    del covivak_old ['ORGANIZATION']
 
     date_otch = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
     new_name_pred ='40_COVID_19_БОТКИНА_' + date_otch + '_предварительный.xlsx'
@@ -77,85 +83,81 @@ def svod_40_cov_19(a):
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_pred)
     ws = wb['Спутник-V']
-    rows = dataframe_to_rows(df,index=False, header=False)
+    rows = dataframe_to_rows(sput,index=False, header=False)
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name_pred) 
 
-    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_pred)
     ws = wb['Вчера_Спутник']
-    rows = dataframe_to_rows(old,index=False, header=False)
+    rows = dataframe_to_rows(sput_old,index=False, header=False)
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name_pred) 
 
-    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_pred)
     ws = wb['ЭпиВакКорона']
     rows = dataframe_to_rows(epivak,index=False, header=False)
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name_pred) 
     
-    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_pred)
     ws = wb['Вчера_ЭпиВак']
     rows = dataframe_to_rows(epivak_old,index=False, header=False)
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name_pred) 
 
-    # основной отчет
-    del df[df.columns[-1]]
-    del df[df.columns[-1]]
-    del df[df.columns[-1]]
-
-    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_osn)
-    ws = wb['Спутник-V']
-    rows = dataframe_to_rows(df,index=False, header=False)
+    ws = wb['КовиВак']
+    rows = dataframe_to_rows(covivak,index=False, header=False)
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name_osn) 
 
-    del epivak[epivak.columns[-1]]
-    del epivak[epivak.columns[-1]]
-    del epivak[epivak.columns[-1]]
+    ws = wb['Вчера_КовиВак']
+    rows = dataframe_to_rows(covivak_old,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    wb.save( shablon_path  + '/' + new_name_pred) 
+
+    send('', 'Готов предварительный файл')
+
+    # основной отчёт
+    del sput[sput.columns[-1]]
+    del sput[sput.columns[-1]]
+    del sput[sput.columns[-1]]
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_osn)
+    ws = wb['Спутник-V']
+    rows = dataframe_to_rows(sput,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    del epivak[epivak.columns[-1]]
+    del epivak[epivak.columns[-1]]
+    del epivak[epivak.columns[-1]]
+    
     ws = wb['ЭпиВакКорона']
     rows = dataframe_to_rows(epivak,index=False, header=False)
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
+
+    del covivak[covivak.columns[-1]]
+    del covivak[covivak.columns[-1]]
+    del covivak[covivak.columns[-1]]
+
+    ws = wb['КовиВак']
+    rows = dataframe_to_rows(covivak,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
     wb.save( shablon_path  + '/' + new_name_osn) 
+
     return(shablon_path  + '/' + new_name_pred + ';' + shablon_path  + '/' + new_name_osn)
 
 def parus_43_cov_nulls(a):
-    sql="""SELECT CAST(r.BDATE AS varchar(30))  day,
-                a.AGNABBR code,
-                a.AGNNAME  organization,
-                sum(CASE WHEN NUMVAL = 0 THEN 1 ELSE 0 END ) nulls_in_itog
-        FROM PARUS.BLINDEXVALUES  d
-        INNER JOIN PARUS.BLSUBREPORTS s
-        ON (d.PRN = s.RN)
-        INNER JOIN PARUS.BLREPORTS r
-        ON(s.PRN = r.RN)
-        INNER JOIN PARUS.AGNLIST a 
-        on(r.AGENT = a.rn)
-        INNER JOIN PARUS.BLREPFORMED pf 
-        on(r.BLREPFORMED = pf.RN)
-        INNER JOIN PARUS.BLREPFORM rf 
-        on(pf.PRN = rf.RN)
-        INNER JOIN PARUS.BALANCEINDEXES bi 
-        on(d.BALANCEINDEX = bi.RN)
-        WHERE  rf.CODE = '43 COVID 19'
-        and bi.CODE in ('43_covid_05','43_covid_07','43_covid_09_2')
-        AND r.BDATE IN ( trunc(SYSDATE),  trunc(SYSDATE-1),  trunc(SYSDATE-2))
-        GROUP BY r.BDATE,a.AGNABBR,a.AGNNAME
-        HAVING sum(CASE WHEN NUMVAL = 0 THEN 1 ELSE 0 END ) > 1"""
+    sql=open('sql/parus/covid_43_nulls.sql','r').read()
     
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)

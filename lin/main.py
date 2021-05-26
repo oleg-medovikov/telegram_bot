@@ -297,7 +297,7 @@ def get_text_messages(message):
                             for file in result[1].split(';'):
                                 bot.send_document(message.from_user.id, open(file, 'rb'))
                                 os.remove(file)
-                                logi(message.from_user.id,command_id,result)
+                            logi(message.from_user.id,command_id,result)
                         else:
                             bot.send_message(message.from_user.id, result[1])
                             logi(message.from_user.id,command_id,result)
