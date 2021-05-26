@@ -48,6 +48,9 @@ def search_file(category):
         pattern = path + '/*Отчёт по лабораторным*.xlsx'
     if category == 'UMSRS':
         pattern = path + '/*УМСРС*.xlsx'
+    if category == 'Vakcina':
+        pattern = path + '/Федеральный регистр вакцинированных*.xlsx'
+
     file_excel = glob.glob(pattern)
     file_csv = glob.glob(pattern[:-4] + 'csv')
     if len(file_csv):
@@ -77,6 +80,11 @@ def check_file(file,category):
         names = [
     '№ п/п', 'Номер свидетельства о смерти', 'Дата выдачи', 'Категория МС', 'Фамилия', 'Имя', 'Отчество', 'Пол', 'Дата рождения','Дата смерти', 'Возраст', 'Страна', 'Республика', 'Субъект', 'Область', 'Район', 'Город', 'Населенный пункт', 'Элемент планировочной структуры','Район СПБ', 'Улица', 'Дом', 'Корпус', 'Строение', 'Квартира', 'Страна смерти', 'Республика смерти','Субъект смерти', 'Область смерти','Район смерти', 'Город смерти', 'Населенный пункт смерти', 'Элемент планировочной структуры смерти', 'Район СПБ смерти', 'Улица смерти','Дом смерти', 'Корпус смерти', 'Строение смерти', 'Квартира смерти', 'Место смерти', 'Код МКБ-10 а', 'Болезнь или состояние, непосред приведшее к смерти','Код МКБ-10 б', 'Патол. состояние, кот. привело к указанной причине', 'Код МКБ-10 в', 'Первоначальная причина смерти', 'Код МКБ-10 г','Внешняя причина при травмах и отравлениях','Код II', 'Прочие важние состояния', 'Код МКБ-10 а(д)', 'Основное заболевание плода или ребенка','Код МКБ-10 б(д)', 'Другие заболевания плода или ребенка', 'Код МКБ-10 в(д)', 'Основное заболевание матери', 'Код МКБ-10 г(д)','Другие заболевания матери', 'Код МКБ-10 д(д)', 'Другие обстоятельства мертворождения', 'Установил причины смерти', 'Адрес МО','Краткое наименование', 'Основания установления причин смерти', 'Осмотр трупа', 'Записи в мед.док.', 'Предшествующего наблюдения','Вскрытие', 'Статус МС', 'Взамен', 'Дубликат', 'Испорченное', 'Напечатано', 'в случае смерти результате ДТП'
                 ]
+    if category == 'Vakcina':
+        names = [
+    'п/н', 'Дата создания РЗ', 'Дата обновления РЗ', 'УНРЗ', 'СНИЛС', 'ФИО', 'Пол', 'Дата рождения', 'Вакцина','Дата вакцинации', 'Субъект РФ', 'Медицинская организация', 'Ведомственная принадлежность', 'Структурное подразделение', 'Статус иммунизации', 'Дневник самонаблюдения', 'Сведения об осложнениях', 'Наличие пациента в Регистре COVID'      
+                ]
+
     sum_colum = len(names)
     names_found = []
     num_colum = 0
@@ -109,6 +117,34 @@ def check_file(file,category):
         return check,error_text,collum, head - 1
     return check,error_text,collum, head - 1
 
+def load_vaccina(a):
+    files = glob.glob(get_dir('path_robot') + '/_ФР_по_частям/Федеральный регистр вакцинированных*')
+    if not len(files):
+        raise my_except('В папке нет файлов!')
+    names = [
+    'п/н', 'Дата создания РЗ', 'Дата обновления РЗ', 'УНРЗ', 'СНИЛС', 'ФИО', 'Пол', 'Дата рождения', 'Вакцина','Дата вакцинации', 'Субъект РФ', 'Медицинская организация', 'Ведомственная принадлежность', 'Структурное подразделение', 'Статус иммунизации', 'Дневник самонаблюдения', 'Сведения об осложнениях', 'Наличие пациента в Регистре COVID'      
+        ]
+    cols = ['number','Data_sozdaniya_RZ','Data_obnovleniya_RZ','UNRZ','SNILS','FIO','Pol','Data_rozhdeniya','Vaktsina','Data_vaktsinatsii','Subyekt_RF','Meditsinskaya_organizatsiya','Vedomstvennaya_prinadlezhnost','Strukturnoye_podrazdeleniye','Status_immunizatsii','Dnevnik_samonablyudeniya','Ob_informatsii_oslozhneniyakh','Nalichiye_patsiyenta_v_Registre_COVID']
+    list_ = []
+    for file in files:
+        part = pd.read_excel(file, usecols=names,  header=1,skipfooter=1 )
+        send('admin','Я прочёл ' + file.rsplit('/',1)[-1])
+        list_.append(part)
+
+    df = pd.concat(list_)
+    df.columns = cols
+    send('admin',str(df.columns))
+    send('admin','Файл в памяти, количество строк: ' + str(len(df)) )
+    sql_execute('TRUNCATE TABLE [tmp].[FedRegVakcin]')
+    send('admin','Очистил FedRegVakcin')
+    df.to_sql('FedRegVakcin',con,schema='tmp',if_exists='replace',index=False)
+    if check_table('FedRegVakcin'):
+        send('admin','Федеральный регистр успешно загружен')
+        return 1
+    else:
+        send('admin','Произошла какая-то проблема с загрузкой вакцинируемых')
+        return 0
+
 def slojit_fr(a):
     import xlrd
     xlrd.xlsx.ensure_elementtree_imported(False, None)
@@ -124,7 +160,7 @@ def slojit_fr(a):
     nameSheetShablon = "Sheet1"
     _list = []
     
-    files = glob.glob(path + '/*.xlsx')
+    files = glob.glob(path + '/Федеральный регистр лиц*.xlsx')
     if not len(files):
         raise my_except('В папке нет файлов!')
 

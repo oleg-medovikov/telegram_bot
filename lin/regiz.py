@@ -192,7 +192,7 @@ def regiz_load_to_base(a):
     mo1.to_sql('Organization',con,schema='nsi',if_exists='append',index=False)
     names = ['Номер истории болезни','Дата открытия СМО','Признак амбулаторного СМО','СНИЛС врача']
     names_new = ['HistoryNumber','OpenDate','IsAmbulant','SnilsDoctor']
-    path = get_dir('regiz') + '/ori.regiz*/_Входящие/*.xls' 
+    path = get_dir('regiz') + '/ori.regiz*/_Входящие/[!~]*.xls' 
     files = glob.glob(path) + glob.glob(path + 'x')
     list_ = []
     remove_files = []
