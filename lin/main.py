@@ -11,11 +11,12 @@ from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,loa
 from loader import load_report_vp_and_cv,load_report_guber,load_vaccina
 from sending import send,voda,send_file
 from presentation import generate_pptx
-from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad,net_dnevnik,delete_old_files,load_snils_comment
+from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad
+from zamechania_mz import net_dnevnik,delete_old_files,load_snils_comment,IVL
 from zamechania_mz import zavishie_statusy
 from regiz import regiz_decomposition,regiz_load_to_base
 from parus import o_40_covid_by_date,svod_40_cov_19,parus_43_cov_nulls,svod_43_covid_19,no_save_43,cvod_29_covid
-from parus import cvod_33_covid,cvod_36_covid,cvod_37_covid,cvod_38_covid,cvod_26_covid
+from parus import cvod_33_covid,cvod_36_covid,cvod_37_covid,cvod_38_covid,cvod_26_covid,cvod_27_covid
 #from send_ODLI import send_bundle_to_ODLI
 import telebot_calendar
 from telebot_calendar import CallbackData

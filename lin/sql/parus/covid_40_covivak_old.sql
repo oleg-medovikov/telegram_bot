@@ -41,7 +41,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(KV_TVSP_02 
                 INNER JOIN PARUS.BLREPFORM rf
                 on(rd.PRN = rf.RN)
                 WHERE rf.code = '40 COVID 19'
-                and r.BDATE =  trunc(SYSDATE-1)
+                and r.BDATE =  trunc(SYSDATE-2)
                  and i.CODE in ('KV_TVSP_02','KV_TVSP_04','KV_TVSP_05_z',
                                                 'KV_TVSP_06','KV_TVSP_07_z', 'KV_TVSP_08', 
                                                 'KV_TVSP_09_z', 'KV_TVSP_10', 'KV_TVSP_11_z',
