@@ -49,7 +49,7 @@ max(value)
 FOR POKAZATEL IN ('50_cov_stac_13' cov_13,'50_cov_stac_14' cov_14,'50_cov_stac_15' cov_15,'50_cov_stac_16' cov_16
 		,'50_cov_stac_17' cov_17,'50_cov_stac_18' cov_18,'50_cov_stac_19' cov_19
 		,'50_cov_stac_20' cov_20,'50_cov_stac_21' cov_21,'50_cov_stac_22' cov_22
-		,'50_cov_stac_23' cov_23,'50_cov_stac_24'
+		,'50_cov_stac_23' cov_23,'50_cov_stac_24' cov_24
 ))
 WHERE ORGANIZATION IN (
 'ВОЕННО-МЕДИЦИНСКАЯ АКАДЕМИЯ ИМЕНИ С.М.КИРОВА',

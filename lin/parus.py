@@ -10,6 +10,11 @@ userName = os.getenv('oracle_user')
 password = os.getenv('oracle_pass')
 userbase = os.getenv('oracle_base')
 
+server  = os.getenv('server')
+user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser') # Тут правильный двойной слеш!
+passwd  = os.getenv('mypassword')
+dbase   = os.getenv('db')
+
 class my_except(Exception):
     pass
 
@@ -159,17 +164,29 @@ def svod_40_cov_19(a):
 def svod_50_cov_19(a):
     sql1  = open('sql/parus/covid_50_polic.sql','r').read()
     sql2  = open('sql/parus/covid_50_stac.sql','r').read()
+    sql3  = open('sql/covid/mz_50.sql','r').read()
 
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         polic = pd.read_sql(sql1,con)
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         stac = pd.read_sql(sql2,con)
-    
+    with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True).connect() as con:
+       covid = pd.read_sql(sql3,con)
+
     send('', 'Запросы к базе выполнены')
     date_otch = polic['DAY'].unique()[0]
     
     del polic ['DAY']
-
+    del stac ['DAY']
+    covid_pol = covid.loc[covid['Type_Therapy'] == 'Поликлинника']
+    del covid_pol ['Type_Therapy']
+    del covid_pol ['Count_70_COVID_week']
+    del covid_pol ['Count_70_COVID']
+    del covid_pol ['Count_70_Pnev_week']
+    del covid_pol ['Count_70_Pnev']
+    covid_stac = covid.loc[covid['Type_Therapy'] == 'Стационар']
+    del covid_stac ['Type_Therapy']
+    
     new_name_pred  ='50_COVID_19_' + date_otch + '_предварительный.xlsx'
     shablon_path = get_dir('help')
 
@@ -190,6 +207,18 @@ def svod_50_cov_19(a):
         for c_idx, value in enumerate(row,0):
             ws.cell(row=r_idx, column=index_col[c_idx], value=value)
     
+    ws = wb['ФР_ГП']
+    rows = dataframe_to_rows(covid_pol,index=False, header=False)
+    for r_idx, row in enumerate(rows,7):  
+        for c_idx, value in enumerate(row,2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['ФР_стац']
+    rows = dataframe_to_rows(covid_stac,index=False, header=False)
+    for r_idx, row in enumerate(rows,7):  
+        for c_idx, value in enumerate(row,2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
     wb.save( shablon_path  + '/' + new_name_pred) 
     return shablon_path  + '/' + new_name_pred
 
