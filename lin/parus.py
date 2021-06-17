@@ -158,27 +158,37 @@ def svod_40_cov_19(a):
 
 def svod_50_cov_19(a):
     sql1  = open('sql/parus/covid_50_polic.sql','r').read()
-        
+    sql2  = open('sql/parus/covid_50_stac.sql','r').read()
+
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         polic = pd.read_sql(sql1,con)
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        stac = pd.read_sql(sql2,con)
     
     send('', 'Запросы к базе выполнены')
     date_otch = polic['DAY'].unique()[0]
     
     del polic ['DAY']
 
-    new_name_osn  ='50_COVID_19_' + date_otch + '_предварительный.xlsx'
+    new_name_pred  ='50_COVID_19_' + date_otch + '_предварительный.xlsx'
     shablon_path = get_dir('help')
 
-    shutil.copyfile(shablon_path + '/40_COVID_19_pred.xlsx' , shablon_path  + '/' + new_name_pred)
-    shutil.copyfile(shablon_path + '/40_COVID_19_osn.xlsx'  , shablon_path  + '/' + new_name_osn)
+    shutil.copyfile(shablon_path + '/50_COVID_19_pred.xlsx' , shablon_path  + '/' + new_name_pred)
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_pred)
     ws = wb['Разрез по МО(поликлиники)']
-    rows = dataframe_to_rows(sput,index=False, header=False)
+    rows = dataframe_to_rows(polic,index=False, header=False)
+    index_col = [2,9,10,11,12,13,14,15,16,17,18,19,20,21]
     for r_idx, row in enumerate(rows,7):  
-        for c_idx, value in enumerate([2,9,10,11,12,13,14,15,16,17,18,19,20,21]):
-            ws.cell(row=r_idx, column=c_idx, value=value)
+        for c_idx, value in enumerate(row,0):
+            ws.cell(row=r_idx, column=index_col[c_idx], value=value)
+    
+    ws = wb['Разрез по МО(стационары)']
+    rows = dataframe_to_rows(stac,index=False, header=False)
+    index_col = [2,13,14,15,16,17,18,19,20,21,22,23,24]
+    for r_idx, row in enumerate(rows,7):  
+        for c_idx, value in enumerate(row,0):
+            ws.cell(row=r_idx, column=index_col[c_idx], value=value)
     
     wb.save( shablon_path  + '/' + new_name_pred) 
     return shablon_path  + '/' + new_name_pred

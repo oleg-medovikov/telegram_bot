@@ -1,4 +1,13 @@
-SEECT * FROM (
+SElECT
+	DAY,ORGANIZATION,
+	CAST(cov_09 as int) cov_09,CAST(cov_10 as int) cov_10,
+	CAST(cov_11 as int) cov_11,CAST(cov_12 as int) cov_12,
+	CAST(cov_13 as int) cov_13,CAST(cov_14 as int) cov_14,
+	CAST(cov_15 as int) cov_15,CAST(cov_16 as int) cov_16,
+	CAST(cov_17 as int) cov_17,CAST(cov_18 as int) cov_18,
+	CAST(cov_19 as int) cov_19,CAST(cov_20 as int) cov_20,
+	CAST(cov_21 as int) cov_21
+FROM (
 		SELECT
 		to_char(r.BDATE, 'DD.MM.YYYY') day,
 		a.AGNNAME ORGANIZATION ,
