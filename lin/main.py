@@ -17,6 +17,7 @@ from zamechania_mz import zavishie_statusy
 from regiz import regiz_decomposition,regiz_load_to_base
 from parus import o_40_covid_by_date,svod_40_cov_19,parus_43_cov_nulls,svod_43_covid_19,no_save_43,cvod_29_covid
 from parus import cvod_33_covid,cvod_36_covid,cvod_37_covid,cvod_38_covid,cvod_26_covid,cvod_27_covid
+from parus import no_save_50, svod_50_cov_19
 #from send_ODLI import send_bundle_to_ODLI
 import telebot_calendar
 from telebot_calendar import CallbackData

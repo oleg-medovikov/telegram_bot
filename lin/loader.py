@@ -25,18 +25,19 @@ con = eng.connect()
 
 def get_dir(name):
     sql = f"SELECT Directory FROM [robo].[directions_for_bot] where NameDir = '{name}' and [linux] = 'True'"
-    df = pd.read_sql(sql,con)
+    with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True).connect() as con:
+        df = pd.read_sql(sql,con)
     return df.iloc[0,0] 
 
 def check_table(name):
-    sql=f"""
-    SELECT distinct case when (cast([datecreated] as date) = cast(getdate() as date))
+    sql=f"""SELECT distinct case when (cast([datecreated] as date) = cast(getdate() as date))
         then 1
         else 0
         end AS 'Check'
-            FROM [dbo].[cv_{name}]
-    """
-    return pd.read_sql(sql,con).iat[0,0]
+            FROM [dbo].[cv_{name}] """
+    with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True).connect() as con:
+        df = pd.read_sql(sql,con).iat[0,0]
+    return df 
 
 def search_file(category):
     path = get_dir('path_robot') + '/' + datetime.datetime.now().strftime("%Y_%m_%d")
@@ -137,7 +138,9 @@ def load_vaccina(a):
     send('admin','Файл в памяти, количество строк: ' + str(len(df)) )
     sql_execute('TRUNCATE TABLE [tmp].[FedRegVakcin]')
     send('admin','Очистил FedRegVakcin')
-    df.to_sql('FedRegVakcin',con,schema='tmp',if_exists='replace',index=False)
+
+    with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True).connect() as con:
+        df.to_sql('FedRegVakcin',con,schema='tmp',if_exists='replace',index=False)
     if check_table('FedRegVakcin'):
         send('admin','Федеральный регистр успешно загружен')
         return 1

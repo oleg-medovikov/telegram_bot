@@ -14,7 +14,7 @@ class my_except(Exception):
     pass
 
 def o_40_covid_by_date(a):
-    sql = open('sql/parus/covid_40_by_date', 'r').read()    
+    sql = open('sql/parus/covid_40_by_date.sql', 'r').read()    
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
 
@@ -64,7 +64,7 @@ def svod_40_cov_19(a):
         covivak = pd.read_sql(sql5,con)
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         covivak_old = pd.read_sql(sql6,con)
-
+    
     send('', 'Запросы к базе выполнены')
     del sput ['ORGANIZATION']
     del sput_old ['ORGANIZATION']
@@ -72,7 +72,7 @@ def svod_40_cov_19(a):
     del epivak_old ['ORGANIZATION']
     del covivak ['ORGANIZATION']
     del covivak_old ['ORGANIZATION']
-
+    
     date_otch = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
     new_name_pred ='40_COVID_19_БОТКИНА_' + date_otch + '_предварительный.xlsx'
     new_name_osn  ='40_COVID_19_БОТКИНА_' + date_otch + '_основной.xlsx'
@@ -156,6 +156,33 @@ def svod_40_cov_19(a):
 
     return(shablon_path  + '/' + new_name_pred + ';' + shablon_path  + '/' + new_name_osn)
 
+def svod_50_cov_19(a):
+    sql1  = open('sql/parus/covid_50_polic.sql','r').read()
+        
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        polic = pd.read_sql(sql1,con)
+    
+    send('', 'Запросы к базе выполнены')
+    date_otch = polic['DAY'].unique()[0]
+    
+    del polic ['DAY']
+
+    new_name_osn  ='50_COVID_19_' + date_otch + '_предварительный.xlsx'
+    shablon_path = get_dir('help')
+
+    shutil.copyfile(shablon_path + '/40_COVID_19_pred.xlsx' , shablon_path  + '/' + new_name_pred)
+    shutil.copyfile(shablon_path + '/40_COVID_19_osn.xlsx'  , shablon_path  + '/' + new_name_osn)
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_pred)
+    ws = wb['Разрез по МО(поликлиники)']
+    rows = dataframe_to_rows(sput,index=False, header=False)
+    for r_idx, row in enumerate(rows,7):  
+        for c_idx, value in enumerate([2,9,10,11,12,13,14,15,16,17,18,19,20,21]):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    
+    wb.save( shablon_path  + '/' + new_name_pred) 
+    return shablon_path  + '/' + new_name_pred
+
 def parus_43_cov_nulls(a):
     sql=open('sql/parus/covid_43_nulls.sql','r').read()
     
@@ -213,6 +240,24 @@ def svod_43_covid_19(a):
 
 def no_save_43(a):
     sql= open('sql/parus/covid_43_no_save.sql','r').read()
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql,con)
+
+    df = df.fillna(0)
+    table_html = get_dir('temp') + '/table.html'
+    table_png  = get_dir('temp') + '/table.png'
+
+    df.to_html(table_html,justify='center', index=False)
+    command = "/usr/bin/wkhtmltoimage --encoding utf-8 -f png --width 0 " +  table_html + " " + table_png
+    try:
+        subprocess.check_call(command,  shell=True)
+    except:
+        raise my_except('Не удалось сделать файл\n' +  subprocess.check_output(command,  shell=True))
+    else:
+        return table_png
+
+def no_save_50(a):
+    sql= open('sql/parus/covid_50_no_save.sql','r').read()
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
 
