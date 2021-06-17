@@ -296,6 +296,7 @@ def load_fr(a):
         df.to_sql('cv_input_fr',con,schema='dbo',if_exists='append',index=False)
         send('admin','Загрузил input_fr, запускаю процедуру')
         sql_execute('EXEC [dbo].[cv_Load_FedReg]')
+        sql_execute('EXEC [mz].[p_Recalculate_for_50_Report]')
         if check_table('fedreg'):
             send('admin','Федеральный регистр успешно загружен')
             return 1
