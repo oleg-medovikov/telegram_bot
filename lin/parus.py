@@ -166,13 +166,21 @@ def svod_50_cov_19(a):
     sql2  = open('sql/parus/covid_50_stac.sql','r').read()
     sql3  = open('sql/covid/mz_50.sql','r').read()
 
+    sql4  = open('sql/parus/covid_50_polic_old.sql','r').read()
+    sql5  = open('sql/parus/covid_50_stac_old.sql','r').read()
+
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         polic = pd.read_sql(sql1,con)
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         stac = pd.read_sql(sql2,con)
     with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True).connect() as con:
        covid = pd.read_sql(sql3,con)
-
+    
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        polic_old = pd.read_sql(sql4,con)
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        stac_old = pd.read_sql(sql5,con)
+    
     send('', 'Запросы к базе выполнены')
     date_otch = polic['DAY'].unique()[0]
     
@@ -193,15 +201,29 @@ def svod_50_cov_19(a):
     shutil.copyfile(shablon_path + '/50_COVID_19_pred.xlsx' , shablon_path  + '/' + new_name_pred)
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_pred)
-    ws = wb['Разрез по МО(поликлиники)']
+    ws = wb['Разрез МО_ГП']
     rows = dataframe_to_rows(polic,index=False, header=False)
     index_col = [2,9,10,11,12,13,14,15,16,17,18,19,20,21]
     for r_idx, row in enumerate(rows,7):  
         for c_idx, value in enumerate(row,0):
             ws.cell(row=r_idx, column=index_col[c_idx], value=value)
     
-    ws = wb['Разрез по МО(стационары)']
+    ws = wb['Разрез МО_стац']
     rows = dataframe_to_rows(stac,index=False, header=False)
+    index_col = [2,13,14,15,16,17,18,19,20,21,22,23,24]
+    for r_idx, row in enumerate(rows,7):  
+        for c_idx, value in enumerate(row,0):
+            ws.cell(row=r_idx, column=index_col[c_idx], value=value)
+    
+    ws = wb['Пред.отч_разрез МО_ГП']
+    rows = dataframe_to_rows(polic_old,index=False, header=False)
+    index_col = [2,9,10,11,12,13,14,15,16,17,18,19,20,21]
+    for r_idx, row in enumerate(rows,7):  
+        for c_idx, value in enumerate(row,0):
+            ws.cell(row=r_idx, column=index_col[c_idx], value=value)
+    
+    ws = wb['Пред.отч_разрез МО_стац']
+    rows = dataframe_to_rows(stac_old,index=False, header=False)
     index_col = [2,13,14,15,16,17,18,19,20,21,22,23,24]
     for r_idx, row in enumerate(rows,7):  
         for c_idx, value in enumerate(row,0):

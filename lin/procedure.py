@@ -668,7 +668,6 @@ def sbor_death_week_svod(a):
         zone.loc[k,'из них: возраст старше 60'] = len(df.loc[(df['Район проживания'] == area) \
                 & (df['Смерть наступила в первые сутки с момента госпитализации (да/нет)'].isin(['да'])) \
                 & (df['Возраст'] >= 60) ])
-
     file_svod= get_dir('temp') + f'/Умершие за неделю с {date_start} по {date_end} свод.xlsx'
     with pd.ExcelWriter(file_svod) as writer:
         svod.to_excel(writer,sheet_name='Свод по МО',index=False)
@@ -680,6 +679,27 @@ def sbor_death_week_svod(a):
     except:
         pass
     return file_svod
+
+def patient_amb_stac(a):
+    sql =  open('sql/covid/patient_amb_stac.sql','r').read()
+    with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True).connect() as con:
+       df = pd.read_sql(sql,con)
+    
+    date_otch = datetime.datetime.now().strftime('%d_%m_%Y')
+    new_name  = date_otch + '_Пациенты на амб и стац лечении.xlsx'
+    shablon_path = get_dir('help')
+
+    shutil.copyfile(shablon_path + '/patient_amb_stac.xlsx' , shablon_path  + '/' + new_name)
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    ws = wb['Лист1']
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,2):  
+        for c_idx, value in enumerate(row,1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    wb.save( shablon_path  + '/' + new_name)
+    
+    return  shablon_path  + '/' + new_name
 
 def svod_unique_patient(date_global):
     def search(fio,birthday):
