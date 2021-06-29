@@ -339,16 +339,33 @@ def cvod_26_covid(a):
     sql = open('sql/parus/covid_26_svod.sql','r').read()
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
-
-    date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d_%m_%Y')
+    df ['type'] = 'parus' 
+    old_file = get_dir('punct_zabor') +'/'+  datetime.datetime.now().strftime('%d.%m.%Y') + ' Пункты отбора.xlsx'
+    old = pd.read_excel(old_file,skiprows=3,header=None).dropna()
+    del old [0] 
+    old ['type'] = 'file' 
+    old.columns = df.columns
+    old_file = get_dir('punct_zabor') +'/'+  datetime.datetime.now().strftime('%d.%m.%Y') + ' Пункты отбора.xlsx'
+    new_df = pd.concat([df,old], ignore_index=True).drop_duplicates(subset=['LAB_UTR_MO', 'ADDR_PZ', 'LAB_UTR_02'])
+    date = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime('%d_%m_%Y')
     new_name = date + '_26_COVID_19_cvod.xlsx'
     shablon_path = get_dir('help')
 
     shutil.copyfile(shablon_path + '/26_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
-    ws = wb['Для заполнения']
+    ws = wb['Из паруса']
     rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):  
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    ws = wb['Из файла']
+    rows = dataframe_to_rows(old,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):  
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    ws = wb['Соединение']
+    rows = dataframe_to_rows(new_df,index=False, header=False)
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 2):
             ws.cell(row=r_idx, column=c_idx, value=value)
@@ -356,24 +373,34 @@ def cvod_26_covid(a):
     return  shablon_path  + '/' + new_name
 
 def cvod_27_covid(a):
-    sql = open('sql/parus/covid_27_svod.sql','r').read()
+    sql1 = open('sql/parus/covid_27_svod.sql','r').read()
+    sql2 = open('sql/parus/covid_27_svod_old.sql','r').read()
     
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
-        df = pd.read_sql(sql,con)
+        df = pd.read_sql(sql1,con)
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df_old = pd.read_sql(sql2,con)
 
     date = datetime.datetime.now().strftime('%d_%m_%Y')
     new_name = date + '_27_COVID_19_cvod.xlsx'
     shablon_path = get_dir('help')
 
     shutil.copyfile(shablon_path + '/27_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
-
-
+    
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    
     ws = wb['Для заполнения']
     rows = dataframe_to_rows(df,index=False, header=False)
     for r_idx, row in enumerate(rows,4):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
+    
+    ws = wb['Пред.отч']
+    rows = dataframe_to_rows(df_old,index=False, header=False)
+    for r_idx, row in enumerate(rows,4):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    
     wb.save( shablon_path  + '/' + new_name)
     return  shablon_path  + '/' + new_name
 
