@@ -341,10 +341,17 @@ def cvod_26_covid(a):
         df = pd.read_sql(sql,con)
     df ['type'] = 'parus' 
     old_file = get_dir('punct_zabor') +'/'+  datetime.datetime.now().strftime('%d.%m.%Y') + ' Пункты отбора.xlsx'
-    old = pd.read_excel(old_file,skiprows=3,header=None).dropna()
-    del old [0] 
-    old ['type'] = 'file' 
-    old.columns = df.columns
+    try:
+        old = pd.read_excel(old_file,skiprows=3,header=None,sheet_name='Соединение').dropna()
+    except:
+        old = pd.DataFrame()
+    else:
+        del old [0]
+        del old [14]
+        old ['type'] = 'file' 
+    if len(old.columns) == len(df.columns):    
+        old.columns = df.columns
+
     old_file = get_dir('punct_zabor') +'/'+  datetime.datetime.now().strftime('%d.%m.%Y') + ' Пункты отбора.xlsx'
     new_df = pd.concat([df,old], ignore_index=True).drop_duplicates(subset=['LAB_UTR_MO', 'ADDR_PZ', 'LAB_UTR_02'])
     date = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime('%d_%m_%Y')
@@ -511,3 +518,23 @@ def cvod_38_covid(a):
     wb.save( shablon_path  + '/' + new_name)
     return  shablon_path  + '/' + new_name
 
+def cvod_51_covid(a):
+    sql = open('sql/parus/covid_51_svod.sql','r').read()
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql,con)
+    date = df['DAY'].unique()[0]
+    del df ['DAY']
+    new_name = date + '_51_COVID_19_cvod.xlsx'
+    shablon_path = get_dir('help')
+
+    shutil.copyfile(shablon_path + '/51_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    ws = wb['Свод по МО']
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,4):  
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    wb.save( shablon_path  + '/' + new_name)
+
+    return shablon_path  + '/' + new_name

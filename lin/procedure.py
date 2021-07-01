@@ -1,4 +1,4 @@
-import datetime,glob,os,shutil,sqlalchemy,openpyxl
+import datetime,glob,os,shutil,sqlalchemy,openpyxl,requests
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 import numpy as np
@@ -796,3 +796,17 @@ def svod_unique_patient(date_global):
         return 'Свод сделан!'
     else:
         return 'Не буду я работать по выходным дням!'
+
+def get_il_stopcorona(a):
+    url = "https://xn--80aesfpebagmfblc0a.xn--p1ai/covid_data.json?do=region_stats&code=RU-SPE"
+
+    data = requests.get(url).json()
+    df = pd.DataFrame.from_dict(data)
+    value = int(df.at[0,'sick']) - int(df.at[1,'sick'])
+
+    report = pd.DataFrame()
+    report.loc[0,'date_rows'] = pd.to_datetime(df['date'],format='%d.%m.%Y').max().date()
+    report.loc[0,'value_name'] = 'Новые заболевшие за сутки согласно СТОПКАРОНОВИРУС'
+    report.loc[0,'value_count'] = value
+    report.to_sql('values',con,schema='robo',index=False,if_exists='append')
+    return value

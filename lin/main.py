@@ -5,7 +5,7 @@ import concurrent.futures
 
 # ======== мои модули 
 from procedure import check_robot,svod_40_COVID_19,sort_death_mg,medical_personal_sick,razlojit_death_week,sbor_death_week_files,sbor_death_week_svod
-from procedure import svod_unique_patient,svod_vachine_dates,patient_amb_stac
+from procedure import svod_unique_patient,svod_vachine_dates,patient_amb_stac,get_il_stopcorona
 from reports import fr_deti,short_report,dead_not_mss,dynamics,mg_from_guber
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
 from loader import load_report_vp_and_cv,load_report_guber,load_vaccina
@@ -17,7 +17,7 @@ from zamechania_mz import zavishie_statusy
 from regiz import regiz_decomposition,regiz_load_to_base
 from parus import o_40_covid_by_date,svod_40_cov_19,parus_43_cov_nulls,svod_43_covid_19,no_save_43,cvod_29_covid
 from parus import cvod_33_covid,cvod_36_covid,cvod_37_covid,cvod_38_covid,cvod_26_covid,cvod_27_covid
-from parus import no_save_50, svod_50_cov_19
+from parus import no_save_50, svod_50_cov_19,cvod_51_covid
 #from send_ODLI import send_bundle_to_ODLI
 import telebot_calendar
 from telebot_calendar import CallbackData
@@ -206,6 +206,16 @@ def regiz_load():
     if not result[0]:
         send('info', result[1])
 
+def stopcorona_1():
+    send('info', 'Сейчас гляну на сайт стопкароны, сколько там заболело')
+    result = create_tred('get_il_stopcorona',None)
+    work = 'количество заболевших со СТОПКОРОНЫ' 
+    log_shedule(work, result)
+    if not result[0]:
+        send('info', result[1])
+    else:
+        send('info', 'Новых заболевших в СПБ ' + str(result[1]))
+
 def go():
     while True:
         schedule.run_pending()
@@ -215,6 +225,7 @@ schedule.every().day.at("03:00").do(load_1)
 schedule.every().day.at("06:00").do(load_2)
 schedule.every().day.at("07:00").do(otchet_1)
 schedule.every().day.at("07:05").do(regiz_razlogenie)
+schedule.every().day.at("10:00").do(stopcorona_1)
 schedule.every().day.at("16:05").do(regiz_load)
 
 t = threading.Thread(target=go, name="Расписание работ")
