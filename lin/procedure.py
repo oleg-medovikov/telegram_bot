@@ -65,7 +65,7 @@ def sort_death_mg(a):
     otchet.rename(columns = {'№ п/п':'Всего СПб'}, inplace = True)
     otchet = otchet.merge(df[df['Субъект'] == 'Ленинградская обл'].groupby(by='Name_MO',as_index=False,).count(), how='outer',left_on='Name_MO',right_on='Name_MO')
     otchet.rename(columns = {'Name_MO':'Медицинская организация', '№ п/п':'Всего ЛО'}, inplace = True)
-
+    df = df.fillna(0)
     for column in otchet.columns:
         if column not in ('Медицинская организация','Всего СПб','Всего ЛО'):
             del otchet[column]

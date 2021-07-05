@@ -22,6 +22,7 @@ from parus import no_save_50, svod_50_cov_19,cvod_51_covid
 import telebot_calendar
 from telebot_calendar import CallbackData
 from telebot.types import ReplyKeyboardRemove,CallbackQuery
+from web import vacine_talon
 # ========== настройки бота ============
 
 # используются переменные среды 
@@ -216,6 +217,13 @@ def stopcorona_1():
     else:
         send('info', 'Новых заболевших в СПБ ' + str(result[1]))
 
+def map_vacine():
+    result = create_tred('vacine_talon',None)
+    work = 'Обновление карты на сайте МИАЦ' 
+    log_shedule(work, result)
+    if not result[0]:
+        send('info', result[1])
+
 def go():
     while True:
         schedule.run_pending()
@@ -225,8 +233,10 @@ schedule.every().day.at("03:00").do(load_1)
 schedule.every().day.at("06:00").do(load_2)
 schedule.every().day.at("07:00").do(otchet_1)
 schedule.every().day.at("07:05").do(regiz_razlogenie)
-schedule.every().day.at("10:00").do(stopcorona_1)
+schedule.every().day.at("12:00").do(stopcorona_1)
 schedule.every().day.at("16:05").do(regiz_load)
+
+schedule.every(20).minutes.do(map_vacine)
 
 t = threading.Thread(target=go, name="Расписание работ")
 t.start()

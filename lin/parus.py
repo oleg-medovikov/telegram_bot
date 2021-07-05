@@ -524,6 +524,8 @@ def cvod_51_covid(a):
         df = pd.read_sql(sql,con)
     date = df['DAY'].unique()[0]
     del df ['DAY']
+    df = df.append(df.sum(numeric_only=True), ignore_index=True)
+    df.loc[len(df)-1,'COV_02'] = 'ИТОГО:'
     new_name = date + '_51_COVID_19_cvod.xlsx'
     shablon_path = get_dir('help')
 
