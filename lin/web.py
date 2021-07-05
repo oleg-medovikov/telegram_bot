@@ -12,7 +12,7 @@ dbase   = os.getenv('db_ncrn')
 
 
 
-def vacine_talon():
+def vacine_talon(a):
     with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True).connect() as con:
         df = pd.read_sql("""select distinct * from tmp.VacAvailability where [Отчетное время] = (select max([Отчетное время]) FROM [PNK_NCRN].[tmp].[VacAvailability])
                         and (moLev2_geo_x is not null and moLev2_geo_y is not null )""", con)
@@ -130,11 +130,7 @@ def vacine_talon():
     file = get_dir('temp') + '/map_light.html'
     m.save(file)
 
-    user = os.getenv('web_user')
-    passwd = os.getenv('web_password')
-
-
     command = f"/usr/bin/scp {file} vacmap@miacsitenew:/home/vacmap/vacmap/vacmap.html"
     os.system(command)
-    send('admin', 'карта обновлена')
+    send('admin', 'карта обновлена на время: ' + str(df['Отчетное время'].max()))
     return 1
