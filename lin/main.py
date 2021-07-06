@@ -236,7 +236,7 @@ schedule.every().day.at("07:05").do(regiz_razlogenie)
 schedule.every().day.at("12:00").do(stopcorona_1)
 schedule.every().day.at("16:05").do(regiz_load)
 
-schedule.every(20).minutes.do(map_vacine)
+schedule.every(30).minutes.do(map_vacine)
 
 t = threading.Thread(target=go, name="Расписание работ")
 t.start()
