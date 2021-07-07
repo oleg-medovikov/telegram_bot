@@ -11,16 +11,15 @@ def vacine_talon(a):
     data = requests.get(url).json()
     df = pd.DataFrame.from_dict(data)
     mo = pd.read_excel('/mnt/COVID-списки/jupyter/талоны/map.xlsx')
-    df = df.merge(mo, how = 'left', left_on='moLev1',right_on='org')
-    df = df.drop_duplicates(subset=['moLev1', 'moLev2'], keep='first')
 
+    df = df.merge(mo, how = 'left', left_on=['moLev1','moLev2','doctorFio'],right_on=['org','org2','cab'])
+    df.index = range(len(df))
 
     lat = pd.to_numeric(df['moLev2_geo_x'])
     lon = pd.to_numeric(df['moLev2_geo_y'])
     elevation = pd.to_numeric(df['cntAppointments'])
     name = df['MO']
     cab = df['cab']
-    #com = df['doctorFio']
     date = df['cntAvailableDates']
     link = df['link']
 

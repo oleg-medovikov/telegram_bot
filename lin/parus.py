@@ -56,6 +56,8 @@ def svod_40_cov_19(a):
     sql4 = open('sql/parus/covid_40_epivak_old.sql','r').read()
     sql5 = open('sql/parus/covid_40_covivak.sql','r').read()
     sql6 = open('sql/parus/covid_40_covivak_old.sql','r').read()
+    sql7 = open('sql/parus/covid_40_revac.sql','r').read()
+    sql8 = open('sql/parus/covid_40_revac_old.sql','r').read()
     
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         sput = pd.read_sql(sql,con)
@@ -69,6 +71,10 @@ def svod_40_cov_19(a):
         covivak = pd.read_sql(sql5,con)
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         covivak_old = pd.read_sql(sql6,con)
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        revac = pd.read_sql(sql7,con)
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        revac_old = pd.read_sql(sql8,con)
     
     send('', 'Запросы к базе выполнены')
     del sput ['ORGANIZATION']
@@ -77,7 +83,9 @@ def svod_40_cov_19(a):
     del epivak_old ['ORGANIZATION']
     del covivak ['ORGANIZATION']
     del covivak_old ['ORGANIZATION']
-    
+    del revac ['INDX']    
+    del revac_old ['INDX']
+
     date_otch = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
     new_name_pred ='40_COVID_19_БОТКИНА_' + date_otch + '_предварительный.xlsx'
     new_name_osn  ='40_COVID_19_БОТКИНА_' + date_otch + '_основной.xlsx'
@@ -122,6 +130,18 @@ def svod_40_cov_19(a):
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['Ревакцинация']
+    rows = dataframe_to_rows(revac,index=False, header=False)
+    for r_idx, row in enumerate(rows,9):  
+        for c_idx, value in enumerate(row, 3):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['Вчера_ревакцин']
+    rows = dataframe_to_rows(revac_old,index=False, header=False)
+    for r_idx, row in enumerate(rows,9):  
+        for c_idx, value in enumerate(row, 3):
+            ws.cell(row=r_idx, column=c_idx, value=value)
     wb.save( shablon_path  + '/' + new_name_pred) 
 
     send('', 'Готов предварительный файл')
@@ -157,6 +177,13 @@ def svod_40_cov_19(a):
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['Ревакцинация']
+    rows = dataframe_to_rows(revac,index=False, header=False)
+    for r_idx, row in enumerate(rows,9):  
+        for c_idx, value in enumerate(row, 3):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
     wb.save( shablon_path  + '/' + new_name_osn) 
 
     return(shablon_path  + '/' + new_name_pred + ';' + shablon_path  + '/' + new_name_osn)
