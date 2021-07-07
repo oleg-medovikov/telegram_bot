@@ -7,7 +7,7 @@ from sending import send
 from loader import get_dir
 
 def vacine_talon(a):
-    url = os.getenv('url837')
+    url = os.getenv('url845')
     data = requests.get(url).json()
     df = pd.DataFrame.from_dict(data)
     mo = pd.read_excel('/mnt/COVID-списки/jupyter/талоны/map.xlsx')
@@ -18,9 +18,10 @@ def vacine_talon(a):
     lat = pd.to_numeric(df['moLev2_geo_x'])
     lon = pd.to_numeric(df['moLev2_geo_y'])
     elevation = pd.to_numeric(df['cntAppointments'])
-    name = df['MO']
+    name = df['MO_x']
     cab = df['cab']
-    date = df['cntAvailableDates']
+    ndate = df['cntAvailableDates']
+    date = df['Ближайший доступный талон']
     link = df['link']
 
     def color_change(elev):
@@ -40,7 +41,7 @@ def vacine_talon(a):
                   )
     lgd_txt = '<span style="color: {col};">{txt}</span>'
 
-    for lat, lon, elevation, name, cab, date,link in zip(lat, lon, elevation, name, cab, date,link):
+    for lat, lon, elevation, name, cab,ndate, date,link in zip(lat, lon, elevation, name, cab,ndate, date,link):
         html = """<style>
                   .table {
                   font-family: Helvetica, Arial, sans-serif;
@@ -93,6 +94,10 @@ def vacine_talon(a):
                     </tr>
                     <tr>
                       <td class="table__cell">Количество дней, на которые есть талоны:</td>
+                      <td class="table__cell table__cell--highlighted">{ndate}</td>
+                    </tr>
+                    <tr>
+                      <td class="table__cell">Ближайший доступный талон:</td>
                       <td class="table__cell table__cell--highlighted">{date}</td>
                     </tr>
                     <tr>
