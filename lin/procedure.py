@@ -809,6 +809,6 @@ def get_il_stopcorona(a):
     report.loc[0,'value_name'] = 'Новые заболевшие за сутки согласно СТОПКАРОНОВИРУС'
     report.loc[0,'value_count'] = value
     with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@miacbase3/MIAC_DS", pool_pre_ping=True).connect() as c:
-        report.to_sql('stopcorona',c,schema='Pds',index=False,if_exists='replace')
+        report.to_sql('stopcorona',c,schema='Pds',index=False,if_exists='append')
     report.to_sql('values',con,schema='robo',index=False,if_exists='append')
     return value

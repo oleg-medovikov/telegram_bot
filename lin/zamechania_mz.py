@@ -193,13 +193,13 @@ def load_snils_comment(a):
     return text
 
 def IVL(a):
-    path = get_dir('Robot') +'/'+ datetime.datetime.now().strftime("%Y_%m_%d")
+    path = get_dir('Robot') +'/'+ (datetime.datetime.now() - datetime.timedelta(days=0)).strftime("%Y_%m_%d")
     try:
         file_vp = glob.glob(path + '/Мониторинг_ВП.xlsx')[0]
     except:
         raise my_except('Не найден Мониторинг_ВП.xlsx')
     try:
-        file_fr = glob.glob(path + '/*едеральный*15-00.xlsx')[0]
+        file_fr = glob.glob(path + '/[!~]*едеральный*15-00.xlsx')[0]
     except:
         raise my_except('Не найден трёхчасовой федеральный регистр')
 
@@ -344,3 +344,4 @@ def IVL(a):
     put_excel_for_mo(zan_otchet,'Занятые койки')
     
     return get_dir('temp') + '/' + 'отчёт по разложению Пациенты на ИВЛ.xlsx' +';'+ get_dir('temp') + '/' + 'отчёт по разложению Занятые койки.xlsx'
+

@@ -7,22 +7,47 @@ from sending import send
 from loader import get_dir
 
 def vacine_talon(a):
-    url = os.getenv('url845')
+    url = os.getenv('url845').replace('845','852')
     data = requests.get(url).json()
     df = pd.DataFrame.from_dict(data)
-    mo = pd.read_excel('/mnt/COVID-списки/jupyter/талоны/map.xlsx')
 
-    df = df.merge(mo, how = 'left', left_on=['moLev1','moLev2','doctorFio'],right_on=['org','org2','cab'])
-    df.index = range(len(df))
+    mo = pd.read_json(get_dir('help') + '/mo64.json')
+    log = ''
+    for i in range(len(df)):
+        key = df.at[i,'moLev2_key']
+        try:
+            df.loc[i,'Краткое стандартизованное наименование'] = mo.loc[mo['Код'] == key, 'Краткое стандартизованное наименование' ].unique()[0]
+        except:
+            log += '\nне удалось найти название для: ' + key
+        try:
+            df.loc[i,'Долгота'] = mo.loc[mo['Код'] == key, 'Долгота' ].unique()[0]       
+            df.loc[i,'Широта'] = mo.loc[mo['Код'] == key, 'Широта' ].unique()[0]
+        except:
+            log += '\nне удалось получить координаты для: ' + key
+        try:
+            orgid =  mo.loc[mo['Код'] == key, 'orgid' ].unique()[0]
+            df.loc[i,'организация'] = mo.loc[mo['Код'] == orgid, 'Краткое стандартизованное наименование' ].unique()[0]
+        except:
+            log += '\nне удалось найти название организации: ' + key
+        
+        try:
+            df.loc[i,'link']  = mo.loc[mo['Код'] == key, 'link' ].unique()[0]
+        except:
+            log += '\nне удалось найти ссылку для:' + key
 
-    lat = pd.to_numeric(df['moLev2_geo_x'])
-    lon = pd.to_numeric(df['moLev2_geo_y'])
+    if len(log):
+        send('',log)
+
+    lat = pd.to_numeric(df['Широта'])
+    lon = pd.to_numeric(df['Долгота'])
     elevation = pd.to_numeric(df['cntAppointments'])
-    name = df['MO_x']
-    cab = df['cab']
+    name = df['Краткое стандартизованное наименование']
+    org = df['организация']
+    cab = df['doctorFio']
     ndate = df['cntAvailableDates']
     date = df['Ближайший доступный талон']
     link = df['link']
+
 
     def color_change(elev):
         if(elev > 100):
@@ -40,86 +65,85 @@ def vacine_talon(a):
                    #tiles = "CartoDB dark_matter",
                   )
     lgd_txt = '<span style="color: {col};">{txt}</span>'
-
-    for lat, lon, elevation, name, cab,ndate, date,link in zip(lat, lon, elevation, name, cab,ndate, date,link):
+    marker_cluster = MarkerCluster().add_to(m)
+    for lat, lon, elevation,org, name, cab,ndate, date,link in zip(lat, lon, elevation,org, name, cab,ndate, date,link):
         html = """<style>
-                  .table {
-                  font-family: Helvetica, Arial, sans-serif;
-                    width: 500px;
-                  }
-                  .table__heading, .table__cell {
-                    padding: .5rem 0;
-                  }
-                  .table__heading {
-                    text-align: left;
-                    font-size: 1.5rem;
-                    border-bottom: 1px solid #ccc;
-                  }
-                  .table__cell {
-                    line-height: 2rem;
-                  }
-                  .table__cell--highlighted {
-                    font-size: 1.25rem;
-                    font-weight: 700;
-                  }
-                  .table__button {
-                    display: inline-block;
-                    padding: .75rem 2rem;
-                    margin-top: 1rem;
-                    font-weight: 700;
-                    text-decoration: none;
-                    text-transform: uppercase;
-                    color: #fff;
-                    background-color: #f82;
-                    border-radius: .5rem;
-                  }
-                  .table__button:hover {
-                    background-color: #e60;
-                  }""" + f"""
-                </style>
-
-                <table cellpadding="1" cellspacing="1" class="table">
-                  <thead>
-                    <tr>
-                      <th colspan="2" scope="col" class="table__heading">{name}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td colspan="2" class="table__cell table__cell--highlighted">{cab}</td>
-                    </tr>
-                    <tr>
-                      <td class="table__cell">Доступно талонов:</td>
-                      <td class="table__cell table__cell--highlighted">{elevation}</td>
-                    </tr>
-                    <tr>
-                      <td class="table__cell">Количество дней, на которые есть талоны:</td>
-                      <td class="table__cell table__cell--highlighted">{ndate}</td>
-                    </tr>
-                    <tr>
-                      <td class="table__cell">Ближайший доступный талон:</td>
-                      <td class="table__cell table__cell--highlighted">{date}</td>
-                    </tr>
-                    <tr>
-                      <td colspan="2" class="table__cell">
-                        <a href={link} target="_blank" class="table__button">Записаться</a>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>"""
-        iframe = folium.IFrame(html)
-        popup = folium.Popup(iframe,min_width=580,max_width=800)
+              .table {
+              font-family: Helvetica, Arial, sans-serif;
+                width: 300px;
+              }
+              .table__heading, .table__cell {
+                padding: .5rem 0;
+              }
+              .table__heading {
+                text-align: left;
+                font-size: 1.5rem;
+                border-bottom: 1px solid #ccc;
+              }
+              .table__cell {
+                line-height: 2rem;
+              }
+              .table__cell--highlighted {
+                font-size: 1.25rem;
+                font-weight: 300;
+              }
+              .table__button {
+                display: inline-block;
+                padding: .75rem 2rem;
+                margin-top: 1rem;
+                font-weight: 300;
+                text-decoration: none;
+                text-transform: uppercase;
+                color: #fff;
+                background-color: #f82;
+                border-radius: .10rem;
+              }
+              .table__button:hover {
+                background-color: #e60;
+              }""" + f"""
+            </style>
+            <table cellpadding="1" cellspacing="1"  bordercolor="white" border="1" class="table">
+              <thead>
+                <tr>
+                  <th colspan="2" scope="col" class="table__heading">{org}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="2" class="table__cell table__cell--highlighted">{name}</td>
+                </tr>
+                 <tr>
+                  <td colspan="2" class="table__cell table__cell--highlighted">{cab}</td>
+                </tr>
+                <tr>
+                  <td class="table__cell">Доступно талонов:</td>
+                  <td class="table__cell table__cell--highlighted">{elevation}</td>
+                </tr>
+                <tr>
+                  <td class="table__cell">Количество дней, на которые есть талоны:</td>
+                  <td class="table__cell table__cell--highlighted">{ndate}</td>
+                </tr>
+                <tr>
+                  <td class="table__cell">Ближайший доступный талон:</td>
+                  <td class="table__cell table__cell--highlighted">{date}</td>
+                </tr>
+                <tr>
+                  <td colspan="2" class="table__cell">
+                    <a href={link} target="_blank" class="table__button">Записаться</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+        """
+        iframe = folium.Html(html,script=True)
+        popup = folium.Popup(iframe)
         try:
-            fg = folium.FeatureGroup(name= lgd_txt.format( txt= name + ' Доступно талонов: ' + str(elevation), col= color_change(elevation)))
-            ci = folium.CircleMarker(location=[lat, lon], radius =10, popup=popup, fill_color=color_change(elevation), color="gray", fill_opacity = 1)
-            fg.add_child(ci)
-            m.add_child(fg)
-            #ci.add_to(marker_cluster)
-            #folium.FeatureGroup(name= lgd_txt.format( txt= name, col= color_change(elevation))).add_to(ci)
+            folium.CircleMarker(location=[lat, lon],
+                                radius = 13, popup=popup, fill_color=color_change(elevation),
+                                color="gray", fill_opacity = 0.8).add_to(marker_cluster)
         except:
-            print(lat,lon)
-
-    folium.map.LayerControl('topleft', collapsed= True).add_to(m)
+            send('','не удалось')
+        
     file = get_dir('temp') + '/map_light.html'
     m.save(file)
 

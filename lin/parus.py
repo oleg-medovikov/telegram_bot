@@ -406,6 +406,16 @@ def cvod_26_covid(a):
     wb.save( shablon_path  + '/' + new_name)
     return  shablon_path  + '/' + new_name
 
+def cvod_27_smal(a):
+    sql = open('sql/parus/covid_27_smal.sql','r').read()
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql,con)
+
+    with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@miacbase3/MIAC_DS", pool_pre_ping=True).connect() as c:
+        df.to_sql('covid_27',c,schema='Pds',index=False,if_exists='append')
+    return 1
+
 def cvod_27_covid(a):
     sql1 = open('sql/parus/covid_27_svod.sql','r').read()
     sql2 = open('sql/parus/covid_27_svod_old.sql','r').read()
