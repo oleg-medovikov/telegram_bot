@@ -99,7 +99,7 @@ def vacine_talon(a):
                 border-radius: .10rem;
               }
               .table__button:hover {
-                background-color: #e60;
+                background-color: #e62;
               }""" + f"""
             </style>
             <table cellpadding="1" cellspacing="1"  bordercolor="white" border="1" class="table">
@@ -120,7 +120,7 @@ def vacine_talon(a):
                   <td class="table__cell table__cell--highlighted">{elevation}</td>
                 </tr>
                 <tr>
-                  <td class="table__cell">Количество дней, на которые есть талоны:</td>
+                  <td class="table__cell">Количество дней в ближайшие 2 месяца, на которые есть талоны:</td>
                   <td class="table__cell table__cell--highlighted">{ndate}</td>
                 </tr>
                 <tr>

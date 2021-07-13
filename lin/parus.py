@@ -177,7 +177,8 @@ def svod_40_cov_19(a):
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
-
+    
+    del revac['SCEP']
     ws = wb['Ревакцинация']
     rows = dataframe_to_rows(revac,index=False, header=False)
     for r_idx, row in enumerate(rows,9):  
