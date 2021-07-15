@@ -369,11 +369,13 @@ def cvod_26_covid(a):
         df = pd.read_sql(sql,con)
     df ['type'] = 'parus' 
     old_file = get_dir('punct_zabor') +'/'+  datetime.datetime.now().strftime('%d.%m.%Y') + ' Пункты отбора.xlsx'
+    values = {6 : 0, 7 : 0, 8 : 0, 9 : 0, 10 : 0, 11 : 0, 12 : 0, 13 : 0, 14 : 0 }
     try:
-        old = pd.read_excel(old_file,skiprows=3,header=None,sheet_name='Соединение').dropna()
+        old = pd.read_excel(old_file,skiprows=3,header=None,sheet_name='Соединение')
     except:
         old = pd.DataFrame()
     else:
+        old = old.loc[~(old[2].isnull() & old[3].isnull() & old[5].isnull() ) ].fillna(value=values)
         del old [0]
         del old [14]
         old ['type'] = 'file' 

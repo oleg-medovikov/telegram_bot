@@ -37,7 +37,7 @@ SELECT 1 AS INDX, ORGANIZATION,'Всего' as typevacine, concat(ORGANIZATION, 
 			and  r.BDATE =  trunc(SYSDATE) - 2 
 			and bi.CODE in ('revac_02_01','revac_03_01','revac_04_01','revac_05_01','revac_06_01','revac_07_01','revac_08_01'
 							,'revac_09_01','revac_10_01','revac_11_01','revac_12_01','revac_13_01','revac_14_01','revac_15_01'
-							,'revac_16_01','revac_17_01','revac_18_01','revac_19')
+							,'revac_16_01','revac_17_01','revac_18_01','revac_19_01')
 		)
 	pivot
 		(
@@ -87,7 +87,7 @@ SELECT 2 AS INDX, ORGANIZATION,'Гам-КОВИД-Вак (Спутник-V)' as 
 			and  r.BDATE =  trunc(SYSDATE) - 2 
 			and bi.CODE in ('revac_02_02','revac_03_02','revac_04_02','revac_05_02','revac_06_02','revac_07_02','revac_08_02'
 							,'revac_09_02','revac_10_02','revac_11_02','revac_12_02','revac_13_02','revac_14_02','revac_15_02'
-							,'revac_16_02','revac_17_02','revac_18_02','revac_19')
+							,'revac_16_02','revac_17_02','revac_18_02','revac_19_02')
 		)
 	pivot
 		(
@@ -137,7 +137,7 @@ SELECT 3 AS INDX,ORGANIZATION,'КовиВак' as typevacine, concat(ORGANIZATIO
 			and  r.BDATE =  trunc(SYSDATE) - 2 
 			and bi.CODE in ('revac_02_03','revac_03_03','revac_04_03','revac_05_03','revac_06_03','revac_07_03','revac_08_03'
 							,'revac_09_03','revac_10_03','revac_11_03','revac_12_03','revac_13_03','revac_14_03','revac_15_03'
-							,'revac_16_03','revac_17_03','revac_18_03','revac_19')
+							,'revac_16_03','revac_17_03','revac_18_03','revac_19_03')
 		)
 	pivot
 		(
@@ -187,7 +187,7 @@ SELECT 4 AS INDX,ORGANIZATION,'ЭпиВакКорона' as typevacine, concat(O
 			and  r.BDATE =  trunc(SYSDATE) - 2 
 			and bi.CODE in ('revac_02_04','revac_03_04','revac_04_04','revac_05_04','revac_06_04','revac_07_04','revac_08_04'
 							,'revac_09_04','revac_10_04','revac_11_04','revac_12_04','revac_13_04','revac_14_04','revac_15_04'
-							,'revac_16_04','revac_17_04','revac_18_04','revac_19')
+							,'revac_16_04','revac_17_04','revac_18_04','revac_19_04')
 		)
 	pivot
 		(
@@ -236,7 +236,7 @@ SELECT 5 AS INDX, ORGANIZATION,'Спутник Лайт' as typevacine, concat(O
 			and  r.BDATE =  trunc(SYSDATE) - 2 
 			and bi.CODE in ('revac_02_05','revac_03_05','revac_04_05','revac_05_05','revac_06_05','revac_07_05','revac_08_05'
 							,'revac_09_05','revac_10_05','revac_11_05','revac_12_05','revac_13_05','revac_14_05','revac_15_05'
-							,'revac_16_05','revac_17_05','revac_18_05','revac_19')
+							,'revac_16_05','revac_17_05','revac_18_05','revac_19_05')
 		)
 	pivot
 		(

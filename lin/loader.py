@@ -205,7 +205,7 @@ def slojit_fr(a):
     day = pd.to_datetime(svod['Дата изменения РЗ'], format='%d.%m.%Y').max().date()
     count_vizd_old = pd.read_sql ("""SELECT [value_count] FROM [robo].[values]
                 where id = (select max(id) from [robo].[values] where [value_name] = 'Всего выздоровело от COVID' 
-                and date_rows = (select max(date_rows) from [robo].[values] where date_rows != cast(getdate() as date) ) )""",con).iat[0,0]
+                and date_rows = (select max(date_rows) from [robo].[values] where [value_name] = 'Всего выздоровело от COVID'  and  date_rows != cast(getdate() as date) ) )""",con).iat[0,0]
     count_vizd_new = len(svod[svod['Исход заболевания'].isin(['Выздоровление']) & svod['Диагноз'].isin(['U07.1']) ])
 
     NumberFor3 = count_vizd_new - count_vizd_old
