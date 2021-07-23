@@ -1,4 +1,4 @@
-import sqlalchemy,cx_Oracle,os,openpyxl,shutil,datetime,subprocess,time,imgkit
+import sqlalchemy,cx_Oracle,os,openpyxl,shutil,datetime,subprocess,time,imgkit,requests
 from openpyxl.utils.dataframe import dataframe_to_rows
 import numpy as np
 import pandas as pd
@@ -427,13 +427,13 @@ def cvod_27_covid(a):
         df = pd.read_sql(sql1,con)
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df_old = pd.read_sql(sql2,con)
-
+    
     date = datetime.datetime.now().strftime('%d_%m_%Y')
     new_name = date + '_27_COVID_19_cvod.xlsx'
     shablon_path = get_dir('help')
 
     shutil.copyfile(shablon_path + '/27_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
-    
+        
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
     
     ws = wb['Для заполнения']
@@ -448,6 +448,51 @@ def cvod_27_covid(a):
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
     
+    wb.save( shablon_path  + '/' + new_name)
+    return  shablon_path  + '/' + new_name
+
+def cvod_27_regiz(a):
+    url = os.getenv('url837').replace('837','870')
+    data = requests.get(url).json()
+    regiz = pd.DataFrame.from_dict(data)
+    columns = ['orderresponse_assign_organization_level1_key', 'ShortNameMO','Кол-во тестов',
+               'Кол-во ПЦР тестов','Кол-во положительных ПЦР тестов','Кол-во тестов на антитела',
+               'Кол-во положительных тестов на антитела','Кол-во тестов на антитела после вакцинации',
+               'Кол-во положительных тестов на антитела после вакцинации']
+    regiz = regiz[columns] 
+    sql = open('sql/parus/covid_27_regiz.sql','r').read()
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql,con)
+    
+    sql = open('sql/covid/nsi_27.sql','r').read()
+    with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@miacbase3/NsiBase",pool_pre_ping=True).connect() as con:
+       nsi = pd.read_sql(sql,con)
+ 
+    date = (datetime.datetime.now() - datetime.timedelta(days=2)).strftime('%d_%m_%Y')
+    new_name = date + '_27_COVID_19_regiz.xlsx'
+    shablon_path = get_dir('help')
+    shutil.copyfile(shablon_path + '/27_COVID_19_regiz.xlsx', shablon_path  + '/' + new_name)
+        
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    
+    ws = wb['parus']
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,4):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    
+
+    ws = wb['regiz']
+    rows = dataframe_to_rows(regiz,index=False, header=True)
+    for r_idx, row in enumerate(rows,2):  
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['nsi']
+    rows = dataframe_to_rows(nsi,index=False, header=True)
+    for r_idx, row in enumerate(rows,1):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
     wb.save( shablon_path  + '/' + new_name)
     return  shablon_path  + '/' + new_name
 

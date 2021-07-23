@@ -349,7 +349,7 @@ def sbor_death_week_svod(a):
     date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
     date_start = date_end - datetime.timedelta(days=6) 
 
-    path     = get_dir('death_week') + f'/с {date_start} по {date_end}/[!~]*[!вод].xlsx'
+    path     = get_dir('death_week') + f'/с {date_start} по {date_end}/[!~]*[!вод]*.xlsx'
     send('', path)
     df = pd.DataFrame()
     list_=[]
@@ -357,6 +357,7 @@ def sbor_death_week_svod(a):
         chast = pd.read_excel(excel)
         list_.append(chast)
     df = pd.concat(list_)
+    send('',str(len(df)) + ' , ' + str(len(glob.glob(path))))
     df['Ndays'] = (pd.to_datetime(df['Дата госпитализации'],errors='coerce') - pd.to_datetime(df['Дата начала заболевания'],errors='coerce')).dt.days
     df = df.loc[~df['ФИО'].isnull()]
     df.index = range(len(df))
