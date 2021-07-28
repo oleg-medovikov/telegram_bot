@@ -58,6 +58,7 @@ def svod_40_cov_19(a):
     sql6 = open('sql/parus/covid_40_covivak_old.sql','r').read()
     sql7 = open('sql/parus/covid_40_revac.sql','r').read()
     sql8 = open('sql/parus/covid_40_revac_old.sql','r').read()
+    sql9 = open('sql/parus/covid_40_light.sql','r').read()
     
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         sput = pd.read_sql(sql,con)
@@ -75,7 +76,10 @@ def svod_40_cov_19(a):
         revac = pd.read_sql(sql7,con)
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         revac_old = pd.read_sql(sql8,con)
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        light = pd.read_sql(sql9,con)
     
+ 
     send('', 'Запросы к базе выполнены')
     del sput ['ORGANIZATION']
     del sput_old ['ORGANIZATION']
@@ -85,6 +89,7 @@ def svod_40_cov_19(a):
     del covivak_old ['ORGANIZATION']
     del revac ['INDX']    
     del revac_old ['INDX']
+    del light ['ORGANIZATION']
 
     date_otch = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
     new_name_pred ='40_COVID_19_БОТКИНА_' + date_otch + '_предварительный.xlsx'
@@ -124,6 +129,13 @@ def svod_40_cov_19(a):
     for r_idx, row in enumerate(rows,5):  
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['Спутник Лайт']
+    rows = dataframe_to_rows(light,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
 
     ws = wb['Вчера_КовиВак']
     rows = dataframe_to_rows(covivak_old,index=False, header=False)
@@ -178,6 +190,17 @@ def svod_40_cov_19(a):
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
     
+
+    del light[light.columns[-1]]
+    del light[light.columns[-1]]
+    del light[light.columns[-1]]
+
+    ws = wb['Спутник Лайт']
+    rows = dataframe_to_rows(light,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
     del revac['SCEP']
     ws = wb['Ревакцинация']
     rows = dataframe_to_rows(revac,index=False, header=False)
