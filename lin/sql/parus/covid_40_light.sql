@@ -41,6 +41,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(Vaccin_TVSP
                 on(rd.PRN = rf.RN)
                 WHERE rf.code = '40 COVID 19'
                 and r.BDATE =  trunc(SYSDATE-1)
+                and ro.BLTABLES = 149115543
                  and i.CODE in ('Vaccin_TVSP','light_03','light_04',
                                                 'light_05','light_06', 'light_07', 
                                                 'light_08', 'light_09', 'light_10',
