@@ -50,15 +50,16 @@ def o_40_covid_by_date(a):
     return file 
 
 def svod_40_cov_19(a):
-    sql  = open('sql/parus/covid_40_spytnic.sql','r').read()
-    sql2 = open('sql/parus/covid_40_spytnic_old.sql','r').read()
-    sql3 = open('sql/parus/covid_40_epivak.sql','r').read()
-    sql4 = open('sql/parus/covid_40_epivak_old.sql','r').read()
-    sql5 = open('sql/parus/covid_40_covivak.sql','r').read()
-    sql6 = open('sql/parus/covid_40_covivak_old.sql','r').read()
-    sql7 = open('sql/parus/covid_40_revac.sql','r').read()
-    sql8 = open('sql/parus/covid_40_revac_old.sql','r').read()
-    sql9 = open('sql/parus/covid_40_light.sql','r').read()
+    sql   = open('sql/parus/covid_40_spytnic.sql','r').read()
+    sql2  = open('sql/parus/covid_40_spytnic_old.sql','r').read()
+    sql3  = open('sql/parus/covid_40_epivak.sql','r').read()
+    sql4  = open('sql/parus/covid_40_epivak_old.sql','r').read()
+    sql5  = open('sql/parus/covid_40_covivak.sql','r').read()
+    sql6  = open('sql/parus/covid_40_covivak_old.sql','r').read()
+    sql7  = open('sql/parus/covid_40_revac.sql','r').read()
+    sql8  = open('sql/parus/covid_40_revac_old.sql','r').read()
+    sql9  = open('sql/parus/covid_40_light.sql','r').read()
+    sql10 = open('sql/parus/covid_40_light_old.sql','r').read()
     
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         sput = pd.read_sql(sql,con)
@@ -78,8 +79,9 @@ def svod_40_cov_19(a):
         revac_old = pd.read_sql(sql8,con)
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         light = pd.read_sql(sql9,con)
-    
- 
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        light_old = pd.read_sql(sql10,con)
+  
     send('', 'Запросы к базе выполнены')
     del sput ['ORGANIZATION']
     del sput_old ['ORGANIZATION']
@@ -90,6 +92,7 @@ def svod_40_cov_19(a):
     del revac ['INDX']    
     del revac_old ['INDX']
     del light ['ORGANIZATION']
+    del light_old ['ORGANIZATION']
 
     date_otch = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
     new_name_pred ='40_COVID_19_БОТКИНА_' + date_otch + '_предварительный.xlsx'
@@ -154,8 +157,14 @@ def svod_40_cov_19(a):
     for r_idx, row in enumerate(rows,9):  
         for c_idx, value in enumerate(row, 3):
             ws.cell(row=r_idx, column=c_idx, value=value)
-    wb.save( shablon_path  + '/' + new_name_pred) 
 
+    ws = wb['Вчера_Спутник Лайт']
+    rows = dataframe_to_rows(light_old,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    wb.save( shablon_path  + '/' + new_name_pred) 
     send('', 'Готов предварительный файл')
 
     # основной отчёт
