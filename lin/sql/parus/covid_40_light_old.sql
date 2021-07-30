@@ -41,7 +41,22 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(Vaccin_TVSP
                 on(rd.PRN = rf.RN)
                 WHERE rf.code = '40 COVID 19'
                 and r.BDATE =  trunc(SYSDATE-2)
-                and ro.BLTABLES = 149115543
+                and ro.BLTABLES = (SELECT BLTABLES FROM (
+ 								SELECT DISTINCT ro.BLTABLES , ROW_NUMBER () over(ORDER BY ro.BLTABLES ASC) AS num
+					                FROM PARUS.BLTBLVALUES v
+					                INNER JOIN PARUS.BLTABLESIND si
+					                on(v.BLTABLESIND = si.RN)
+					                INNER JOIN PARUS.BALANCEINDEXES i
+					                on(si.BALANCEINDEXES = i.RN)
+					                INNER JOIN PARUS.BLTBLROWS ro
+					                on(v.PRN = ro.RN)
+					                INNER JOIN PARUS.BLSUBREPORTS s
+					                on(ro.PRN = s.RN)
+					                INNER JOIN PARUS.BLREPORTS r
+					                on(s.PRN = r.RN)
+					                WHERE  r.BDATE =  trunc(SYSDATE-2)
+					                and i.CODE in ('light_09') 
+										) WHERE num = 1)
                  and i.CODE in ('Vaccin_TVSP','light_03','light_04',
                                                 'light_05','light_06', 'light_07', 
                                                 'light_08', 'light_09', 'light_10',
@@ -111,7 +126,7 @@ SELECT ORGANIZATION, 'Медицинская организация' TYPE, REPLA
                         INNER JOIN PARUS.BALANCEINDEXES bi 
                         on(d.BALANCEINDEX = bi.RN)
                 WHERE rf.code = '40 COVID 19'
-                 and  r.BDATE =  trunc(SYSDATE-1)
+                 and  r.BDATE =  trunc(SYSDATE-2)
                  and bi.CODE in ('Vaccin_MO','light_03','light_04','light_05',
                                                 'light_06','light_07', 'light_08', 
                                                 'light_09', 'light_10', 'light_11',
