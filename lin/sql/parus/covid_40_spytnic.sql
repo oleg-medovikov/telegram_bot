@@ -11,7 +11,7 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                 CAST(Vaccin_tvsp_16 AS int) Vaccin_tvsp_16, CAST(Vaccin_tvsp_17 AS int) Vaccin_tvsp_17,
                 CAST(Vaccin_tvsp_18 AS int) Vaccin_tvsp_18, CAST(Vaccin_tvsp_19 AS int) Vaccin_tvsp_19, CAST(Vaccin_tvsp_19_day AS int) Vaccin_tvsp_19_day,
                 CAST(Vaccin_tvsp_21 AS int) Vaccin_tvsp_21, CAST(Vaccin_tvsp_21_day AS int) Vaccin_tvsp_21_day,
-                CAST(Vaccin_tvsp_23 AS int) Vaccin_tvsp_23 
+                CAST(revac_20_01 AS int) revac_20_01 
         FROM (
                 SELECT
                         r.BDATE day,
@@ -42,7 +42,7 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                 WHERE rf.code = '40 COVID 19'
                 and r.BDATE =  trunc(SYSDATE-1)
                 and ro.BLTABLES = (SELECT BLTABLES FROM (
- 								SELECT DISTINCT ro.BLTABLES , ROW_NUMBER () over(ORDER BY ro.BLTABLES ASC) AS num
+ 								SELECT DISTINCT ro.BLTABLES , ROW_NUMBER () over(ORDER BY ro.BLTABLES desc) AS num
 					                FROM PARUS.BLTBLVALUES v
 					                INNER JOIN PARUS.BLTABLESIND si
 					                on(v.BLTABLESIND = si.RN)
@@ -62,7 +62,7 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                                                 'Vaccin_tvsp_11', 'Vaccin_tvsp_12', 'Vaccin_tvsp_20','Vaccin_tvsp_20_day',
                                                 'Vaccin_tvsp_13','Vaccin_tvsp_14','Vaccin_tvsp_15', 'Vaccin_tvsp_16', 'Vaccin_tvsp_17',
                                                 'Vaccin_tvsp_18', 'Vaccin_tvsp_19', 'Vaccin_tvsp_19_day','Vaccin_tvsp_21', 'Vaccin_tvsp_21_day'
-                                                , 'Vaccin_tvsp_23')
+                                                , 'revac_20_01')
                 )
                 pivot
                 (
@@ -74,7 +74,7 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                                                 'Vaccin_tvsp_20_day' Vaccin_tvsp_20_day,'Vaccin_tvsp_13' Vaccin_tvsp_13,'Vaccin_tvsp_14' Vaccin_tvsp_14,
                                                 'Vaccin_tvsp_15' Vaccin_tvsp_15, 'Vaccin_tvsp_16' Vaccin_tvsp_16, 'Vaccin_tvsp_17' Vaccin_tvsp_17,
                                                 'Vaccin_tvsp_18' Vaccin_tvsp_18, 'Vaccin_tvsp_19' Vaccin_tvsp_19, 'Vaccin_tvsp_19_day' Vaccin_tvsp_19_day,
-                                                'Vaccin_tvsp_21' Vaccin_tvsp_21, 'Vaccin_tvsp_21_day' Vaccin_tvsp_21_day, 'Vaccin_tvsp_23' Vaccin_tvsp_23)
+                                                'Vaccin_tvsp_21' Vaccin_tvsp_21, 'Vaccin_tvsp_21_day' Vaccin_tvsp_21_day, 'revac_20_01' revac_20_01)
                 )
                 WHERE tvsp IS NOt NULL
                 and ORGANIZATION NOT LIKE 'Администр%'
@@ -92,7 +92,7 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                                 CAST(Vaccin_16 AS int) Vaccin_16, CAST(Vaccin_17 AS int) Vaccin_17,
                                 CAST(Vaccin_18 AS int) Vaccin_18, CAST(Vaccin_19 AS int) Vaccin_19, CAST(Vaccin_19_day AS int) Vaccin_19_day,
                                 CAST(Vaccin_21 AS int) Vaccin_21, CAST(Vaccin_21_day AS int) Vaccin_21_day,
-                                CAST(Vaccin_23 AS int) Vaccin_23 
+                                CAST(revac_20_02 AS int) revac_20_02 
                 FROM (
                 SELECT
                         r.BDATE,
@@ -123,7 +123,7 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                                                 'Vaccin_11', 'Vaccin_12', 'Vaccin_20','Vaccin_20_day',
                                                 'Vaccin_13','Vaccin_14','Vaccin_15', 'Vaccin_16', 'Vaccin_17',
                                                 'Vaccin_18', 'Vaccin_19', 'Vaccin_19_day','Vaccin_21', 'Vaccin_21_day'
-                                                , 'Vaccin_23')
+                                                , 'revac_20_02')
                 )
                 pivot
                 (
@@ -135,7 +135,7 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                                                 'Vaccin_20_day' Vaccin_20_day,'Vaccin_13' Vaccin_13,'Vaccin_14' Vaccin_14,
                                                 'Vaccin_15' Vaccin_15, 'Vaccin_16' Vaccin_16, 'Vaccin_17' Vaccin_17,
                                                 'Vaccin_18' Vaccin_18, 'Vaccin_19' Vaccin_19, 'Vaccin_19_day' Vaccin_19_day,
-                                                'Vaccin_21' Vaccin_21, 'Vaccin_21_day' Vaccin_21_day, 'Vaccin_23' Vaccin_23)
+                                                'Vaccin_21' Vaccin_21, 'Vaccin_21_day' Vaccin_21_day, 'revac_20_02' revac_20_02)
                 )
         WHERE ORGANIZATION NOT LIKE 'Администр%'
         ORDER BY ORGANIZATION,TYPE

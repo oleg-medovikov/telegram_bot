@@ -1,17 +1,18 @@
 SELECT  ORGANIZATION, 'Пункт вакцинации' type, 
-                                substr(tvsp ,1,INSTR(tvsp , ' ')-1) dist,
-                                TRIM(LEADING ' ' from REPLACE(substr(tvsp ,INSTR(tvsp , ' ')+1, length(tvsp)),'район ','') ) tvsp, 
-                                CAST(Vaccin_tvsp_03 AS int) Vaccin_tvsp_03 , CAST(Vaccin_tvsp_04 AS int) Vaccin_tvsp_04, 
-                                CAST(Vaccin_tvsp_04_day AS int) Vaccin_tvsp_04_day, CAST(Vaccin_tvsp_05 AS int) Vaccin_tvsp_05,
-                                CAST(Vaccin_tvsp_06 AS int) Vaccin_tvsp_06, CAST(Vaccin_tvsp_07 AS int) Vaccin_tvsp_07, CAST(Vaccin_tvsp_08 AS int) Vaccin_tvsp_08,
-                                CAST(Vaccin_tvsp_09 AS int) Vaccin_tvsp_09, CAST(Vaccin_tvsp_10 AS int) Vaccin_tvsp_10,
-                                CAST(Vaccin_tvsp_11 AS int) Vaccin_tvsp_11, CAST(Vaccin_tvsp_12 AS int) Vaccin_tvsp_12, 
-                                CAST(Vaccin_tvsp_20 AS int) Vaccin_tvsp_20, CAST(Vaccin_tvsp_20_day AS int) Vaccin_tvsp_20_day,
-                                CAST(Vaccin_tvsp_13 AS int) Vaccin_tvsp_13, CAST(Vaccin_tvsp_14 AS int) Vaccin_tvsp_14, CAST(Vaccin_tvsp_15 AS int) Vaccin_tvsp_15,
-                                CAST(Vaccin_tvsp_16 AS int) Vaccin_tvsp_16, CAST(Vaccin_tvsp_17 AS int) Vaccin_tvsp_17,
-                                CAST(Vaccin_tvsp_18 AS int) Vaccin_tvsp_18, CAST(Vaccin_tvsp_19 AS int) Vaccin_tvsp_19, CAST(Vaccin_tvsp_19_day AS int) Vaccin_tvsp_19_day,
-                                CAST(Vaccin_tvsp_21 AS int) Vaccin_tvsp_21, CAST(Vaccin_tvsp_21_day AS int) Vaccin_tvsp_21_day, CAST(Vaccin_tvsp_23 AS int) Vaccin_tvsp_23 
-                FROM (
+                substr(tvsp ,1,INSTR(tvsp , ' ')-1) dist,
+                TRIM(LEADING ' ' from REPLACE(substr(tvsp ,INSTR(tvsp , ' ')+1, length(tvsp)),'район ','') ) tvsp, 
+                CAST(Vaccin_tvsp_03 AS int) Vaccin_tvsp_03 , CAST(Vaccin_tvsp_04 AS int) Vaccin_tvsp_04, 
+                CAST(Vaccin_tvsp_04_day AS int) Vaccin_tvsp_04_day, CAST(Vaccin_tvsp_05 AS int) Vaccin_tvsp_05,
+                CAST(Vaccin_tvsp_06 AS int) Vaccin_tvsp_06, CAST(Vaccin_tvsp_07 AS int) Vaccin_tvsp_07, CAST(Vaccin_tvsp_08 AS int) Vaccin_tvsp_08,
+                CAST(Vaccin_tvsp_09 AS int) Vaccin_tvsp_09, CAST(Vaccin_tvsp_10 AS int) Vaccin_tvsp_10,
+                CAST(Vaccin_tvsp_11 AS int) Vaccin_tvsp_11, CAST(Vaccin_tvsp_12 AS int) Vaccin_tvsp_12, 
+                CAST(Vaccin_tvsp_20 AS int) Vaccin_tvsp_20, CAST(Vaccin_tvsp_20_day AS int) Vaccin_tvsp_20_day,
+                CAST(Vaccin_tvsp_13 AS int) Vaccin_tvsp_13, CAST(Vaccin_tvsp_14 AS int) Vaccin_tvsp_14, CAST(Vaccin_tvsp_15 AS int) Vaccin_tvsp_15,
+                CAST(Vaccin_tvsp_16 AS int) Vaccin_tvsp_16, CAST(Vaccin_tvsp_17 AS int) Vaccin_tvsp_17,
+                CAST(Vaccin_tvsp_18 AS int) Vaccin_tvsp_18, CAST(Vaccin_tvsp_19 AS int) Vaccin_tvsp_19, CAST(Vaccin_tvsp_19_day AS int) Vaccin_tvsp_19_day,
+                CAST(Vaccin_tvsp_21 AS int) Vaccin_tvsp_21, CAST(Vaccin_tvsp_21_day AS int) Vaccin_tvsp_21_day,
+                CAST(revac_20_01 AS int) revac_20_01 
+        FROM (
                 SELECT
                         r.BDATE day,
                         a.AGNNAME organization,
@@ -41,7 +42,7 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                 WHERE rf.code = '40 COVID 19'
                 and r.BDATE =  trunc(SYSDATE-2)
                 and ro.BLTABLES = (SELECT BLTABLES FROM (
- 								SELECT DISTINCT ro.BLTABLES , ROW_NUMBER () over(ORDER BY ro.BLTABLES ASC) AS num
+ 								SELECT DISTINCT ro.BLTABLES , ROW_NUMBER () over(ORDER BY ro.BLTABLES desc) AS num
 					                FROM PARUS.BLTBLVALUES v
 					                INNER JOIN PARUS.BLTABLESIND si
 					                on(v.BLTABLESIND = si.RN)
@@ -61,7 +62,7 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                                                 'Vaccin_tvsp_11', 'Vaccin_tvsp_12', 'Vaccin_tvsp_20','Vaccin_tvsp_20_day',
                                                 'Vaccin_tvsp_13','Vaccin_tvsp_14','Vaccin_tvsp_15', 'Vaccin_tvsp_16', 'Vaccin_tvsp_17',
                                                 'Vaccin_tvsp_18', 'Vaccin_tvsp_19', 'Vaccin_tvsp_19_day','Vaccin_tvsp_21', 'Vaccin_tvsp_21_day'
-                                                , 'Vaccin_tvsp_23')
+                                                , 'revac_20_01')
                 )
                 pivot
                 (
@@ -73,13 +74,13 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                                                 'Vaccin_tvsp_20_day' Vaccin_tvsp_20_day,'Vaccin_tvsp_13' Vaccin_tvsp_13,'Vaccin_tvsp_14' Vaccin_tvsp_14,
                                                 'Vaccin_tvsp_15' Vaccin_tvsp_15, 'Vaccin_tvsp_16' Vaccin_tvsp_16, 'Vaccin_tvsp_17' Vaccin_tvsp_17,
                                                 'Vaccin_tvsp_18' Vaccin_tvsp_18, 'Vaccin_tvsp_19' Vaccin_tvsp_19, 'Vaccin_tvsp_19_day' Vaccin_tvsp_19_day,
-                                                'Vaccin_tvsp_21' Vaccin_tvsp_21, 'Vaccin_tvsp_21_day' Vaccin_tvsp_21_day, 'Vaccin_tvsp_23' Vaccin_tvsp_23)
+                                                'Vaccin_tvsp_21' Vaccin_tvsp_21, 'Vaccin_tvsp_21_day' Vaccin_tvsp_21_day, 'revac_20_01' revac_20_01)
                 )
                 WHERE tvsp IS NOt NULL
                 and ORGANIZATION NOT LIKE 'Администр%'
-            UNION ALL
+        UNION ALL
                 SELECT    			ORGANIZATION,	'Медицинская организация' type, 
-                                dist,
+                                REPLACE(dist,' район ','') dist,
                                 case when tvsp is null then organization else tvsp end tvsp, 
                                 CAST(Vaccin_03 AS int) Vaccin_03 , CAST(Vaccin_04 AS int) Vaccin_04, 
                                 CAST(Vaccin_04_day AS int) Vaccin_04_day, CAST(Vaccin_05 AS int) Vaccin_05,
@@ -90,7 +91,8 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                                 CAST(Vaccin_13 AS int) Vaccin_13, CAST(Vaccin_14 AS int) Vaccin_14, CAST(Vaccin_15 AS int) Vaccin_15,
                                 CAST(Vaccin_16 AS int) Vaccin_16, CAST(Vaccin_17 AS int) Vaccin_17,
                                 CAST(Vaccin_18 AS int) Vaccin_18, CAST(Vaccin_19 AS int) Vaccin_19, CAST(Vaccin_19_day AS int) Vaccin_19_day,
-                                CAST(Vaccin_21 AS int) Vaccin_21, CAST(Vaccin_21_day AS int) Vaccin_21_day, CAST(Vaccin_23 AS int) Vaccin_23 
+                                CAST(Vaccin_21 AS int) Vaccin_21, CAST(Vaccin_21_day AS int) Vaccin_21_day,
+                                CAST(revac_20_02 AS int) revac_20_02 
                 FROM (
                 SELECT
                         r.BDATE,
@@ -121,7 +123,7 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                                                 'Vaccin_11', 'Vaccin_12', 'Vaccin_20','Vaccin_20_day',
                                                 'Vaccin_13','Vaccin_14','Vaccin_15', 'Vaccin_16', 'Vaccin_17',
                                                 'Vaccin_18', 'Vaccin_19', 'Vaccin_19_day','Vaccin_21', 'Vaccin_21_day'
-                                                , 'Vaccin_23')
+                                                , 'revac_20_02')
                 )
                 pivot
                 (
@@ -133,7 +135,7 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                                                 'Vaccin_20_day' Vaccin_20_day,'Vaccin_13' Vaccin_13,'Vaccin_14' Vaccin_14,
                                                 'Vaccin_15' Vaccin_15, 'Vaccin_16' Vaccin_16, 'Vaccin_17' Vaccin_17,
                                                 'Vaccin_18' Vaccin_18, 'Vaccin_19' Vaccin_19, 'Vaccin_19_day' Vaccin_19_day,
-                                                'Vaccin_21' Vaccin_21, 'Vaccin_21_day' Vaccin_21_day, 'Vaccin_23' Vaccin_23)
+                                                'Vaccin_21' Vaccin_21, 'Vaccin_21_day' Vaccin_21_day, 'revac_20_02' revac_20_02)
                 )
-        WHERE ORGANIZATION NOT LIKE '%Администр%'
+        WHERE ORGANIZATION NOT LIKE 'Администр%'
         ORDER BY ORGANIZATION,TYPE

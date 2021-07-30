@@ -12,7 +12,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(EVC_TVSP_2_
         nvl(cast(EVC_TVSP_2_20 as int),0)  EVC_TVSP_2_20,nvl(cast(EVC_TVSP_2_21 as int),0)  EVC_TVSP_2_21,
         nvl(cast(EVC_TVSP_2_22 as int),0)  EVC_TVSP_2_22,nvl(cast(EVC_TVSP_2_23_z as int),0)  EVC_TVSP_2_23_z, 
         nvl(cast(EVC_TVSP_2_24 as int),0)  EVC_TVSP_2_24,nvl(cast(EVC_TVSP_2_25 as int),0)  EVC_TVSP_2_25,
-        nvl(cast(EVC_TVSP_2_27 as int),0)  EVC_TVSP_2_27
+        nvl(cast(revac_20_01 as int),0)  revac_20_01
                 FROM (
                 SELECT
                         r.BDATE day,
@@ -42,13 +42,29 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(EVC_TVSP_2_
                 on(rd.PRN = rf.RN)
                 WHERE rf.code = '40 COVID 19'
                 and r.BDATE =  trunc(SYSDATE-1)
+                                and ro.BLTABLES = (SELECT BLTABLES FROM (
+ 								SELECT DISTINCT ro.BLTABLES , ROW_NUMBER () over(ORDER BY ro.BLTABLES desc) AS num
+					                FROM PARUS.BLTBLVALUES v
+					                INNER JOIN PARUS.BLTABLESIND si
+					                on(v.BLTABLESIND = si.RN)
+					                INNER JOIN PARUS.BALANCEINDEXES i
+					                on(si.BALANCEINDEXES = i.RN)
+					                INNER JOIN PARUS.BLTBLROWS ro
+					                on(v.PRN = ro.RN)
+					                INNER JOIN PARUS.BLSUBREPORTS s
+					                on(ro.PRN = s.RN)
+					                INNER JOIN PARUS.BLREPORTS r
+					                on(s.PRN = r.RN)
+					                WHERE  r.BDATE =  trunc(SYSDATE-1)
+					                and i.CODE in ('EVC_TVSP_2_05_z') 
+										) WHERE num = 1)
                  and i.CODE in ('EVC_TVSP_2_02','EVC_TVSP_2_04','EVC_TVSP_2_05_z',
                                                 'EVC_TVSP_2_06','EVC_TVSP_2_07_z', 'EVC_TVSP_2_08', 
                                                 'EVC_TVSP_2_09_z', 'EVC_TVSP_2_10', 'EVC_TVSP_2_11_z',
                                                 'EVC_TVSP_2_12','EVC_TVSP_2_13_z', 'EVC_TVSP_2_14', 
                                                 'EVC_TVSP_2_15_z', 'EVC_TVSP_2_16','EVC_TVSP_2_17_z', 'EVC_TVSP_2_18'
                                                 , 'EVC_TVSP_2_19_z', 'EVC_TVSP_2_20', 'EVC_TVSP_2_21', 'EVC_TVSP_2_22'
-                                                , 'EVC_TVSP_2_23_z', 'EVC_TVSP_2_24', 'EVC_TVSP_2_25_z', 'EVC_TVSP_2_27')
+                                                , 'EVC_TVSP_2_23_z', 'EVC_TVSP_2_24', 'EVC_TVSP_2_25_z', 'revac_20_01')
                 )
                 pivot
                 (
@@ -68,7 +84,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(EVC_TVSP_2_
         'EVC_TVSP_2_19_z'  EVC_TVSP_2_19_z,
         'EVC_TVSP_2_20'  EVC_TVSP_2_20,'EVC_TVSP_2_21'  EVC_TVSP_2_21,
         'EVC_TVSP_2_22'  EVC_TVSP_2_22, 'EVC_TVSP_2_23_z'  EVC_TVSP_2_23_z,
-        'EVC_TVSP_2_24'  EVC_TVSP_2_24,'EVC_TVSP_2_25_z'  EVC_TVSP_2_25,'EVC_TVSP_2_27'  EVC_TVSP_2_27
+        'EVC_TVSP_2_24'  EVC_TVSP_2_24,'EVC_TVSP_2_25_z'  EVC_TVSP_2_25,'revac_20_01'  revac_20_01
         )
                 )
         UNION
@@ -84,7 +100,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(EVC_TVSP_2_
         nvl(cast(EVC_TVSP_20 as int),0)  EVC_TVSP_20,nvl(cast(EVC_TVSP_21   as int),0)  EVC_TVSP_21,
         nvl(cast(EVC_TVSP_22 as int),0)  EVC_TVSP_22,nvl(cast(EVC_TVSP_23_z as int),0)  EVC_TVSP_23_z,
         nvl(cast(EVC_TVSP_24 as int),0)  EVC_TVSP_24,nvl(cast(EVC_TVSP_25 as int),0)  EVC_TVSP_25,
-        nvl(cast(EVC_TVSP_27 as int),0)  EVC_TVSP_27
+        nvl(cast(revac_20_04 as int),0)  revac_20_04
                 FROM (
                 SELECT
                 to_char(r.BDATE, 'DD.MM.YYYY') day,
@@ -116,7 +132,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(EVC_TVSP_2_
                                                 'EVC_TVSP_12','EVC_TVSP_13_z', 'EVC_TVSP_14', 
                                                 'EVC_TVSP_15_z', 'EVC_TVSP_16','EVC_TVSP_17_z', 'EVC_TVSP_18'
                                                 , 'EVC_TVSP_19_z', 'EVC_TVSP_20', 'EVC_TVSP_21', 'EVC_TVSP_22'
-                                                , 'EVC_TVSP_23_z', 'EVC_TVSP_24', 'EVC_TVSP_25_z', 'EVC_TVSP_27')
+                                                , 'EVC_TVSP_23_z', 'EVC_TVSP_24', 'EVC_TVSP_25_z', 'revac_20_04')
                 )
                 pivot
                 (
@@ -129,7 +145,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(EVC_TVSP_2_
         'EVC_TVSP_16'  EVC_TVSP_16,'EVC_TVSP_17_z'  EVC_TVSP_17_z,'EVC_TVSP_18'  EVC_TVSP_18,
         'EVC_TVSP_19_z'  EVC_TVSP_19_z,'EVC_TVSP_20'  EVC_TVSP_20,'EVC_TVSP_21'  EVC_TVSP_21,
         'EVC_TVSP_22'  EVC_TVSP_22,'EVC_TVSP_23_z'  EVC_TVSP_23_z,'EVC_TVSP_24'  EVC_TVSP_24,
-        'EVC_TVSP_25_z'  EVC_TVSP_25,'EVC_TVSP_27'  EVC_TVSP_27
+        'EVC_TVSP_25_z'  EVC_TVSP_25,'revac_20_04'  revac_20_04
         )
                 )
         ORDER BY ORGANIZATION,TYPE

@@ -42,7 +42,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(Vaccin_TVSP
                 WHERE rf.code = '40 COVID 19'
                 and r.BDATE =  trunc(SYSDATE-2)
                 and ro.BLTABLES = (SELECT BLTABLES FROM (
- 								SELECT DISTINCT ro.BLTABLES , ROW_NUMBER () over(ORDER BY ro.BLTABLES ASC) AS num
+ 								SELECT DISTINCT ro.BLTABLES , ROW_NUMBER () over(ORDER BY ro.BLTABLES DESC) AS num
 					                FROM PARUS.BLTBLVALUES v
 					                INNER JOIN PARUS.BLTABLESIND si
 					                on(v.BLTABLESIND = si.RN)
