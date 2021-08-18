@@ -71,19 +71,16 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(Vaccin_TVSP
                 FOR POKAZATEL IN ('Vaccin_TVSP'  Vaccin_TVSP,
         'light_03'  light_03,
         'light_04'  light_04,'light_05'  light_05,
-        'light_06'  light_06,
-        'light_07'  light_07,
+        'light_06'  light_06,'light_07'  light_07,
         'light_08'  light_08,'light_09'  light_09,
-        'light_10'  light_10,
-        'light_11'  light_11,
+        'light_10'  light_10,'light_11'  light_11,
         'light_12'  light_12,'light_13'  light_13,
-        'light_14'  light_14,
-        'light_15'  light_15,
+        'light_14'  light_14,'light_15'  light_15,
         'light_16'  light_16,'light_17'  light_17,
-        'light_18'  light_18,
-        'light_19'  light_19,'light_20'  light_20,
-        'light_21'  light_21, 'light_24'  light_24,
-        'light_26'  light_26,'revac_20_01' revac_20_01
+        'light_18'  light_18,'light_19'  light_19,
+        'light_20'  light_20,'light_21'  light_21,
+        'light_24'  light_24,'light_26'  light_26,
+        'revac_20_01' revac_20_01
         )
                 )
       WHERE Vaccin_TVSP IS NOT null
@@ -127,25 +124,25 @@ SELECT ORGANIZATION, 'Медицинская организация' TYPE, REPLA
                         on(d.BALANCEINDEX = bi.RN)
                 WHERE rf.code = '40 COVID 19'
                  and  r.BDATE =  trunc(SYSDATE-2)
-                 and bi.CODE in ('Vaccin_MO','light_03','light_04','light_05',
-                                                'light_06','light_07', 'light_08', 
-                                                'light_09', 'light_10', 'light_11',
-                                                'light_12','light_13', 'light_14', 
-                                                'light_15', 'light_16','light_17', 'light_18',
-                                                'light_19', 'light_20', 'light_21',
-                                                'light_24', 'light_26', 'revac_20_05')
+                 and bi.CODE in ('Vaccin_MO','light_03_s','light_04_s','light_05_s',
+                                                'light_06_s','light_07_s', 'light_08_s', 
+                                                'light_09_s', 'light_10_s', 'light_11_s',
+                                                'light_12_s','light_13_s', 'light_14_s', 
+                                                'light_15_s', 'light_16_s','light_17_s', 'light_18_s',
+                                                'light_19_s', 'light_20_s', 'light_21_s',
+                                                'light_24_s', 'light_26_s', 'revac_20_05')
                 )
                 pivot
                 (
                 max(value)
-                FOR POKAZATEL IN ('Vaccin_MO'  Vaccin_MO,'light_03'  light_03,
-        'light_04'  light_04,'light_05'  light_05,'light_06'  light_06,
-        'light_07'  light_07,'light_08'  light_08,'light_09'  light_09,
-        'light_10'  light_10,'light_11'  light_11,'light_12'  light_12,
-        'light_13'  light_13,'light_14'  light_14,'light_15'  light_15,
-        'light_16'  light_16,'light_17'  light_17,'light_18'  light_18,
-        'light_19'  light_19,'light_20'  light_20, 'light_21'  light_21,
-        'light_24'  light_24,'light_26'  light_26,'revac_20_05'  revac_20_05
+                FOR POKAZATEL IN ('Vaccin_MO'  Vaccin_MO,'light_03_s'  light_03,
+        'light_04_s'  light_04,'light_05_s'  light_05,'light_06_s'  light_06,
+        'light_07_s'  light_07,'light_08_s'  light_08,'light_09_s'  light_09,
+        'light_10_s'  light_10,'light_11_s'  light_11,'light_12_s'  light_12,
+        'light_13_s'  light_13,'light_14_s'  light_14,'light_15_s'  light_15,
+        'light_16_s'  light_16,'light_17_s'  light_17,'light_18_s'  light_18,
+        'light_19_s'  light_19,'light_20_s'  light_20, 'light_21_s'  light_21,
+        'light_24_s'  light_24,'light_26_s'  light_26,'revac_20_05'  revac_20_05
         )
                 ) 
 ORDER BY ORGANIZATION,TYPE

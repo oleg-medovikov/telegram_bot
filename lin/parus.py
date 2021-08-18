@@ -636,9 +636,16 @@ def cvod_38_covid(a):
     return  shablon_path  + '/' + new_name
 
 def cvod_51_covid(a):
-    sql = open('sql/parus/covid_51_svod.sql','r').read()
+    sql1 = open('sql/parus/covid_51_svod.sql','r').read()
+    sql2 = open('sql/parus/covid_51_svod_all.sql','r').read()
+
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
-        df = pd.read_sql(sql,con)
+        df = pd.read_sql(sql1,con)
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df_all = pd.read_sql(sql2,con)
+
+
     date = df['DAY'].unique()[0]
     del df ['DAY']
     df = df.append(df.sum(numeric_only=True), ignore_index=True)
@@ -654,6 +661,12 @@ def cvod_51_covid(a):
     for r_idx, row in enumerate(rows,4):  
         for c_idx, value in enumerate(row, 2):
             ws.cell(row=r_idx, column=c_idx, value=value)
+    ws = wb['Свод по всем МО']
+    rows = dataframe_to_rows(df_all,index=False, header=False)
+    for r_idx, row in enumerate(rows,4):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    
     wb.save( shablon_path  + '/' + new_name)
 
     return shablon_path  + '/' + new_name

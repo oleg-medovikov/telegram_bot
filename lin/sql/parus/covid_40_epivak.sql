@@ -132,7 +132,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(EVC_TVSP_2_
                                                 'EVC_TVSP_12','EVC_TVSP_13_z', 'EVC_TVSP_14', 
                                                 'EVC_TVSP_15_z', 'EVC_TVSP_16','EVC_TVSP_17_z', 'EVC_TVSP_18'
                                                 , 'EVC_TVSP_19_z', 'EVC_TVSP_20', 'EVC_TVSP_21', 'EVC_TVSP_22'
-                                                , 'EVC_TVSP_23_z', 'EVC_TVSP_24', 'EVC_TVSP_25_z', 'revac_20_04')
+                                                , 'EVC_TVSP_23_z', 'EVC_TVSP_24', 'EVC_TVSP_25_z', 'revac_20_04_s')
                 )
                 pivot
                 (
@@ -145,7 +145,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(EVC_TVSP_2_
         'EVC_TVSP_16'  EVC_TVSP_16,'EVC_TVSP_17_z'  EVC_TVSP_17_z,'EVC_TVSP_18'  EVC_TVSP_18,
         'EVC_TVSP_19_z'  EVC_TVSP_19_z,'EVC_TVSP_20'  EVC_TVSP_20,'EVC_TVSP_21'  EVC_TVSP_21,
         'EVC_TVSP_22'  EVC_TVSP_22,'EVC_TVSP_23_z'  EVC_TVSP_23_z,'EVC_TVSP_24'  EVC_TVSP_24,
-        'EVC_TVSP_25_z'  EVC_TVSP_25,'revac_20_04'  revac_20_04
+        'EVC_TVSP_25_z'  EVC_TVSP_25,'revac_20_04_s'  revac_20_04
         )
                 )
         ORDER BY ORGANIZATION,TYPE

@@ -123,7 +123,7 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                                                 'Vaccin_11', 'Vaccin_12', 'Vaccin_20','Vaccin_20_day',
                                                 'Vaccin_13','Vaccin_14','Vaccin_15', 'Vaccin_16', 'Vaccin_17',
                                                 'Vaccin_18', 'Vaccin_19', 'Vaccin_19_day','Vaccin_21', 'Vaccin_21_day'
-                                                , 'revac_20_02')
+                                                , 'revac_20_02_s')
                 )
                 pivot
                 (
@@ -135,7 +135,7 @@ SELECT  ORGANIZATION, 'Пункт вакцинации' type,
                                                 'Vaccin_20_day' Vaccin_20_day,'Vaccin_13' Vaccin_13,'Vaccin_14' Vaccin_14,
                                                 'Vaccin_15' Vaccin_15, 'Vaccin_16' Vaccin_16, 'Vaccin_17' Vaccin_17,
                                                 'Vaccin_18' Vaccin_18, 'Vaccin_19' Vaccin_19, 'Vaccin_19_day' Vaccin_19_day,
-                                                'Vaccin_21' Vaccin_21, 'Vaccin_21_day' Vaccin_21_day, 'revac_20_02' revac_20_02)
+                                                'Vaccin_21' Vaccin_21, 'Vaccin_21_day' Vaccin_21_day, 'revac_20_02_s' revac_20_02)
                 )
         WHERE ORGANIZATION NOT LIKE 'Администр%'
         ORDER BY ORGANIZATION,TYPE

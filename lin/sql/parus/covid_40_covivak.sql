@@ -132,7 +132,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(KV_TVSP_02 
                                                 'epy_vak_12','epy_vak_13_z', 'epy_vak_14', 
                                                 'epy_vak_15_z', 'epy_vak_16','epy_vak_17_z', 'epy_vak_18'
                                                 , 'epy_vak_19_z', 'epy_vak_20', 'epy_vak_21', 'epy_vak_22'
-                                                , 'epy_vak_23_z', 'epy_vak_24', 'epy_vak_25_z', 'revac_20_03')
+                                                , 'epy_vak_23_z', 'epy_vak_24', 'epy_vak_25_z', 'revac_20_03_s')
                 )
                 pivot
                 (
@@ -145,7 +145,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(KV_TVSP_02 
         'epy_vak_16'  epy_vak_16,'epy_vak_17_z'  epy_vak_17_z,'epy_vak_18'  epy_vak_18,
         'epy_vak_19_z'  epy_vak_19_z,'epy_vak_20'  epy_vak_20,'epy_vak_21'  epy_vak_21,
         'epy_vak_22'  epy_vak_22,'epy_vak_23_z'  epy_vak_23_z,'epy_vak_24'  epy_vak_24,
-        'epy_vak_25_z'  epy_vak_25,'revac_20_03'  revac_20_03
+        'epy_vak_25_z'  epy_vak_25,'revac_20_03_s'  revac_20_03
         )
                 )
         ORDER BY ORGANIZATION,TYPE
