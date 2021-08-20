@@ -77,9 +77,9 @@ def no_snils(a):
 def bez_izhoda(a):
     sql = open('sql/zam/bez_ishod.sql','r').read()
     df = pd.read_sql(sql,con) 
-    put_svod(df,'Без исхода 45 дней')
-    put_excel_for_mo(df,'Без исхода 45 дней')
-    return get_dir('temp') + '/' + 'отчёт по разложению Без исхода 45 дней.xlsx'
+    put_svod(df,'Без исхода 30 дней')
+    put_excel_for_mo(df,'Без исхода 30 дней')
+    return get_dir('temp') + '/' + 'отчёт по разложению Без исхода 30 дней.xlsx'
 
 def bez_ambulat_level(a):
     sql = open('sql/zam/bez_ambulat_level.sql','r').read()

@@ -21,8 +21,8 @@ valume = [
     ,['2 группа замечаний: Нет сведений ОМС (Амб.)','Нет сведений ОМС','Амбулаторная']
     #,['4 группа замечаний: Без амбулаторного этапа (Стац.)','Нет амбулаторного этапа','Стационарная']
     ,['4 группа замечаний: Без амбулаторного этапа (Амб.)','Нет амбулаторного этапа','Амбулаторная']
-    ,['5 группа замечаний: Без исхода заболевания больше 45 дней (Стац.)','Без исхода заболевания больше 45 дней','Стационарная']
-    ,['5 группа замечаний: Без исхода заболевания больше 45 дней (Амб.)','Без исхода заболевания больше 45 дней','Амбулаторная']
+    ,['5 группа замечаний: Без исхода заболевания больше 30 дней (Стац.)','Без исхода заболевания больше 45 дней','Стационарная']
+    ,['5 группа замечаний: Без исхода заболевания больше 30 дней (Амб.)','Без исхода заболевания больше 45 дней','Амбулаторная']
     ,['8 группа замечаний: Неправильный тип лечения (Стац.)', 'Неверный вид лечения', 'Стационарная']
     ,['8 группа замечаний: Неправильный тип лечения (Амб.)', 'Неверный вид лечения', 'Амбулаторная']
     ,['11 группа замечаний: Количество дублированных  УНРЗ в одном МО (Стац.)', 'Количество дублей','Стационарная']
@@ -36,24 +36,24 @@ valume = [
 
 
 def generate_pptx(date):
-    def create_slide(title,type_error,type_org,date_start):
+    def create_slide(title,type_error,type_org,date_start,date_end):
         sql = f"""
         select distinct d1.[Медицинская организация] ,d1.eror1  , d2.eror2 
-                    , d1.eror1 -  d2.eror2 as 'Динамика'           
+                    , d2.eror2 -  d1.eror1 as 'Динамика'           
             from (
         SELECT [Медицинская организация]
               , isnull([{type_error}],0) as 'eror1'
           FROM [COVID].[robo].[cv_Zamechania_fr]
-          where [дата отчета] = '{date_start_sql}' 
+          where [дата отчета] = '{date_start}' 
             and [Тип организации] = '{type_org}'  ) as d1
           full join (
         SELECT [Медицинская организация]
               , isnull([{type_error}],0) as 'eror2'
           FROM [COVID].[robo].[cv_Zamechania_fr]
-          where [дата отчета] = cast(getdate()  as date)
+          where [дата отчета] = '{date_end}'
           and [Тип организации] = '{type_org}' ) as d2
           on (d1.[Медицинская организация] = d2.[Медицинская организация])
-          order by  d1.eror1 - d2.eror2  DESC , d1.eror1 DESC
+          order by  d2.eror2 - d1.eror1  DESC , d1.eror1 DESC
         """
 #        send('',sql)
         frame = pd.read_sql(sql,con)
@@ -78,12 +78,12 @@ def generate_pptx(date):
         body_shape = shapes.placeholders[0]
         tf = body_shape.text_frame
         p = tf.add_paragraph()
-        p.text = 'Общее число замечаний на ' + date_start + ' было ' + str(sum_err1).replace('.0','')
+        p.text = 'Общее число замечаний на ' + date_start + ' — ' + str(sum_err1).replace('.0','')
         p.font.color.rgb = RGBColor(20,20,20)
         p.font.size = Pt(18)
         
         p = tf.add_paragraph()
-        p.text = 'А на ' + date_end + ' cтало ' + str(sum_err2).replace('.0','')
+        p.text = 'На ' + date_end + ' — ' + str(sum_err2).replace('.0','')
         p.font.color.rgb = RGBColor(20,20,20)
         p.font.size = Pt(18)
         
@@ -128,10 +128,12 @@ def generate_pptx(date):
             table.cell(i+1, 3).text_frame.paragraphs[0].font.size = Pt(12)
             table.cell(i+1, 4).text = str(df.at[i,'Динамика']).replace('.0','')
             table.cell(i+1, 4).text_frame.paragraphs[0].font.size = Pt(12)
-
-    date_start_sql = date
-    date_start = pd.to_datetime(date).strftime("%d.%m.%Y")
-    date_end = (datetime.datetime.today() - datetime.timedelta(days=0)).strftime("%d.%m.%Y")
+    date1 = date.split(',')[0]
+    date2 = date.split(',')[1]
+    date_start_sql = date1
+    date_end_sql = date2
+    date_start = pd.to_datetime(date1).strftime("%d.%m.%Y")
+    date_end = pd.to_datetime(date2).strftime("%d.%m.%Y")
     prs = Presentation()
     title_slide_layout = prs.slide_layouts[0]
     slide = prs.slides.add_slide(title_slide_layout)
@@ -153,13 +155,13 @@ def generate_pptx(date):
 
     title_shape.text = 'Группы замечаний по ведению Регистра на '+ date_end
     tf = body_shape.text_frame
-    date_in_text = (datetime.datetime.now()-datetime.timedelta(45)).strftime("%d.%m.%Y")
+    date_in_text = (pd.to_datetime(date2) - datetime.timedelta(30)).strftime("%d.%m.%Y")
 
     text = f"""Срок создания регистровой записи (УНРЗ) не соответствует дате установки диагноза – более 7 дней между датами (МЗ оценивает регион) (Количество регистровых записей, внесённых с задержкой больше недели, за последний месяц)
     Отсутствие информации о номере Полиса ОМС в разделе «Медицинское страхование»
     Не заполнен Раздел «Результаты ежедневного наблюдения» (дневниковые записи) – по данным МЗ РФ
     Поле «исход заболевания» заполнено «переведён в другую МО» без открытия следующего этапа лечения («зависшие» пациенты более 7 дней от даты перевода в др. МО)
-    Поле «исход заболевания» не заполнено с датой установки диагноза ранее {date_in_text} (длительность болезни более 45 дней)
+    Поле «исход заболевания» не заполнено с датой установки диагноза ранее {date_in_text} (длительность болезни более 30 дней)
     Количество УНРЗ с заполненным полем «исход заболевания» «выздоровление» не соответствует оперативной отчётности поликлиник
     Количество УНРЗ с пустым полем «исход заболевания» (находящиеся под медицинским наблюдением в амбулаторных условиях) не соответствует оперативной отчётности поликлиник
     Поле «Вид лечения» ошибочно заполнено «стационарный» -  у пациентов, находящихся под медицинским наблюдением в амбулаторных условиях 
@@ -242,7 +244,7 @@ def generate_pptx(date):
     p.font.size = Pt(20)
 
     for title,type_error,type_org in valume:
-        create_slide(title,type_error,type_org,date_start)
+        create_slide(title,type_error,type_org,date_start_sql,date_end_sql)
 
     pptx_file = get_dir('temp') + '/dynamic.pptx' 
     prs.save(pptx_file)
