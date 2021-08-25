@@ -454,19 +454,52 @@ def cvod_27_smal(a):
 def cvod_27_covid(a):
     sql1 = open('sql/parus/covid_27_svod.sql','r').read()
     sql2 = open('sql/parus/covid_27_svod_old.sql','r').read()
+    sql3 = open('sql/parus/covid_27_svod_2.sql','r').read()
+    sql4 = open('sql/parus/covid_27_svod_3.sql','r').read()
+    sql5 = open('sql/parus/covid_27_svod_4.sql','r').read()
     
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql1,con)
+
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df_old = pd.read_sql(sql2,con)
     
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df_2 = pd.read_sql(sql3,con)
+     
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df_3 = pd.read_sql(sql4,con)
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df_4 = pd.read_sql(sql5,con)
+
     date = datetime.datetime.now().strftime('%d_%m_%Y')
-    new_name = date + '_27_COVID_19_cvod.xlsx'
+     
+    df_3 = df_3.loc[~(df_3['IDMO'].isnull())]
+    for col  in df_3.columns[10:]:
+        try:
+            df_3[col] = df_3[col].str.replace(',','.').astype(float)
+        except:
+            send('',col)
+
+   
+    df_4 = df_4.loc[~(df_4['IDMO'].isnull())]
+    for col  in df_4.columns[10:]:
+        try:
+            df_4[col] = df_4[col].str.replace(',','.').astype(float)
+        except:
+            send('',col)
+
     shablon_path = get_dir('help')
 
-    shutil.copyfile(shablon_path + '/27_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
+    new_name_1 = shablon_path +'/'+ date + '_1_27_COVID-19.xlsx'
+    new_name_2 = shablon_path +'/'+ date + '_2_Результаты_исследований_материала_на_COVID-19.xlsx'
+    new_name_3 = shablon_path +'/'+ date + '_3_Кратность_лаб_обсл_на_COVID-19.xlsx'
+    new_name_4 = shablon_path +'/'+ date + '_4_Кратность_положительных_лаб_обсл_на_COVID-19.xlsx'
+
+    shutil.copyfile(shablon_path + '/27_COVID_19_svod.xlsx', new_name_1)
         
-    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    wb= openpyxl.load_workbook( new_name_1)
     
     ws = wb['Для заполнения']
     rows = dataframe_to_rows(df,index=False, header=False)
@@ -480,8 +513,44 @@ def cvod_27_covid(a):
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
     
-    wb.save( shablon_path  + '/' + new_name)
-    return  shablon_path  + '/' + new_name
+    wb.save( new_name_1 )
+
+    shutil.copyfile(shablon_path + '/27_COVID_19_svod_2.xlsx', new_name_2)
+        
+    wb= openpyxl.load_workbook( new_name_2)
+    
+    ws = wb['свод']
+    rows = dataframe_to_rows(df_2,index=False, header=False)
+    for r_idx, row in enumerate(rows,4):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    
+    wb.save( new_name_2 )
+
+    shutil.copyfile(shablon_path + '/27_COVID_19_svod_3.xlsx', new_name_3)
+        
+    wb= openpyxl.load_workbook( new_name_3)
+    
+    ws = wb['свод']
+    rows = dataframe_to_rows(df_3,index=False, header=False)
+    for r_idx, row in enumerate(rows,4):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    
+    wb.save( new_name_3 )
+     
+    shutil.copyfile(shablon_path + '/27_COVID_19_svod_4.xlsx', new_name_4)
+    
+    wb= openpyxl.load_workbook( new_name_4)
+    
+    ws = wb['свод']
+    rows = dataframe_to_rows(df_4,index=False, header=False)
+    for r_idx, row in enumerate(rows,4):  
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    
+    wb.save( new_name_4 )
+    return ( new_name_1 + ';' + new_name_2 +';'+ new_name_3 +';'+ new_name_4 )
 
 def cvod_27_regiz(a):
     url = os.getenv('url837').replace('837','870')

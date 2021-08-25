@@ -53,13 +53,14 @@ def generate_pptx(date):
           where [дата отчета] = '{date_end}'
           and [Тип организации] = '{type_org}' ) as d2
           on (d1.[Медицинская организация] = d2.[Медицинская организация])
-          order by  d2.eror2 - d1.eror1  DESC , d1.eror1 DESC
+          order by  d2.eror2 - d1.eror1 DESC, d1.eror1 DESC
         """
 #        send('',sql)
         frame = pd.read_sql(sql,con)
         frame.fillna(0,inplace=True)
         frame ['Динамика'] = pd.to_numeric(frame['Динамика'])
-        df = frame.loc[~frame['Динамика'].isin([0])]
+        df = frame
+        #df = frame.loc[~frame['Динамика'].isin([0])]
         if len(df) > 16:
             df = df.head(8).append(df.tail(8))
             df.index = range(len(df))

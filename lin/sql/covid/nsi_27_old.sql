@@ -10,13 +10,13 @@ SELECT   med.[Id]
               ,[IdentifierId]
             FROM [NsiBase].[dbo].[OrgIdentifiers]
             WHERE [IdentitySystemId] = 24) AS parus
-      ON (parus.[MedObjectId] = med.[Id])
+      ON (parus.[MedObjectId] = med.[OrganizationId])
     LEFT JOIN (SELECT [MedObjectId]
               ,[IdentifierId]
             FROM [NsiBase].[dbo].[OrgIdentifiers]
             WHERE [IdentitySystemId] = 11) AS analitic
-      ON (analitic.[MedObjectId] = med.[Id])
+      ON (analitic.[MedObjectId] = med.[OrganizationId])
   WHERE (parus.IdentifierId is not null
       OR analitic.IdentifierId is not null)
-      --AND [OrganizationId] = med.[Id]
+      AND [OrganizationId] = med.[Id]
   ORDER BY  med.[Id]
