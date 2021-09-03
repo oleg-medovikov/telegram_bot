@@ -36,7 +36,7 @@ def vacine_talon(a):
             log += '\nне удалось найти ссылку для:' + key
 
     if len(log):
-        send('',log)
+       pass# send('',log)
 
     lat = pd.to_numeric(df['Широта'])
     lon = pd.to_numeric(df['Долгота'])

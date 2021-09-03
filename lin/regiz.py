@@ -208,9 +208,18 @@ def regiz_load_to_base(a):
             organization = mo.loc[mo['ftp_user'] == file.split('/')[5], 'MO'].values[0]
         else:
             organization = 'Не определена'
-
         try:
             df = pd.read_excel(file,usecols=names,dtype=str)
+        except KeyError:
+            stat = stat.append({'MOName' : organization,
+                                      'NameFile'     : file,
+                                      'CountRows'    : len(df),
+                                      'TextError'    : 'Файл является листом excel, не могу прочитать',
+                                      'OtherFiles'   : other_files,
+                                      'mis'          : org_mis(file.split('/')[5]),
+                                      'DateLoadFile' : datetime.datetime.now(),
+                                      'InOrOut'      : 'IN'}, ignore_index=True)
+ 
         except XLRDError: # если это html файл 
             try:
                 df = pd.read_html(file)

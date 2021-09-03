@@ -11,8 +11,8 @@ SELECT  DAY, pok_01, nvl(cast(pok_02 as int),0) pok_02,
     nvl(cast(pok_47 as float),0) pok_47,nvl(cast(pok_48 as float),0) pok_48,nvl(cast(pok_49 as float),0) pok_49,
     nvl(cast(pok_50 as float),0) pok_50,nvl(cast(pok_51 as float),0) pok_51,nvl(cast(pok_52 as float),0) pok_52,
     nvl(cast(pok_53 as float),0) pok_53,nvl(cast(pok_54 as float),0) pok_54,nvl(cast(pok_55 as float),0) pok_55,
-    nvl(cast(pok_62 as int),0) pok_62,nvl(cast(pok_63 as float),0) pok_63,nvl(cast(pok_64 as int),0) pok_64,nvl(cast(pok_65 as float),0) pok_65,
-    nvl(cast(pok_66 as int),0) pok_66,nvl(cast(pok_67 as float),0) pok_67
+    nvl(cast(pok_62 as float),0) pok_62,nvl(cast(pok_63 as float),0) pok_63,nvl(cast(pok_64 as float),0) pok_64,nvl(cast(pok_65 as float),0) pok_65,
+    nvl(cast(pok_66 as float),0) pok_66,nvl(cast(pok_67 as float),0) pok_67
     FROM (
     SELECT 
             to_char(r.BDATE, 'DD.MM.YYYY')  day,

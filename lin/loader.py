@@ -437,10 +437,9 @@ def load_fr_lab(a):
         else:
             send('admin','Не найден файл лаборатории')
         return 0
-
 def load_UMSRS(a): 
     def UMSRS_to_sql(df):
-        df.to_sql('cv_input_umsrs_2',con,schema='dbo',if_exists='append',index = False)
+        df.to_sql('cv_input_umsrs_2',con,schema='dbo',if_exists='replace',index = False)
         send('admin','Данные загружены в input_umsrs_2, запускаю процедурки')
         sql_execute("""
                     EXEC   [dbo].[Insert_Table_cv_input_umsrs_2]
@@ -452,36 +451,23 @@ def load_UMSRS(a):
         else:
             send('admin','Какая-то проблема с загрузкой УМСРС')
             return 0
+
     send('admin','А теперь будем грузить УМСРС')
     search = search_file('UMSRS')
-    if search[0] and search[1]:
-        send('admin','файл уже сконвертирован:\n' + search[2].split('/')[-1] + '\nПосмотрим что внутри...')
-        check = check_file(search[2],'UMSRS')
-        if check[0]:
-            send('admin','Файл прошёл проверку, начинаю грузить в память')
-            df = pd.read_csv(search[2],header = check[3], usecols = check[2], names = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
+    if search[0]:
+        names = ['№ п/п', 'Номер свидетельства о смерти', 'Дата выдачи', 'Категория МС', 'Фамилия', 'Имя', 'Отчество', 'Пол', 'Дата рождения','Дата смерти', 'Возраст', 'Страна',  'Субъект',  'Район', 'Город', 'Населенный пункт', 'Элемент планировочной структуры','Район СПБ', 'Улица', 'Дом', 'Корпус', 'Строение', 'Квартира', 'Страна смерти', 'Субъект смерти', 'Район смерти', 'Город смерти', 'Населенный пункт смерти', 'Элемент планировочной структуры смерти', 'Район СПБ смерти', 'Улица смерти','Дом смерти', 'Корпус смерти', 'Строение смерти', 'Квартира смерти', 'Место смерти', 'Код МКБ-10 а', 'Болезнь или состояние, непосред приведшее к смерти','Код МКБ-10 б', 'Патол. состояние, кот. привело к указанной причине', 'Код МКБ-10 в', 'Первоначальная причина смерти', 'Код МКБ-10 г','Внешняя причина при травмах и отравлениях','Код II-1', 'Прочие важние состояния-1', 'Код МКБ-10 а(д)', 'Основное заболевание плода или ребенка','Код МКБ-10 б(д)', 'Другие заболевания плода или ребенка', 'Код МКБ-10 в(д)', 'Основное заболевание матери', 'Код МКБ-10 г(д)','Другие заболевания матери', 'Код МКБ-10 д(д)', 'Другие обстоятельства мертворождения', 'Установил причины смерти', 'Адрес МО','Краткое наименование', 'Осмотр трупа', 'Записи в мед.док.', 'Предшествующего наблюдения','Вскрытие', 'Статус МС', 'Взамен', 'Дубликат', 'Испорченное', 'Напечатано', 'в случае смерти результате ДТП'] 
+        send('admin','Найден файл, сейчас прочту')
+        try:
+            df = pd.read_excel(search[2],usecols=names, header=7)
+        except:
+            raise my_except('Не смог обработать файл\n' + search[2] )
+        else:
+            df.columns = range(len(df.columns))
+            df.head()
             UMSRS_to_sql(df)
-            return 1
-        else:
-            send('admin','Файл не прошёл проверку!\n' + check[1])
-            return 0
+        return 0 
     else:
-        if search[0]:
-            send('admin','Нее... я не хочу работать с xlsx, щас конвертирую!')
-            file_csv = excel_to_csv(search[2]) 
-            send('admin','Результат:\n' + file_csv.split('/')[-1])
-            check = check_file(file_csv,'UMSRS')
-            if check[0]:
-                send('admin','Файл прошёл проверку, начинаю грузить в память')
-                df = pd.read_csv(file_csv,header = check[3], usecols = check[2], names = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
-                UMSRS_to_sql(df)
-                return 1
-            else:
-                send('Файл не прошёл проверку!\n' + check[1])
-                return 0
-        else:
-            send('admin','Но я не нашёл файла УМСРС! (((')
-            return 0 
+        send('admin', 'Не найден файл УМСРС')
 
 def load_report_vp_and_cv(a): 
     def open_save(file): 
