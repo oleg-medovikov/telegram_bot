@@ -5,11 +5,15 @@ from folium.plugins import MarkerCluster
 
 from sending import send
 from loader import get_dir
+class my_except(Exception):
+     pass
 
 def vacine_talon(a):
     url = os.getenv('url845').replace('845','852')
     data = requests.get(url).json()
     df = pd.DataFrame.from_dict(data)
+    if not len(df):
+        raise my_except('Нет данных от нетрики')
 
     mo = pd.read_json(get_dir('help') + '/mo64.json')
     log = ''
@@ -142,7 +146,8 @@ def vacine_talon(a):
                                 radius = 13, popup=popup, fill_color=color_change(elevation),
                                 color="gray", fill_opacity = 0.8).add_to(marker_cluster)
         except:
-            send('','не удалось')
+            pass
+            #send('','не удалось')
         
     file = get_dir('temp') + '/map_light.html'
     m.save(file)
