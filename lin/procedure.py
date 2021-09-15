@@ -42,7 +42,7 @@ def sort_death_mg(a):
         return 'Я не нашёл файлик за сегодня!'
     cols = ['№ п/п','Возраст','Субъект','Улица смерти','Дом смерти','Краткое наименование','Место смерти']
     df = pd.read_excel(excel[0],header=1, usecols = cols )
-    df = df[df['№ п/п'].notnull() & df['№ п/п'] != 0 ]
+    df = df[(df['№ п/п'].notnull() ) & ( df['№ п/п'] != 0 ) ]
     df.index = range(len(df))
     mo = namedtuple('mo',['Name_MO','Street','House'])
     sql = """

@@ -359,7 +359,7 @@ def regiz_load_to_base(a):
     
         send_file('info',svod_file)
         for file in remove_files:
-            new_file = file.rsplit('/',2)[0] + '/Архив/время_' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '.' + file.rsplit('.',1)[1]
+            new_file = file.rsplit('/',2)[0] + '/Архив/время_' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '_' + file.rsplit('/',1)[1]
             try:
                 os.replace(file,new_file)
             except:

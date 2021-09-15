@@ -57,7 +57,7 @@ def svod_40_cov_19(a):
     sql5  = open('sql/parus/covid_40_covivak.sql','r').read()
     sql6  = open('sql/parus/covid_40_covivak_old.sql','r').read()
     sql7  = open('sql/parus/covid_40_revac.sql','r').read()
-    sql8  = open('sql/parus/covid_40_revac_old.sql','r').read()
+    sql8  = open('sql/parus/covid_40_revac_old_new.sql','r').read()
     sql9  = open('sql/parus/covid_40_light.sql','r').read()
     sql10 = open('sql/parus/covid_40_light_old.sql','r').read()
     
@@ -89,8 +89,8 @@ def svod_40_cov_19(a):
     del epivak_old ['ORGANIZATION']
     del covivak ['ORGANIZATION']
     del covivak_old ['ORGANIZATION']
-    del revac ['INDX']    
-    del revac_old ['INDX']
+    #del revac ['INDX']    
+    #del revac_old ['INDX']
     del light ['ORGANIZATION']
     del light_old ['ORGANIZATION']
 
@@ -149,13 +149,13 @@ def svod_40_cov_19(a):
     ws = wb['Ревакцинация']
     rows = dataframe_to_rows(revac,index=False, header=False)
     for r_idx, row in enumerate(rows,9):  
-        for c_idx, value in enumerate(row, 3):
+        for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
 
     ws = wb['Вчера_ревакцин']
     rows = dataframe_to_rows(revac_old,index=False, header=False)
     for r_idx, row in enumerate(rows,9):  
-        for c_idx, value in enumerate(row, 3):
+        for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
 
     ws = wb['Вчера_Спутник Лайт']
