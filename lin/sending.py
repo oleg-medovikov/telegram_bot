@@ -71,7 +71,7 @@ def send_Debtors(id_cov):
             sql   = open('sql/dolg/covid_38.sql','r').read()
         elif id_cov == 51:
             sql   = open('sql/dolg/covid_51.sql','r').read()
-          else:
+        else:
             return 1
         with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
             df = pd.read_sql(sql,con)
