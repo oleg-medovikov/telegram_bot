@@ -93,6 +93,8 @@ def svod_40_cov_19(a):
     #del revac_old ['INDX']
     del light ['ORGANIZATION']
     del light_old ['ORGANIZATION']
+    revac = revac.loc[revac['TIP'] == 'Медицинская организация']
+    revac_old = revac_old.loc[revac_old['TIP'] == 'Медицинская организация']
 
     date_otch = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d.%m.%Y')
     new_name_pred ='40_COVID_19_БОТКИНА_' + date_otch + '_предварительный.xlsx'
@@ -214,7 +216,7 @@ def svod_40_cov_19(a):
     ws = wb['Ревакцинация']
     rows = dataframe_to_rows(revac,index=False, header=False)
     for r_idx, row in enumerate(rows,9):  
-        for c_idx, value in enumerate(row, 3):
+        for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
 
     wb.save( shablon_path  + '/' + new_name_osn) 

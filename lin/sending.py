@@ -1,4 +1,4 @@
-import telebot,os,sqlalchemy,datetime
+import telebot,os,sqlalchemy,datetime,cx_Oracle
 import pandas as pd  
 import smtplib
 from email.message import EmailMessage
@@ -14,6 +14,16 @@ dbase   = os.getenv('db')
 eng = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}")
 con = eng.connect()
 
+base_parus = os.getenv('base_parus')
+userName = os.getenv('oracle_user')
+password = os.getenv('oracle_pass')
+userbase = os.getenv('oracle_base')
+
+
+class my_except(Exception):
+    pass
+
+ 
 def send(group,text):
     sql = f"SELECT  [id] FROM [robo].[bot_users] where [groups] in ('master','{group}')"
     df = pd.read_sql(sql,con)
@@ -49,5 +59,44 @@ def voda(message):
     bot.send_message(message.from_user.id, 'Я послал письмо')
 
 
+def send_Debtors(id_cov):
+    def spisok_mo(id_cov):
+        if id_cov == 33:
+            sql   = open('sql/dolg/covid_33.sql','r').read()
+        elif id_cov == 36:
+            sql   = open('sql/dolg/covid_36.sql','r').read()
+        elif id_cov == 37:
+            sql   = open('sql/dolg/covid_37.sql','r').read()
+        elif id_cov == 38:
+            sql   = open('sql/dolg/covid_38.sql','r').read()
+        elif id_cov == 51:
+            sql   = open('sql/dolg/covid_51.sql','r').read()
+          else:
+            return 1
+        with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+            df = pd.read_sql(sql,con)
+        
+        return df
+    
+    try:
+        id_chat_parus = int(os.getenv('id_chat_parus'))
+    except:
+        raise my_except('Не найден id чата парус')
+    else:
+        monitoring = str(id_cov) + ' COVID 19'
+        sql = f"SELECT Distinct [NameMOParus] FROM [COVID].[robo].[DebtorsReport] WHERE [Report] = '{monitoring}' AND [IsAction] = 1"
+        base = pd.read_sql(sql,con)
+        organization = spisok_mo(id_cov)
 
+        Debtors = base.merge(organization,how='left',left_on='NameMOParus', right_on='ORGANIZATION')
+        Debtors = Debtors.loc[Debtors['ORGANIZATION'].isnull()]
+        
+        mes = f"""\U0001F916 Добрый день, уважаемые коллеги! \u23F0
+Напоминаем, что сегодня (*{datetime.datetime.now().strftime('%d.%m.%Y')}*) до *17:00* необходимо внести данные по отчёту *{monitoring}*.
+На данный момент от *{len(Debtors)}* МО не получены отчёты:"""
 
+        for mo in Debtors['NameMOParus']:
+            mes += '\n' + mo
+
+        bot.send_message(id_chat_parus, mes, parse_mode= 'Markdown')
+        return 1

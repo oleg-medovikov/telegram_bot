@@ -1,4 +1,4 @@
-SELECT 'Медицинская организация', 1 AS INDX,  ORGANIZATION,'Всего' as typevacine, concat(ORGANIZATION, ' Всего') AS scep
+SELECT 'Медицинская организация' AS tip, 1 AS INDX,  ORGANIZATION,'Всего' as typevacine, concat(ORGANIZATION, ' Всего') AS scep
 		,nvl(cast(cov_02 as int),0) cov_02
 		,nvl(cast(cov_03 as int),0) cov_03,nvl(cast(cov_04 as int),0) cov_04
 		,nvl(cast(cov_05 as int),0) cov_05,nvl(cast(cov_06 as int),0) cov_06
@@ -49,7 +49,7 @@ SELECT 'Медицинская организация', 1 AS INDX,  ORGANIZATION
 					,'revac_16_01_s' cov_16,'revac_17_01_s' cov_17,'revac_18_01_s' cov_18,'revac_19_01_s' cov_19)
 		)
 UNION all
-SELECT  'Медицинская организация',2 AS INDX, ORGANIZATION,'Гам-КОВИД-Вак (Спутник-V)' as  typevacine, concat(ORGANIZATION, ' Гам-КОВИД-Вак (Спутник-V)') AS scep
+SELECT  'Медицинская организация' AS tip ,2 AS INDX, ORGANIZATION,'Гам-КОВИД-Вак (Спутник-V)' as  typevacine, concat(ORGANIZATION, ' Гам-КОВИД-Вак (Спутник-V)') AS scep
 		,nvl(cast(cov_02 as int),0) cov_02
 		,nvl(cast(cov_03 as int),0) cov_03,nvl(cast(cov_04 as int),0) cov_04
 		,nvl(cast(cov_05 as int),0) cov_05,nvl(cast(cov_06 as int),0) cov_06
@@ -99,7 +99,7 @@ SELECT  'Медицинская организация',2 AS INDX, ORGANIZATION,
 					,'revac_16_02_s' cov_16,'revac_17_02_s' cov_17,'revac_18_02_s' cov_18,'revac_19_02_s' cov_19)
 		)
 UNION ALL
-SELECT  'Медицинская организация',3 AS INDX,ORGANIZATION,'КовиВак' as typevacine, concat(ORGANIZATION, ' КовиВак') AS scep
+SELECT  'Медицинская организация' AS tip ,3 AS INDX,ORGANIZATION,'КовиВак' as typevacine, concat(ORGANIZATION, ' КовиВак') AS scep
 		,nvl(cast(cov_02 as int),0) cov_02
 		,nvl(cast(cov_03 as int),0) cov_03,nvl(cast(cov_04 as int),0) cov_04
 		,nvl(cast(cov_05 as int),0) cov_05,nvl(cast(cov_06 as int),0) cov_06
@@ -149,7 +149,7 @@ SELECT  'Медицинская организация',3 AS INDX,ORGANIZATION,'
 					,'revac_16_03_s' cov_16,'revac_17_03_s' cov_17,'revac_18_03_s' cov_18,'revac_19_03_s' cov_19)
 		)
 UNION ALL 
-SELECT 'Медицинская организация', 4 AS INDX,ORGANIZATION,'ЭпиВакКорона' as typevacine, concat(ORGANIZATION, ' ЭпиВакКорона') AS scep
+SELECT 'Медицинская организация' AS tip, 4 AS INDX,ORGANIZATION,'ЭпиВакКорона' as typevacine, concat(ORGANIZATION, ' ЭпиВакКорона') AS scep
 		,nvl(cast(cov_02 as int),0) cov_02
 		,nvl(cast(cov_03 as int),0) cov_03,nvl(cast(cov_04 as int),0) cov_04
 		,nvl(cast(cov_05 as int),0) cov_05,nvl(cast(cov_06 as int),0) cov_06
@@ -199,7 +199,7 @@ SELECT 'Медицинская организация', 4 AS INDX,ORGANIZATION,'
 					,'revac_16_04_s' cov_16,'revac_17_04_s' cov_17,'revac_18_04_s' cov_18,'revac_19_04_s' cov_19)
 		)
 UNION ALL 
-SELECT  'Медицинская организация', 5 AS INDX,ORGANIZATION,'Спутник Лайт' as typevacine, concat(ORGANIZATION, ' Спутник Лайт') AS scep
+SELECT  'Медицинская организация' AS tip , 5 AS INDX,ORGANIZATION,'Спутник Лайт' as typevacine, concat(ORGANIZATION, ' Спутник Лайт') AS scep
 		,nvl(cast(cov_02 as int),0) cov_02
 		,nvl(cast(cov_03 as int),0) cov_03,nvl(cast(cov_04 as int),0) cov_04
 		,nvl(cast(cov_05 as int),0) cov_05,nvl(cast(cov_06 as int),0) cov_06
@@ -248,8 +248,9 @@ SELECT  'Медицинская организация', 5 AS INDX,ORGANIZATION,
 					,'revac_18_05_s' cov_18,'revac_19_05_s' cov_19)
 		)
 UNION ALL 
-SELECT  'Пункт вакцинации', 6 AS INDX,ORGANIZATION, tvsp as typevacine, concat(tvsp, revac) AS scep
-		,nvl(cast(cov_02 ais int),0) cov_02
+SELECT  'Пункт вакцинации' AS tip, 6 AS INDX, ORGANIZATION, revac as typevacine
+		,REPLACE(substr(tvsp ,INSTR(tvsp , ' ')+1, length(tvsp)),'район ','') AS scep
+		,nvl(cast(cov_02 as int),0) cov_02
 		,nvl(cast(cov_03 as int),0) cov_03,nvl(cast(cov_04 as int),0) cov_04
 		,nvl(cast(cov_05 as int),0) cov_05,nvl(cast(cov_06 as int),0) cov_06
 		,nvl(cast(cov_07 as int),0) cov_07,nvl(cast(cov_08 as int),0) cov_08
@@ -287,8 +288,8 @@ SELECT  'Пункт вакцинации', 6 AS INDX,ORGANIZATION, tvsp as typev
         INNER JOIN PARUS.BLREPFORM rf
         on(rd.PRN = rf.RN)
         WHERE rf.code = '40 COVID 19'
-	        and r.BDATE =  trunc(SYSDATE-1)
-			and i.CODE in ( 'tvsp_revac','vac_revac','revac_02_01','revac_03_01','revac_04_01',
+	        and r.BDATE =  trunc(SYSDATE) - 1 
+			and i.CODE in ( 'tvsp_revac','vak_revac','revac_02_01','revac_03_01','revac_04_01',
 							'revac_05_01','revac_06_01','revac_07_01','revac_08_01','revac_09_01',
 							'revac_10_01','revac_11_01','revac_12_01','revac_13_01','revac_14_01',
 							'revac_15_01','revac_16_01','revac_17_01','revac_18_01','revac_19_01',
@@ -297,7 +298,7 @@ SELECT  'Пункт вакцинации', 6 AS INDX,ORGANIZATION, tvsp as typev
 	pivot
 		(
 	max(value)
-	FOR POKAZATEL IN ('tvsp_revac' tvsp,'vac_revac' revac, 'revac_02_01' cov_02,'revac_03_01' cov_03,'revac_04_01'cov_04,
+	FOR POKAZATEL IN ('tvsp_revac' tvsp,'vak_revac' revac, 'revac_02_01' cov_02,'revac_03_01' cov_03,'revac_04_01'cov_04,
 							'revac_05_01' cov_05,'revac_06_01' cov_06,'revac_07_01' cov_07,'revac_08_01' cov_08,'revac_09_01' cov_09,
 							'revac_10_01' cov_10,'revac_11_01' cov_11,'revac_12_01' cov_12,'revac_13_01' cov_13,'revac_14_01' cov_14,
 							'revac_15_01' cov_15,'revac_16_01' cov_16,'revac_17_01' cov_17,'revac_18_01' cov_18,'revac_19_01' cov_19,

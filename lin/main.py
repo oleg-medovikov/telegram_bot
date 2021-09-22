@@ -9,7 +9,7 @@ from procedure import svod_unique_patient,svod_vachine_dates,patient_amb_stac,ge
 from reports import fr_deti,short_report,dead_not_mss,dynamics,mg_from_guber
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
 from loader import load_report_vp_and_cv,load_report_guber,load_vaccina
-from sending import send,voda,send_file
+from sending import send,voda,send_file,send_Debtors
 from presentation import generate_pptx
 from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad
 from zamechania_mz import net_dnevnik,delete_old_files,load_snils_comment,IVL
@@ -286,7 +286,23 @@ def logi(user_id,command_id,result):
 # ========== Главная процедура бота ===============
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
+    if message.chat.id == int(os.getenv('id_chat_parus')):
+        if 'долг' in message.text.lower() and user.known(message.from_user.id):
+            try:
+                id_cov = int(message.text.lower().split(' ')[1])
+            except:
+                return 1
+            else:
+                if id_cov in [33,36,37,38,51]:
+                    bot.delete_message(message.chat.id,message.message_id)
+                    bot.send_message(user.master(), 'запускаю поиск должников' )
+                    send_Debtors(id_cov)
+                    #result = create_tred('send_Debtors',id_cov)
+                else:
+                    return 1
+        return 1
     if user.known(message.from_user.id):
+        #bot.send_message(user.master(), str(message.chat.id) )
         if message.text.lower() in ['привет', 'ghbdtn','/start','старт']:
             bot.send_message(message.from_user.id, get_hello_start() + user.name(message.from_user.id))
             bot.send_message(message.from_user.id,command.hello_mess(message.from_user.id))
@@ -345,5 +361,6 @@ def get_text_messages(message):
         bot.send_message(user.master(),'Мне написал неизвесный пользователь!')
         bot.send_message(user.master(),str(message.from_user.id))
         bot.send_message(user.master(),str(message.from_user.username))
+
 
 bot.polling(none_stop=True, timeout=60)
