@@ -17,7 +17,7 @@ from zamechania_mz import zavishie_statusy
 from regiz import regiz_decomposition,regiz_load_to_base
 from parus import o_40_covid_by_date,svod_40_cov_19,parus_43_cov_nulls,svod_43_covid_19,no_save_43,cvod_29_covid
 from parus import cvod_33_covid,cvod_36_covid,cvod_37_covid,cvod_38_covid,cvod_26_covid,cvod_27_covid,cvod_27_regiz
-from parus import no_save_50, svod_50_cov_19,cvod_51_covid,cvod_27_smal,cvod_52_covid
+from parus import no_save_50, svod_50_cov_19,cvod_51_covid,cvod_27_smal,cvod_52_covid,cvod_28_covid
 #from send_ODLI import send_bundle_to_ODLI
 import telebot_calendar
 from telebot_calendar import CallbackData
@@ -231,6 +231,14 @@ def covid_27_smal_p():
     if not result[0]:
         send('info', result[1])
 
+def dolg_51():
+    result = create_tred('send_Debtors',51)
+    work = 'Оповещение должников 51 мониторинга ковид' 
+    log_shedule(work, result)
+    if not result[0]:
+        send('info', result[1])
+
+
 def go():
     while True:
         schedule.run_pending()
@@ -241,6 +249,7 @@ schedule.every().day.at("06:00").do(load_2)
 schedule.every().day.at("07:00").do(otchet_1)
 schedule.every().day.at("07:00").do(covid_27_smal_p)
 schedule.every().day.at("07:05").do(regiz_razlogenie)
+schedule.every().day.at("11:00").do(dolg_51)
 schedule.every().day.at("12:00").do(stopcorona_1)
 schedule.every().day.at("16:05").do(regiz_load)
 

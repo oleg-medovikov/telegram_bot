@@ -791,3 +791,27 @@ def cvod_52_covid(a):
 
     return shablon_path  + '/' + new_name +';'+ shablon_path  + '/' + new_name_2
 
+def cvod_28_covid(a):
+    sql= open('sql/parus/covid_28_svod.sql','r').read()
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql,con)
+ 
+    date = str(df['DAY'].unique()[0])
+    del df ['DAY']
+
+    new_name = date + '_28_COVID_19.xlsx'
+    shablon_path = get_dir('help')
+
+    shutil.copyfile(shablon_path + '/28_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
+ 
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    ws = wb['Свод']
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,4):
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    
+    wb.save( shablon_path  + '/' + new_name)
+    
+    return shablon_path  + '/' + new_name

@@ -91,11 +91,19 @@ def send_Debtors(id_cov):
         Debtors = base.merge(organization,how='left',left_on='NameMOParus', right_on='ORGANIZATION')
         Debtors = Debtors.loc[Debtors['ORGANIZATION'].isnull()]
         
+        if id_cov == 51:
+            time = '11:00'
+        else:
+            time = '17:00'
+
         mes = f"""\U0001F916 Добрый день, уважаемые коллеги! \u23F0
-Напоминаем, что сегодня (*{datetime.datetime.now().strftime('%d.%m.%Y')}*) до *17:00* необходимо внести данные по отчёту *{monitoring}*.
+Напоминаем, что сегодня (*{datetime.datetime.now().strftime('%d.%m.%Y')}*) до *{time}* необходимо внести данные по отчёту *{monitoring}*.
 На данный момент от *{len(Debtors)}* МО не получены отчёты:"""
 
         for mo in Debtors['NameMOParus']:
+            if len(mes) > 4000:
+                bot.send_message(id_chat_parus, mes, parse_mode= 'Markdown')
+                mes = ''
             mes += '\n' + mo
 
         bot.send_message(id_chat_parus, mes, parse_mode= 'Markdown')
