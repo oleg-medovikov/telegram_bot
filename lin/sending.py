@@ -58,8 +58,20 @@ def voda(message):
 
     bot.send_message(message.from_user.id, 'Я послал письмо')
 
+def send_parus(mess):
+    try:
+        id_chat_parus = int(os.getenv('id_chat_parus'))
+    except:
+        raise my_except('Не найден id чата парус')
+    else:
+        mess = mess.replace('today', datetime.datetime.now().strftime('%d.%m.%Y'))
+        mess = mess.replace('yesterday', (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d.%m.%Y'))
 
-def send_Debtors(id_cov):
+        mes = f"""\U0001F916 Добрый день, уважаемые коллеги! \u23F0 \n{mess}"""
+        bot.send_message(id_chat_parus, mes, parse_mode= 'Markdown')
+        return 1
+
+def send_Debtors(argument):
     def spisok_mo(id_cov):
         if id_cov == 33:
             sql   = open('sql/dolg/covid_33.sql','r').read()
@@ -77,6 +89,15 @@ def send_Debtors(id_cov):
             df = pd.read_sql(sql,con)
         
         return df
+    try:
+        id_cov = int(argument.split(';')[0])
+    except:
+        raise my_except('не понятный аргумент\n', argument)
+    
+    try:
+        mess = argument.split(';')[1]
+    except:
+        raise my_except('не понятный аргумент\n', argument)
     
     try:
         id_chat_parus = int(os.getenv('id_chat_parus'))
@@ -90,15 +111,12 @@ def send_Debtors(id_cov):
 
         Debtors = base.merge(organization,how='left',left_on='NameMOParus', right_on='ORGANIZATION')
         Debtors = Debtors.loc[Debtors['ORGANIZATION'].isnull()]
-        
-        if id_cov == 51:
-            time = '11:00'
-        else:
-            time = '17:00'
 
-        mes = f"""\U0001F916 Добрый день, уважаемые коллеги! \u23F0
-Напоминаем, что сегодня (*{datetime.datetime.now().strftime('%d.%m.%Y')}*) до *{time}* необходимо внести данные по отчёту *{monitoring}*.
-На данный момент от *{len(Debtors)}* МО не получены отчёты:"""
+        mess = mess.replace('today', datetime.datetime.now().strftime('%d.%m.%Y'))
+        mess = mess.replace('yesterday', (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d.%m.%Y'))
+
+       
+        mes = f"""\U0001F916 Добрый день, уважаемые коллеги! \u23F0 \n{mess}\nНа данный момент от *{len(Debtors)}* МО не получены отчёты:"""
 
         for mo in Debtors['NameMOParus']:
             if len(mes) > 4000:

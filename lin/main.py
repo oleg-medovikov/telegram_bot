@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import telebot,schedule,time,threading,os,random,datetime,sqlalchemy
+import pandas as pd
+import telebot,time,threading,os,random,datetime,sqlalchemy
 from dataclasses import dataclass
 import concurrent.futures
 
@@ -9,7 +10,7 @@ from procedure import svod_unique_patient,svod_vachine_dates,patient_amb_stac,ge
 from reports import fr_deti,short_report,dead_not_mss,dynamics,mg_from_guber
 from loader import search_file,check_file,excel_to_csv,load_fr,load_fr_death,load_fr_lab,slojit_fr,load_UMSRS,get_dir
 from loader import load_report_vp_and_cv,load_report_guber,load_vaccina
-from sending import send,voda,send_file,send_Debtors
+from sending import send,voda,send_file,send_Debtors,send_parus
 from presentation import generate_pptx
 from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad
 from zamechania_mz import net_dnevnik,delete_old_files,load_snils_comment,IVL
@@ -145,119 +146,64 @@ def create_tred(func,arg):
 #===================================================
 
 #============== Тут будут поток для расписаний =====
+def create_tred_task(work,func,arg):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(globals()[func],arg)
+        try:
+            return_value = future.result()
+            send('admin', 'Выполнил ' + work)
+        except:
+            send('admin', 'При выполнении ' + work + 'что-то произошло\n' )
+        
+        sql = f"""INSERT INTO [robo].[bot_logs]
+	            ([user],[task],[schedule],[success],[result])
+                    VALUES
+                   ('devil'
+                   ,'{work}'
+                   ,'True'
+                   ,''
+                   ,'{str(future.result()).replace("'","")}') """
+        
+        con.execute(sql)
+        return True
+
+
 def log_shedule(work,result):
     if not result[0]:
         send('admin', 'При выполнении ' + work + ' произошло\n' + result[1])
     else:
         send('admin', 'Выполнил ' + work)
 
-    sql = f"""
-    INSERT INTO [robo].[bot_logs]
-	       ([user],[task],[schedule],[success],[result])
-	 VALUES
-	       ('devil'
-	       ,'{work}'
-	       ,'True'
-	       ,'{result[0]}'
-	       ,'{str(result[1]).replace("'","")}')
-    """
-    con.execute(sql)
-
-
-def load_1():
-    result = create_tred('load_fr',None)
-    work = 'загрузка фр'
-    log_shedule(work, result)
-    if result[0]:
-        result = create_tred('load_fr_death',None)
-        work = 'загрузка умерших'
-        log_shedule(work, result)
-        if result[0]:
-            result = create_tred('load_fr_lab',None)
-            work = 'загрузка лаборатории'
-            log_shedule(work, result)
-
-def load_2():
-    result = create_tred('load_UMSRS',None)
-    log_shedule('загрузка УМСРС', result)
-
-def otchet_1():
-    result = create_tred('medical_personal_sick',None)
-    work = 'файл заболевших медработников' 
-    log_shedule(work, result)
-
-def regiz_razlogenie():
-    send('info', 'РЕГИЗ Начинаю раскладывать файлы по папкам')
-    result = create_tred('regiz_decomposition', None )
-    work = 'РЕГИЗ разложение файлов' 
-    log_shedule(work, result)
-    if not result[0]:
-        send('info', result[1])
-    else:
-        try:
-            os.remove(result[1])
-        except:
-            pass
-
-def regiz_load():
-    send('info', 'РЕГИЗ Начинаю загружать файлы')
-    result = create_tred('regiz_load_to_base',None)
-    work = 'РЕГИЗ загрузка файлов' 
-    log_shedule(work, result)
-    if not result[0]:
-        send('info', result[1])
-
-def stopcorona_1():
-    send('info', 'Сейчас гляну на сайт стопкароны, сколько там заболело')
-    result = create_tred('get_il_stopcorona',None)
-    work = 'количество заболевших со СТОПКОРОНЫ' 
-    log_shedule(work, result)
-    if not result[0]:
-        send('info', result[1])
-    else:
-        send('info', 'Новых заболевших в СПБ ' + str(result[1]))
-
-def map_vacine():
-    result = create_tred('vacine_talon',None)
-    work = 'Обновление карты на сайте МИАЦ' 
-    log_shedule(work, result)
-    if not result[0]:
-        send('info', result[1])
-
-def covid_27_smal_p():
-    result = create_tred('cvod_27_smal',None)
-    work = 'Загрузка показателей 27 отчёта для Плотниковой' 
-    log_shedule(work, result)
-    if not result[0]:
-        send('info', result[1])
-
-def dolg_51():
-    result = create_tred('send_Debtors',51)
-    work = 'Оповещение должников 51 мониторинга ковид' 
-    log_shedule(work, result)
-    if not result[0]:
-        send('info', result[1])
-
-
-def go():
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
-
-schedule.every().day.at("03:00").do(load_1)
-schedule.every().day.at("06:00").do(load_2)
-schedule.every().day.at("07:00").do(otchet_1)
-schedule.every().day.at("07:00").do(covid_27_smal_p)
-schedule.every().day.at("07:05").do(regiz_razlogenie)
-schedule.every().day.at("11:00").do(dolg_51)
-schedule.every().day.at("12:00").do(stopcorona_1)
-schedule.every().day.at("16:05").do(regiz_load)
-
-schedule.every(20).minutes.do(map_vacine)
-
-t = threading.Thread(target=go, name="Расписание работ")
+def shedule():
+    def read_tasks():
+        sql = f"""select *
+                    from robo.bot_scheduler
+                    where IsAction = 1 and Day_week like '%{datetime.datetime.now().strftime("%a")}%'"""
+        df = pd.read_sql(sql,con)
+        return df
+    
+    df = read_tasks()
+    starttime=time.time()
+    delta = 60 - time.time() % 60
+    time.sleep(delta)
+    while True:   
+        time_now = datetime.datetime.now()
+        if time_now.minute == 30:
+            df = read_tasks()
+        
+        for i in df.loc[( (df['Time_hour'] == time_now.hour) & (df['Time_minute'] == time_now.minute) ) \
+                        | ( ( df['Time_hour'].isnull() )  & (time_now.minute % df['Time_minute'] == 0)  )
+                       ].index:
+            
+            my_thread = threading.Thread(target=create_tred_task, args=(df.at[i, 'name_job'],df.at[i, 'Procedure' ],df.at[i,'argument']))
+            my_thread.start()
+        
+        delta = 60 - time.time() % 60
+        time.sleep(delta)
+    
+    
+t = threading.Thread(target=shedule, name="Расписание работ")
 t.start()
-
 # ========= Маленькая процедурка для определения периода суток
 
 def get_hello_start():
