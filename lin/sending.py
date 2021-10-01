@@ -113,7 +113,7 @@ def send_Debtors(argument):
         Debtors = Debtors.loc[Debtors['ORGANIZATION'].isnull()]
 
         mess = mess.replace('today', datetime.datetime.now().strftime('%d.%m.%Y'))
-        mess = mess.replace('yesterday', (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d.%m.%Y'))
+        mess = mess.replace('yesterday', (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d.%m.%Y') )
 
        
         mes = f"""\U0001F916 Добрый день, уважаемые коллеги! \u23F0 \n{mess}\nНа данный момент от *{len(Debtors)}* МО не получены отчёты:"""

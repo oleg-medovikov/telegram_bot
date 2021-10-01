@@ -27,7 +27,9 @@ def get_path_mo(organization):
     else:
         return root + dir
 
-def put_excel_for_mo(df,name):
+def put_excel_for_mo(df,name,date):
+    if date is None:
+        date = str(datetime.datetime.now().date())
     stat = pd.DataFrame()
     for org in df['Медицинская организация'].unique():
         k = len(stat)
@@ -43,7 +45,7 @@ def put_excel_for_mo(df,name):
                 os.makedirs(path_otch)
             except OSError:
                 pass
-            file = path_otch + '/' + str(datetime.datetime.now().date()) + ' ' + name + '.xlsx'
+            file = path_otch + '/' + date + ' ' + name + '.xlsx'
             with pd.ExcelWriter(file) as writer:
                 part.to_excel(writer,sheet_name='унрз')
             stat.loc[k,'Статус'] = 'Файл положен'
@@ -54,9 +56,11 @@ def put_excel_for_mo(df,name):
     with pd.ExcelWriter(get_dir('temp') + '/отчёт по разложению ' + name + '.xlsx') as writer:
         stat.to_excel(writer,sheet_name='унрз') 
 
-def put_svod(df,name): 
+def put_svod(df,name,date):
+    if date is None:
+        date = str(datetime.datetime.now().date()) 
     path = get_dir('zam_svod') + '/' + name
-    name = str(datetime.datetime.now().date()) + ' ' + name + '.xlsx'
+    name = date + ' ' + name + '.xlsx'
     try:
         os.mkdir(path)
     except OSError:
@@ -70,22 +74,22 @@ def put_svod(df,name):
 def no_snils(a): 
     sql = open('sql/zam/no_snils.sql','r').read()
     df = pd.read_sql(sql,con)
-    put_svod(df,'Нет СНИЛСа')
-    put_excel_for_mo(df,'Нет СНИЛСа')
+    put_svod(df,'Нет СНИЛСа',None)
+    put_excel_for_mo(df,'Нет СНИЛСа',None)
     return get_dir('temp') + '/' + 'отчёт по разложению Нет СНИЛСа.xlsx'
 
 def bez_izhoda(a):
     sql = open('sql/zam/bez_ishod.sql','r').read()
     df = pd.read_sql(sql,con) 
-    put_svod(df,'Без исхода 30 дней')
-    put_excel_for_mo(df,'Без исхода 30 дней')
+    put_svod(df,'Без исхода 30 дней',None)
+    put_excel_for_mo(df,'Без исхода 30 дней',None)
     return get_dir('temp') + '/' + 'отчёт по разложению Без исхода 30 дней.xlsx'
 
 def bez_ambulat_level(a):
     sql = open('sql/zam/bez_ambulat_level.sql','r').read()
     df = pd.read_sql(sql,con) 
-    put_svod(df,'Нет амбулаторного этапа')
-    put_excel_for_mo(df,'Нет амбулаторного этапа')
+    put_svod(df,'Нет амбулаторного этапа',None)
+    put_excel_for_mo(df,'Нет амбулаторного этапа',None)
 
     #sql = open('sql/zam/bez_ambulat_level_death_covid.sql','r').read()
     #df = pd.read_sql(sql,con) 
@@ -94,8 +98,8 @@ def bez_ambulat_level(a):
 
     sql = open('sql/zam/bez_ambulat_level_death_nocovid.sql','r').read()
     df = pd.read_sql(sql,con) 
-    put_svod(df,'Нет амбулаторного этапа, умер не от COVID')
-    put_excel_for_mo(df,'Нет амбулаторного этапа, умер не от COVID')
+    put_svod(df,'Нет амбулаторного этапа, умер не от COVID',None)
+    put_excel_for_mo(df,'Нет амбулаторного этапа, умер не от COVID',None)
     temp = get_dir('temp')
     files =   temp + '/' + 'отчёт по разложению Нет амбулаторного этапа.xlsx' + ';' \
             + temp + '/' + 'отчёт по разложению Нет амбулаторного этапа, умер не от COVID.xlsx' #+ temp + '/' + 'отчёт по разложению Нет амбулаторного этапа, умер от COVID.xlsx' + ';'  
@@ -104,50 +108,50 @@ def bez_ambulat_level(a):
 def no_OMS(a):
     sql = open('sql/zam/no_OMS.sql','r').read()
     df = pd.read_sql(sql,con) 
-    put_svod(df,'Нет данных ОМС')
-    put_excel_for_mo(df,'Нет данных ОМС')
+    put_svod(df,'Нет данных ОМС',None)
+    put_excel_for_mo(df,'Нет данных ОМС',None)
     return get_dir('temp') + '/' + 'отчёт по разложению Нет данных ОМС.xlsx'
 
 def neveren_vid_lechenia(a):
     sql = open('sql/zam/neverni_vid_lecenia.sql','r').read()
     df = pd.read_sql(sql,con) 
-    put_svod(df,'неверный вид лечения')
-    put_excel_for_mo(df,'неверный вид лечения')
+    put_svod(df,'неверный вид лечения',None)
+    put_excel_for_mo(df,'неверный вид лечения',None)
     return get_dir('temp') + '/' + 'отчёт по разложению неверный вид лечения.xlsx'
 
 def no_lab(a):
     sql = open('sql/zam/no_lab.sql','r').read()
     df = pd.read_sql(sql,con) 
-    put_svod(df,'нет лабораторного подтверждения')
-    put_excel_for_mo(df,'нет лабораторного подтверждения')
+    put_svod(df,'нет лабораторного подтверждения',None)
+    put_excel_for_mo(df,'нет лабораторного подтверждения',None)
     return get_dir('temp') + '/' + 'отчёт по разложению нет лабораторного подтверждения.xlsx'
 
 def net_diagnoz_covid(a):
     sql = open('sql/zam/net_diagnoz_covid.sql','r').read()
     df = pd.read_sql(sql,con) 
-    put_svod(df,'нет диагноза COVID')
-    put_excel_for_mo(df,'нет диагноза COVID')
+    put_svod(df,'нет диагноза COVID',None)
+    put_excel_for_mo(df,'нет диагноза COVID',None)
     return get_dir('temp') + '/' + 'отчёт по разложению нет диагноза COVID.xlsx'
 
 def net_pad(a):
     sql = open('sql/zam/net_pad.sql','r').read()
     df = pd.read_sql(sql,con) 
-    put_svod(df,'нет ПАЗ')
-    put_excel_for_mo(df,'нет ПАЗ')
+    put_svod(df,'нет ПАЗ',None)
+    put_excel_for_mo(df,'нет ПАЗ',None)
     return  get_dir('temp') + '/' + 'отчёт по разложению нет ПАЗ.xlsx'
 
 def net_dnevnik(a):
     sql = open('sql/zam/net_dnevnik.sql','r').read()
     df = pd.read_sql(sql,con)
-    put_svod(df,'нет дневниковых записей')
-    put_excel_for_mo(df,'нет дневниковых записей')
+    put_svod(df,'нет дневниковых записей',None)
+    put_excel_for_mo(df,'нет дневниковых записей',None)
     return get_dir('temp') + '/' + 'отчёт по разложению нет дневниковых записей.xlsx'
 
 def zavishie_statusy(a):
     sql = open('sql/zam/zavishie_status.sql','r').read()
     df = pd.read_sql(sql,con)
-    put_svod(df,'зависшие статусы')
-    put_excel_for_mo(df,'зависшие статусы')
+    put_svod(df,'зависшие статусы',None)
+    put_excel_for_mo(df,'зависшие статусы',None)
     return get_dir('temp') + '/' + 'отчёт по разложению зависшие статусы.xlsx'
 
 def delete_old_files(date):
@@ -205,9 +209,10 @@ def IVL(a):
 
     send('epid', 'Использую \n' + file_vp.rsplit('/',1)[-1] + '\n' + file_fr.rsplit('/',1)[-1])
 
-    names = ['Медицинская организация','Исход заболевания','ИВЛ','Вид лечения','Субъект РФ','Диагноз']
+    names = ['Дата изменения РЗ','Медицинская организация','Исход заболевания','ИВЛ','Вид лечения','Субъект РФ','Диагноз']
     fr = pd.read_excel(file_fr, usecols=names,dtype=str)
-
+    date_otch =  str(pd.to_datetime(fr['Дата изменения РЗ'],format='%d.%m.%Y').max().date())
+    del fr['Дата изменения РЗ']
     names = ['mo','vp_zan','vp_ivl','cov_zan','cov_ivl']
     vp = pd.read_excel(file_vp, usecols = "A,I,L,Y,AB",header=7, names=names)
 
@@ -336,12 +341,12 @@ def IVL(a):
 
     path_otc ='/mnt/COVID-списки/Замечания Мин. Здравоохранения (Своды)/сверка ИВЛ и занятые койки'
 
-    with pd.ExcelWriter(path_otc+ '/' + str(datetime.datetime.now().date()) + ' пациенты на ИВЛ новый.xlsx') as writer:
+    with pd.ExcelWriter(path_otc+ '/' + str(date_otch) + ' пациенты на ИВЛ новый.xlsx') as writer:
         ivl_otchet.to_excel(writer,sheet_name='ИВЛ')
         zan_otchet.to_excel(writer,sheet_name='занятые койки')
     
-    put_excel_for_mo(ivl_otchet,'Пациенты на ИВЛ')
-    put_excel_for_mo(zan_otchet,'Занятые койки')
+    put_excel_for_mo(ivl_otchet,'Пациенты на ИВЛ', date_otch)
+    put_excel_for_mo(zan_otchet,'Занятые койки', date_otch)
     
     return get_dir('temp') + '/' + 'отчёт по разложению Пациенты на ИВЛ.xlsx' +';'+ get_dir('temp') + '/' + 'отчёт по разложению Занятые койки.xlsx'
 
