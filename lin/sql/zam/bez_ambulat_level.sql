@@ -1,6 +1,9 @@
 select s.Gid,s.[УНРЗ],s.[ФИО],s.[Дата рождения],s.[СНИЛС],s.[Вид лечения],
 	s.[МО прикрепления] as 'Медицинская организация',s.[Исход заболевания],s.[Дата исхода заболевания],
-	s.[Диагноз],s.[Диагноз установлен],DATEDIFF(day,s.[Дата исхода заболевания],getdate()) as [Дней в статусе перевода]
+	s.[Диагноз],s.[Диагноз установлен],DATEDIFF(day,s.[Дата исхода заболевания],getdate()) as [Дней в статусе перевода],
+	case when  um.Gid is not null  then 'умерший' 
+		 when  um.Gid is null  then '' 
+			end as 'Проверка наличие в УМСРС' 
 	from
 (select dbo.get_Gid(idPatient) as 'Gid',* 
 	from dbo.cv_fedreg
@@ -8,6 +11,7 @@ select s.Gid,s.[УНРЗ],s.[ФИО],s.[Дата рождения],s.[СНИЛС
 								'Перевод пациента на амбулаторное лечение',
 								'Перевод пациента на стационарное лечение')
 			and [МО прикрепления] != ''
+			and  [МО прикрепления]  in (select distinct [Медицинская организация] from cv_fedreg where [Субъект РФ] = 'г. Санкт-Петербург') 
 			and DATEDIFF(day,[Дата исхода заболевания],getdate())  > 7
 			and  [Медицинская организация] in (
 'СПб ГБУЗ Клиническая инфекционная больница им. С.П. Боткина',
@@ -32,6 +36,7 @@ select s.Gid,s.[УНРЗ],s.[ФИО],s.[Дата рождения],s.[СНИЛС
 'СПб ГБУЗ "Городская больница №33"'
 	)
 union  all
+
 select dbo.get_Gid(idPatient) as 'Gid',*
 	from dbo.cv_fedreg
 	where [Исход заболевания] in ('Перевод пациента в другую МО',
@@ -47,5 +52,4 @@ select dbo.get_Gid(idPatient) as 'Gid',*
 ) as s
  left join ( select dbo.get_Gid(idPatient) as 'Gid'  from cv_umsrs )as um
         on (s.Gid = um.Gid)
-            where um.Gid is null
 order by s.[МО прикрепления] desc,s.[Дата исхода заболевания]

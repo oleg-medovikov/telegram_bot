@@ -289,7 +289,7 @@ def load_fr(a):
         report.loc[0,'value_name'] = 'Всего выздоровело от COVID'
         report.loc[0,'value_count'] = len(df[df['Исход заболевания'].isin(['Выздоровление']) & df['Диагноз'].isin(['U07.1'])])
         report.to_sql('values',con,schema='robo',index=False,if_exists='append')
-        # ============
+        # ============================================
         send('admin','Файл в памяти, количество строк: ' + str(len(df)) )
         sql_execute('TRUNCATE TABLE [dbo].[cv_input_fr]')
         send('admin','Очистил input_fr')
