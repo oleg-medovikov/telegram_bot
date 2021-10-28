@@ -208,7 +208,7 @@ SELECT  'Медицинская организация' AS tip , 5 AS INDX,ORGAN
 		,nvl(cast(cov_11 as int),0) cov_11,nvl(cast(cov_12 as int),0) cov_12
 		,nvl(cast(cov_13 as int),0) cov_13,nvl(cast(cov_14 as int),0) cov_14
 		,nvl(cast(cov_15 as int),0) cov_15,0 as cov_16, 0 as cov_17
-		,nvl(cast(cov_18 as int),0) cov_18,nvl(cast(cov_19 as int),0) cov_19
+		,nvl(cast(cov_16 as int),0) cov_18,nvl(cast(cov_17 as int),0) cov_19
 		FROM (
 		SELECT
 			to_char(r.BDATE, 'DD.MM.YYYY') day,
@@ -245,6 +245,7 @@ SELECT  'Медицинская организация' AS tip , 5 AS INDX,ORGAN
 					'revac_06_05_s' cov_06,'revac_07_05_s' cov_07,'revac_08_05_s' cov_08
 					,'revac_09_05_s' cov_09,'revac_10_05_s' cov_10,'revac_11_05_s' cov_11,
 					'revac_12_05_s' cov_12,'revac_13_05_s' cov_13,'revac_14_05_s' cov_14,'revac_15_05_s' cov_15
+					,'revac_16_05_s' cov_16,'revac_17_05_s' cov_17
 					,'revac_18_05_s' cov_18,'revac_19_05_s' cov_19)
 		)
 UNION ALL 

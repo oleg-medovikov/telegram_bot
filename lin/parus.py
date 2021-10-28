@@ -50,16 +50,16 @@ def o_40_covid_by_date(a):
     return file 
 
 def svod_40_cov_19(a):
-    sql   = open('sql/parus/covid_40_spytnic.sql','r').read()
-    sql2  = open('sql/parus/covid_40_spytnic_old.sql','r').read()
-    sql3  = open('sql/parus/covid_40_epivak.sql','r').read()
-    sql4  = open('sql/parus/covid_40_epivak_old.sql','r').read()
-    sql5  = open('sql/parus/covid_40_covivak.sql','r').read()
-    sql6  = open('sql/parus/covid_40_covivak_old.sql','r').read()
-    sql7  = open('sql/parus/covid_40_revac.sql','r').read()
-    sql8  = open('sql/parus/covid_40_revac_old_new.sql','r').read()
-    sql9  = open('sql/parus/covid_40_light.sql','r').read()
-    sql10 = open('sql/parus/covid_40_light_old.sql','r').read()
+    sql   = open('sql/parus/covid_40_spytnic.sql','r').read()#.replace('SYSDATE', 'SYSDATE - 1')
+    sql2  = open('sql/parus/covid_40_spytnic_old.sql','r').read()#.replace('SYSDATE', 'SYSDATE - 1')
+    sql3  = open('sql/parus/covid_40_epivak.sql','r').read()#.replace('SYSDATE', 'SYSDATE - 1')
+    sql4  = open('sql/parus/covid_40_epivak_old.sql','r').read()#.replace('SYSDATE', 'SYSDATE - 1')
+    sql5  = open('sql/parus/covid_40_covivak.sql','r').read()#.replace('SYSDATE', 'SYSDATE - 1')
+    sql6  = open('sql/parus/covid_40_covivak_old.sql','r').read()#.replace('SYSDATE', 'SYSDATE - 1')
+    sql7  = open('sql/parus/covid_40_revac.sql','r').read()#.replace('SYSDATE', 'SYSDATE - 1')
+    sql8  = open('sql/parus/covid_40_revac_old_new.sql','r').read()#.replace('SYSDATE', 'SYSDATE - 1')
+    sql9  = open('sql/parus/covid_40_light.sql','r').read()#.replace('SYSDATE', 'SYSDATE - 1')
+    sql10 = open('sql/parus/covid_40_light_old.sql','r').read()#.replace('SYSDATE', 'SYSDATE - 1')
     
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         sput = pd.read_sql(sql,con)
@@ -868,3 +868,58 @@ def cvod_42_covid(a):
     
     return shablon_path  + '/' + new_name
 
+def cvod_4_3_covid(a):
+    medications = open('sql/lists/medications','r').read().split('\n')
+    poks = ['_01', '_02', '_03', '_04', '_05', '_06', '_07', '_08', '_09',
+            '_10', '_11', '_12', '_13', '_14', '_15', '_16', '_17', '_18',
+            '_19', '_20', '_21', '_22', '_23', '_24', '_25', '_26', '_27',
+            '_28', '_29', '_30', '_31', '_32', '_33', '_34', '_35', '_36',
+            '_37', '_38', '_39', '_40', '_41', '_42', '_43', '_44', '_45',
+            '_46', '_47', '_48', '_49', '_50', '_51', '_52', '_53', '_54',
+            '_55', '_56', '_57', '_58']
+
+    shablon =  get_dir('help') + '/4.3_COVID_19_svod.xlsx'
+    file = get_dir('help') + '/4.3 COVID 19.xlsx'
+
+    shutil.copyfile(shablon,file)
+    wb= openpyxl.load_workbook(file,data_only=False)
+    
+    for med,pok in zip(medications,poks):
+        pokazateli = f"""'4.3_1{pok}' pok1,'4.3_2{pok}' pok2,'4.3_3{pok}' pok3,'4.3_4{pok}' pok4,'4.3_5{pok}' pok5,'4.3_6{pok}' pok6,'4.3_7{pok}' pok7,'4.3_8{pok}' pok8"""
+        sql = open('/home/sshuser/telegram_bot/lin/sql/parus/covid_4.3_svod_stac.sql','r').read().replace('pokazateli',pokazateli)
+
+        with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+            df = pd.read_sql(sql,con)
+        del df['DAY']
+    
+        df['POK9'] = 30*(df['POK1'] + df['POK3'])/ df['POK4'] 
+        df['POK10'] = (df['POK1'] + df['POK3'])/ df['POK4'] 
+        ws = wb[pok.replace('_','')]
+        
+        # пишем наименование лекарства
+        ws.cell(row=3, column=6, value=med)
+        # пишем значения в таблицу
+        rows = dataframe_to_rows(df,index=False, header=False)
+        for r_idx, row in enumerate(rows,5):  
+            for c_idx, value in enumerate(row, 5):
+                ws.cell(row=r_idx, column=c_idx, value=value)
+
+        ws = wb['main']
+        ws.cell(row= 6  + medications.index(med), column=5, value=med)
+        
+        ws.cell(row= 6  + medications.index(med), column=6, value=df.loc[~(df['POK1'].isnull()), 'POK1'].sum())
+        ws.cell(row= 6  + medications.index(med), column=7, value=df.loc[~(df['POK3'].isnull()), 'POK3'].sum())
+        ws.cell(row= 6  + medications.index(med), column=8, value=df.loc[~(df['POK4'].isnull()), 'POK4'].sum())
+        ws.cell(row= 6  + medications.index(med), column=9, value=df.loc[~(df['POK5'].isnull()), 'POK5'].sum())
+
+
+        ws.cell(row= 6  + medications.index(med), column=10, value=df.loc[~(df['POK9'].isnull()) & (df['POK9'] != np.inf) , 'POK9'].mean())
+        ws.cell(row= 6  + medications.index(med), column=11, value=df.loc[~(df['POK10'].isnull()) & (df['POK10'] != np.inf) , 'POK10'].mean())
+        if len(df.loc[(df['POK9'].isnull()) | (df['POK9'] == np.inf) , 'POK9']):
+            ws.cell(row= 6  + medications.index(med), column=12, value='Да')
+        else:
+            ws.cell(row= 6  + medications.index(med), column=12, value='Нет')
+
+    wb.save(file)
+
+    return file

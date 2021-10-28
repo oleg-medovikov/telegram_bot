@@ -41,7 +41,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(KV_TVSP_02 
                 INNER JOIN PARUS.BLREPFORM rf
                 on(rd.PRN = rf.RN)
                 WHERE rf.code = '40 COVID 19'
-                and r.BDATE =  trunc(SYSDATE-2)
+                and r.BDATE =  trunc(SYSDATE) - 2
                                 and ro.BLTABLES = (SELECT BLTABLES FROM (
  								SELECT DISTINCT ro.BLTABLES , ROW_NUMBER () over(ORDER BY ro.BLTABLES desc) AS num
 					                FROM PARUS.BLTBLVALUES v
@@ -55,7 +55,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(KV_TVSP_02 
 					                on(ro.PRN = s.RN)
 					                INNER JOIN PARUS.BLREPORTS r
 					                on(s.PRN = r.RN)
-					                WHERE  r.BDATE =  trunc(SYSDATE-2)
+					                WHERE  r.BDATE =  trunc(SYSDATE) - 2
 					                and i.CODE in ('KV_TVSP_06') 
 										) WHERE num = 1)
                  and i.CODE in ('KV_TVSP_02','KV_TVSP_04','KV_TVSP_05_z',
@@ -125,7 +125,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(KV_TVSP_02 
                         INNER JOIN PARUS.BALANCEINDEXES bi 
                         on(d.BALANCEINDEX = bi.RN)
                 WHERE rf.code = '40 COVID 19'
-                 and  r.BDATE =  trunc(SYSDATE-2)
+                 and  r.BDATE =  trunc(SYSDATE) - 2
                  and bi.CODE in ('epy_vak_01','epy_vak_02','epy_vak_04','epy_vak_05_z',
                                                 'epy_vak_06','epy_vak_07_z', 'epy_vak_08', 
                                                 'epy_vak_09_z', 'epy_vak_10', 'epy_vak_11_z',

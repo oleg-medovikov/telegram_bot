@@ -1,8 +1,7 @@
 import pandas as pd
 import os,datetime,glob,sqlalchemy
 
-from  loader import get_dir
-
+from loader import get_dir
 from sending import send
 
 server  = os.getenv('server')
@@ -18,6 +17,16 @@ class my_except(Exception):
     pass
 
 def get_path_mo(organization):
+    if organization == 'ФГБОУ ВО ПСПбГМУ им. И.П.Павлова Минздрава России (амб.)':
+        papka = 'Замечания Мин. Здравоохранения'
+    elif 'стац' in organization:
+        organization = organization.replace(' (стац)','')
+        papka = 'Замечания Мин. Здравоохранения/стационарное'
+    elif 'амб' in organization:
+        organization = organization.replace(' (амб.)','')
+        papka = 'Замечания Мин. Здравоохранения/амбулаторное'
+    else:
+        papka = 'Замечания Мин. Здравоохранения'
     sql = f"select top(1) [user] from robo.directory where [Наименование в ФР] = '{organization}'"
     root = get_dir('covid')
     try:
@@ -25,7 +34,7 @@ def get_path_mo(organization):
     except:
         return 0
     else:
-        return root + dir
+        return root + dir + papka
 
 def put_excel_for_mo(df,name,date):
     if date is None:
@@ -40,7 +49,7 @@ def put_excel_for_mo(df,name,date):
         part = part.applymap(str)
         root = get_path_mo(org)
         if root:
-            path_otch = root + 'Замечания Мин. Здравоохранения'
+            path_otch = root #+ 'Замечания Мин. Здравоохранения'
             try:
                 os.makedirs(path_otch)
             except OSError:
@@ -91,10 +100,10 @@ def bez_ambulat_level(a):
     put_svod(df,'Нет амбулаторного этапа',None)
     put_excel_for_mo(df,'Нет амбулаторного этапа',None)
 
-    #sql = open('sql/zam/bez_ambulat_level_death_covid.sql','r').read()
-    #df = pd.read_sql(sql,con) 
-    #put_svod(df,'Нет амбулаторного этапа, умер от COVID')
-    #put_excel_for_mo(df,'Нет амбулаторного этапа, умер от COVID')
+    sql = open('sql/zam/bez_ambulat_level_death_covid.sql','r').read()
+    df = pd.read_sql(sql,con) 
+    put_svod(df,'Нет амбулаторного этапа, умер от COVID',None)
+    put_excel_for_mo(df,'Нет амбулаторного этапа, умер от COVID',None)
 
     sql = open('sql/zam/bez_ambulat_level_death_nocovid.sql','r').read()
     df = pd.read_sql(sql,con) 
@@ -102,7 +111,8 @@ def bez_ambulat_level(a):
     put_excel_for_mo(df,'Нет амбулаторного этапа, умер не от COVID',None)
     temp = get_dir('temp')
     files =   temp + '/' + 'отчёт по разложению Нет амбулаторного этапа.xlsx' + ';' \
-            + temp + '/' + 'отчёт по разложению Нет амбулаторного этапа, умер не от COVID.xlsx' #+ temp + '/' + 'отчёт по разложению Нет амбулаторного этапа, умер от COVID.xlsx' + ';'  
+            + temp + '/' + 'отчёт по разложению Нет амбулаторного этапа, умер не от COVID.xlsx' +';'\
+            + temp + '/' + 'отчёт по разложению Нет амбулаторного этапа, умер от COVID.xlsx'  
     return files
 
 def no_OMS(a):
@@ -175,7 +185,10 @@ def load_snils_comment(a):
         except Exception as e: text +=  file.split('/')[-1] +'\n' + str(e) 
         else:
             with con.connect() as cursor:
-                cursor.execute("""TRUNCATE TABLE tmp.snils_comment""")
+                try:
+                    cursor.execute("""TRUNCATE TABLE tmp.snils_comment""")
+                except:
+                    pass
             df.to_sql('snils_comment',con,schema='tmp',if_exists='append',index=False)
             with con.connect() as cursor:
                 cursor.execute("""
@@ -349,4 +362,37 @@ def IVL(a):
     put_excel_for_mo(zan_otchet,'Занятые койки', date_otch)
     
     return get_dir('temp') + '/' + 'отчёт по разложению Пациенты на ИВЛ.xlsx' +';'+ get_dir('temp') + '/' + 'отчёт по разложению Занятые койки.xlsx'
+
+def zamechania_mz(a):
+    date = pd.read_sql("SELECT max([Дата изменения РЗ]) as 'дата отчета' from robo.v_FedReg",con)
+    sql = open('sql/zam/kolichestvo.sql', 'r').read()
+    
+    df = pd.read_sql(sql,con)
+    df['дата отчета'] = date.iloc[0,0]
+
+    names = [['net_diagnoz_covid.sql', 'Не стоит диагноз ковид' ],
+             ['no_snils.sql', 'Без СНИЛСа'],
+             ['no_OMS.sql', 'Нет сведений ОМС'],
+             ['bez_ishod.sql', 'Без исхода заболевания больше 45 дней'],
+             ['no_lab.sql', 'без лабораторного потверждения'],
+             ['net_dnevnik.sql','Нет дневниковых записей'],
+             ['net_pad.sql', 'Нет ПАД'],
+             ['neverni_vid_lecenia.sql','Неверный вид лечения'],
+             ['bez_ambulat_level.sql', 'Нет амбулаторного этапа']]
+    
+    for file,name in names:
+        sql = open('sql/zam/' + file, 'r').read()
+        part = pd.read_sql(sql,con)
+        part = part.groupby(by=["Медицинская организация"],as_index=False).size()
+        part.rename(columns={"size": name}, inplace=True)
+
+        df = df.merge(part, how = "left" , left_on = 'Медицинская организация', right_on = 'Медицинская организация' )
+
+    sql = f"delete from [robo].[cv_Zamechania_fr] where [дата отчета] ='{date.iat[0,0]}'"
+    con.execute(sql)
+    df.fillna(0, inplace=True)
+    df.to_sql('cv_Zamechania_fr',con,schema='robo',if_exists='append',index=False)
+    return 1
+
+
 

@@ -14,11 +14,12 @@ from sending import send,voda,send_file,send_Debtors,send_parus
 from presentation import generate_pptx
 from zamechania_mz import no_snils,bez_izhoda,bez_ambulat_level,no_OMS,neveren_vid_lechenia,no_lab,net_diagnoz_covid,net_pad
 from zamechania_mz import net_dnevnik,delete_old_files,load_snils_comment,IVL
-from zamechania_mz import zavishie_statusy
+from zamechania_mz import zavishie_statusy,zamechania_mz
 from regiz import regiz_decomposition,regiz_load_to_base
 from parus import o_40_covid_by_date,svod_40_cov_19,parus_43_cov_nulls,svod_43_covid_19,no_save_43,cvod_29_covid
 from parus import cvod_33_covid,cvod_36_covid,cvod_37_covid,cvod_38_covid,cvod_26_covid,cvod_27_covid,cvod_27_regiz
 from parus import no_save_50, svod_50_cov_19,cvod_51_covid,cvod_27_smal,cvod_52_covid,cvod_28_covid,cvod_41_covid,cvod_42_covid
+from parus import cvod_4_3_covid
 from geocoder import search_coordinats
 #from send_ODLI import send_bundle_to_ODLI
 import telebot_calendar
@@ -44,6 +45,7 @@ commands = []
 @dataclass
 class command: 
     command_id     : int
+    category       : str
     command_name   : str
     command_key    : list
     procedure_name : str
@@ -58,13 +60,14 @@ class command:
         for row in con.execute('exec robo.bot_command_table'):
             commands.append(command(int(row[0])
                                     ,row[1]
-                                    ,[str(x) for x in row[2].split(',')]
-                                    ,row[3]
+                                    ,row[2]
+                                    ,[str(x) for x in row[3].split(',')]
                                     ,row[4]
                                     ,row[5]
-                                    ,[str(x) for x in row[6].split(';')]
-                                    ,[int(x) for x in row[7].split(',')]
-                                    ,row[8]
+                                    ,row[6]
+                                    ,[str(x) for x in row[7].split(';')]
+                                    ,[int(x) for x in row[8].split(',')]
+                                    ,row[9]
                                    ))
     def search(key):
         for command in commands:
@@ -286,6 +289,7 @@ def get_text_messages(message):
                             bot.send_message(chat_id=call.from_user.id,
                                             text=f"Вы выбрали {date.strftime('%d.%m.%Y')}",
                                             reply_markup=ReplyKeyboardRemove(),)
+                            command_id = command.number(message.from_user.id,message.text.lower())[1]
                             bot.send_message(call.from_user.id,commands[command_id].procedure_name)
                             result = create_tred(commands[command_id].procedure_name,date)
                             bot.send_message(call.from_user.id,result[1])

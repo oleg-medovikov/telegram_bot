@@ -40,7 +40,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(Vaccin_TVSP
                 INNER JOIN PARUS.BLREPFORM rf
                 on(rd.PRN = rf.RN)
                 WHERE rf.code = '40 COVID 19'
-                and r.BDATE =  trunc(SYSDATE-1)
+                and r.BDATE =  trunc(SYSDATE) - 1
                 and ro.BLTABLES = (SELECT BLTABLES FROM (
  								SELECT DISTINCT ro.BLTABLES , ROW_NUMBER () over(ORDER BY ro.BLTABLES DESC) AS num
 					                FROM PARUS.BLTBLVALUES v
@@ -54,7 +54,7 @@ SELECT ORGANIZATION, 'Пункт вакцинации' type,  substr(Vaccin_TVSP
 					                on(ro.PRN = s.RN)
 					                INNER JOIN PARUS.BLREPORTS r
 					                on(s.PRN = r.RN)
-					                WHERE  r.BDATE =  trunc(SYSDATE-1)
+					                WHERE  r.BDATE =  trunc(SYSDATE) - 1
 					                and i.CODE in ('light_09') 
 										) WHERE num = 1)
                  and i.CODE in ('Vaccin_TVSP','light_03','light_04',
@@ -123,7 +123,7 @@ SELECT ORGANIZATION, 'Медицинская организация' TYPE, REPLA
                         INNER JOIN PARUS.BALANCEINDEXES bi 
                         on(d.BALANCEINDEX = bi.RN)
                 WHERE rf.code = '40 COVID 19'
-                 and  r.BDATE =  trunc(SYSDATE-1)
+                 and  r.BDATE =  trunc(SYSDATE) - 1
                  and bi.CODE in ('Vaccin_MO','light_03_s','light_04_s','light_05_s',
                                                 'light_06_s','light_07_s', 'light_08_s', 
                                                 'light_09_s', 'light_10_s', 'light_11_s',
