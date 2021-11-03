@@ -1,5 +1,6 @@
 import pandas as pd
-import os,datetime,glob,sqlalchemy
+import os,datetime,glob,sqlalchemy,shutil,openpyxl
+from openpyxl.utils.dataframe import dataframe_to_rows
 
 from loader import get_dir
 from sending import send
@@ -295,6 +296,7 @@ def IVL(a):
                 ,[r'ФГБОУ ВО СПБГПМУ МИНЗДРАВА РОССИИ',r'ФГБОУ ВО СПбГПМУ Минздрава России']
                 ,[r'СПб ГБУЗ "Детская городская клиническая больница №5 имени Нила Федоровича Филатова"',r'СПб ГБУЗ "ДГКБ №5 им. Н.Ф.Филатова"']
                 ,[r'СПб ГБУЗ "Городская многопрофильная больница №2"' , r'СПб ГБУЗ "ГМПБ 2"']
+                ,[r'СПб ГБУЗ "Клиническая инфекционная больница им. С.П. Боткина"' , r'СПб ГБУЗ "Больница Боткина"']
                       ]
     vp = vp.fillna(0)
     # Меняем названия МО и сумируем строки 
@@ -368,6 +370,7 @@ def zamechania_mz(a):
     sql = open('sql/zam/kolichestvo.sql', 'r').read()
     
     df = pd.read_sql(sql,con)
+    del df ['Принадлежность']
     df['дата отчета'] = date.iloc[0,0]
 
     names = [['net_diagnoz_covid.sql', 'Не стоит диагноз ковид' ],
@@ -393,6 +396,148 @@ def zamechania_mz(a):
     df.fillna(0, inplace=True)
     df.to_sql('cv_Zamechania_fr',con,schema='robo',if_exists='append',index=False)
     return 1
+def zamechania_mz_file(a):
+    date = pd.read_sql("SELECT max([Дата изменения РЗ]) as 'дата отчета' from robo.v_FedReg",con)
+    sql = open('sql/zam/kolichestvo.sql', 'r').read()
+    
+    df = pd.read_sql(sql,con)
+    #df['дата отчета'] = date.iloc[0,0]
+
+    names = [['no_snils.sql', 'Без СНИЛСа'],
+             ['no_OMS.sql', 'Нет сведений ОМС'],
+             ['bez_ishod.sql', 'Без исхода заболевания больше 30 дней'],
+             ['net_dnevnik.sql','Нет дневниковых записей'],
+             ['net_pad.sql', 'Нет ПАД'],
+             ['neverni_vid_lecenia.sql','Неверный вид лечения'],
+             ['bez_ambulat_level.sql', 'Нет амбулаторного этапа'],
+             ['bez_ambulat_level_amb.sql', 'Нет амбулаторного этапа (Амб.)'],
+             ['bez_ambulat_level_noMO.sql', 'Нет амбулаторного этапа (Без МО)']]
+    
+    for file,name in names:
+        sql = open('sql/zam/' + file, 'r').read()
+        part = pd.read_sql(sql,con)
+        part = part.groupby(by=["Медицинская организация"],as_index=False).size()
+        part.rename(columns={"size": name}, inplace=True)
+
+        df = df.merge(part, how = "left" , left_on = 'Медицинская организация', right_on = 'Медицинская организация' )
+
+    #sql = f"delete from [robo].[cv_Zamechania_fr] where [дата отчета] ='{date.iat[0,0]}'"
+    #con.execute(sql)
+    df.fillna(0, inplace=True)
+    del df['Уникальных пациентов']
+    df.index = range(len(df))    
+    
+    file = get_dir("temp") + "/Замечания_за_" +date.iat[0,0] +".xlsx"
+    shutil.copyfile(get_dir('help') + '/Zamechania.xlsx',  file)
+    
+    wb= openpyxl.load_workbook( file)
+
+    ws = wb['main']   
+    part = df.copy()
+    del part ['Тип организации']
+    del part ['Принадлежность']
+    rows = dataframe_to_rows(part ,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 7):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+   
+    ws = wb['amb']   
+    part = df.loc[df['Тип организации'] == 'Амбулаторная' ].copy()
+    del part ['Тип организации']
+    del part ['Принадлежность']
+    rows = dataframe_to_rows(part ,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 7):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['amb_dist']   
+    part = df.loc[(df['Тип организации'] == 'Амбулаторная' ) & ~(df['Принадлежность'].isin(['комитет здравоохранения','частные','федеральные']) ) ].copy()
+    del part ['Тип организации']
+    rows = dataframe_to_rows(part ,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 7):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['amb_kz']   
+    part = df.loc[(df['Тип организации'] == 'Амбулаторная' ) & ( df['Принадлежность'].isin(['комитет здравоохранения']) ) ].copy()
+    del part ['Тип организации']
+    del part ['Принадлежность']
+    rows = dataframe_to_rows(part ,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 7):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['amb_fed']   
+    part = df.loc[(df['Тип организации'] == 'Амбулаторная' ) & ( df['Принадлежность'].isin(['федеральные']) ) ].copy()
+    del part ['Тип организации']
+    del part ['Принадлежность']
+    rows = dataframe_to_rows(part ,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 7):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['amb_ch']   
+    part = df.loc[(df['Тип организации'] == 'Амбулаторная' ) & ( df['Принадлежность'].isin(['частные']) ) ].copy()
+    del part ['Тип организации']
+    del part ['Принадлежность']
+    rows = dataframe_to_rows(part ,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 7):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+
+   
+    ws = wb['stat']   
+    part = df.loc[df['Тип организации'] == 'Стационарная' ].copy()
+    del part ['Тип организации']
+    del part ['Принадлежность']
+    rows = dataframe_to_rows(part ,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 7):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['stat_dist']   
+    part = df.loc[(df['Тип организации'] == 'Стационарная' ) & ~(df['Принадлежность'].isin(['комитет здравоохранения','частные','федеральные']) ) ].copy()
+    del part ['Тип организации']
+    rows = dataframe_to_rows(part ,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 7):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['stat_kz']   
+    part = df.loc[(df['Тип организации'] == 'Стационарная' ) & ( df['Принадлежность'].isin(['комитет здравоохранения']) )  ].copy()
+    del part ['Тип организации']
+    del part ['Принадлежность']
+    rows = dataframe_to_rows(part ,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 7):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['stat_fed']   
+    part = df.loc[(df['Тип организации'] == 'Стационарная' ) &  (df['Принадлежность'].isin(['федеральные']) ) ].copy()
+    del part ['Тип организации']
+    del part ['Принадлежность']
+    rows = dataframe_to_rows(part ,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 7):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['stat_ch']   
+    part = df.loc[(df['Тип организации'] == 'Стационарная' ) & ( df['Принадлежность'].isin(['частные']) ) ].copy()
+    del part ['Тип организации']
+    del part ['Принадлежность']
+    rows = dataframe_to_rows(part ,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 7):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+
+
+    wb.save( file )
+ 
+
+    return file
+
 
 
 

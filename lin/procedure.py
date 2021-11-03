@@ -258,7 +258,7 @@ def razlojit_death_week(a):
     select dbo.get_Gid(idPatient) as 'Gid',[Медицинская организация],[ФИО],[Дата рождения]
     ,dbo.[f_calculation_age]([Дата рождения],[Дата исхода заболевания]) as 'Возраст'
     ,[Посмертный диагноз]
-    from cv_fedreg
+    from robo.v_FedReg
       where [Исход заболевания] = 'Смерть'
       and [Дата исхода заболевания]  BETWEEN '{date_start}' AND '{date_end}'
       and YEAR([Дата исхода заболевания]) = YEAR(getdate())
@@ -287,7 +287,7 @@ def razlojit_death_week(a):
     report_1 = pd.DataFrame()
     for MO in MOs:
         try:
-            directory = get_dir('covid') + mo_directory.loc[mo_directory['Наименование в ФР'] == MO, 'user'].unique()[0]
+            directory = get_dir('covid') + mo_directory.loc[mo_directory['Наименование в ФР'] == MO.replace(' (стац)','').replace(' (амб.)',''), 'user'].unique()[0]
         except:
             print('Не найдена организация', MO)
         else:
@@ -315,7 +315,8 @@ def razlojit_death_week(a):
 
     report_file = get_dir('temp') + '/разложенные файлы.xlsx'
     with pd.ExcelWriter(report_file) as writer:
-        report_1.to_excel(writer,index=False)
+        report_1.to_excel(writer,sheet_name = 'файлы',index=False)
+        df.to_excel(writer,sheet_name = 'свод',index=False)
 
     report = pd.DataFrame(df['Gid'])
     report['time'] = datetime.datetime.now()
@@ -358,7 +359,8 @@ def sbor_death_week_svod(a):
         chast = pd.read_excel(excel)
         list_.append(chast)
     df = pd.concat(list_)
-    send('',str(len(df)) + ' , ' + str(len(glob.glob(path))))
+    #send('',str(len(df)) + ' , ' + str(len(glob.glob(path))))
+    df = df.loc[~df['Медицинская организация'].isnull()]
     df['Ndays'] = (pd.to_datetime(df['Дата госпитализации'],errors='coerce') - pd.to_datetime(df['Дата начала заболевания'],errors='coerce')).dt.days
     df = df.loc[~df['ФИО'].isnull()]
     df.index = range(len(df))
@@ -378,11 +380,16 @@ def sbor_death_week_svod(a):
         index = int(cheak.at[i,'index'])
         diagnoz = cheak.at[i,'Посмертный диагноз новый']
         df.loc[index,'Посмертный диагноз'] = diagnoz
-
+    send('',f"exec robo.death_week_value'{date_start}','{date_end}'")
     svod = pd.read_sql(f"exec robo.death_week_value'{date_start}','{date_end}'", con)
     svod = svod.fillna(0)
-
+    
+    
     MOs = svod['Медицинская организация'].unique()
+    
+    for org in df['Медицинская организация'].unique():
+        if not org in MOs:
+            send('epid', 'Неправильная организация! \n' + org)
 
     for MO in MOs:
         svod.loc[svod['Медицинская организация'].isin([MO]),'J'] = len(df[df['Медицинская организация'].isin([MO]) & \
@@ -659,6 +666,16 @@ def sbor_death_week_svod(a):
         ,svod['Количество пациентов, умерших от ВБП, имеющих ожирение'].sum()
     )
 # ========== Расчёт районов ==================
+    
+    
+    empty = ''
+    for i in df.loc[df['Район проживания'].isnull()].index:
+        empty += 'Пустой район в ' + str(df.at[i,'Медицинская организация'])
+
+    if len(empty):
+        send('epid', empty)
+    df['Район проживания'] = df['Район проживания'].fillna('Пустое значение')
+    df['Район проживания'] = df['Район проживания'].str.lower()
     districts = df['Район проживания'].unique()
     zone = pd.DataFrame()
     for area in districts:
@@ -670,6 +687,7 @@ def sbor_death_week_svod(a):
         zone.loc[k,'из них: возраст старше 60'] = len(df.loc[(df['Район проживания'] == area) \
                 & (df['Смерть наступила в первые сутки с момента госпитализации (да/нет)'].isin(['да'])) \
                 & (df['Возраст'] >= 60) ])
+
     file_svod= get_dir('temp') + f'/Умершие за неделю с {date_start} по {date_end} свод.xlsx'
     with pd.ExcelWriter(file_svod) as writer:
         svod.to_excel(writer,sheet_name='Свод по МО',index=False)

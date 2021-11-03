@@ -868,6 +868,43 @@ def cvod_42_covid(a):
     
     return shablon_path  + '/' + new_name
 
+def cvod_49_covid(a):
+    sql1= open('sql/parus/covid_49_svod.sql','r').read()
+    sql2= open('sql/parus/covid_49_dolg.sql','r').read()
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql1,con)
+    
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        dolg = pd.read_sql(sql2,con)
+ 
+ 
+    date = str(df['DAY'].unique()[0])
+    del df ['DAY']
+
+    new_name = date + '_49_COVID_19.xlsx'
+    shablon_path = get_dir('help')
+
+    shutil.copyfile(shablon_path + '/49_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
+ 
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    ws = wb['свод']
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    
+    rows = dataframe_to_rows(dolg,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 9):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    
+    wb.save( shablon_path  + '/' + new_name)
+    
+    return shablon_path  + '/' + new_name
+
+
+
 def cvod_4_3_covid(a):
     medications = open('sql/lists/medications','r').read().split('\n')
     poks = ['_01', '_02', '_03', '_04', '_05', '_06', '_07', '_08', '_09',
@@ -923,3 +960,8 @@ def cvod_4_3_covid(a):
     wb.save(file)
 
     return file
+
+
+
+
+
