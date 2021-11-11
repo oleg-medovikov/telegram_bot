@@ -17,46 +17,51 @@ eng = sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase
 con = eng.connect()
 
 valume = [
-     ['2 группа замечаний: Нет сведений ОМС (Стац.)','Нет сведений ОМС','Стационарная']
-    ,['2 группа замечаний: Нет сведений ОМС (Амб.)','Нет сведений ОМС','Амбулаторная']
-    ,['2 группа замечаний: Нет сведений ОМС (Частные)','Нет сведений ОМС','Частные']
+     ['2 группа замечаний: Нет сведений ОМС (Стац.)','Нет сведений ОМС','Стационарная', True]
+    ,['2 группа замечаний: Нет сведений ОМС (Амб.)','Нет сведений ОМС','Амбулаторная' , True]
+    ,['2 группа замечаний: Нет сведений ОМС (Частные)','Нет сведений ОМС','Частные'   , True]
     #,['4 группа замечаний: Без амбулаторного этапа (Стац.)','Нет амбулаторного этапа','Стационарная']
-    ,['4 группа замечаний: Без амбулаторного этапа (Амб.)','Нет амбулаторного этапа','Амбулаторная']
-    ,['4 группа замечаний: Без амбулаторного этапа (Частные)','Нет амбулаторного этапа','Частные']
-    ,['5 группа замечаний: Без исхода заболевания больше 30 дней (Стац.)','Без исхода заболевания больше 45 дней','Стационарная']
-    ,['5 группа замечаний: Без исхода заболевания больше 30 дней (Амб.)','Без исхода заболевания больше 45 дней','Амбулаторная']
-    ,['5 группа замечаний: Без исхода заболевания больше 30 дней (Частные)','Без исхода заболевания больше 45 дней','Частные']
-    ,['8 группа замечаний: Неправильный тип лечения (Стац.)', 'Неверный вид лечения', 'Стационарная']
-    ,['8 группа замечаний: Неправильный тип лечения (Амб.)', 'Неверный вид лечения', 'Амбулаторная']
-    ,['8 группа замечаний: Неправильный тип лечения (Частные)', 'Неверный вид лечения', 'Частные']
-    ,['11 группа замечаний: Количество дублированных  УНРЗ в одном МО (Стац.)', 'Количество дублей','Стационарная']
-    ,['11 группа замечаний: Количество дублированных  УНРЗ в одном МО (Амб.)', 'Количество дублей','Амбулаторная']
-    ,['11 группа замечаний: Количество дублированных  УНРЗ в одном МО (Частные)', 'Количество дублей','Частные']
-    ,['12 группа замечаний: Нет ПАД (Стац.)','Нет ПАД','Стационарная' ]
-    ,['12 группа замечаний: Нет ПАД (Амб.)','Нет ПАД','Амбулаторная' ]
-    ,['12 группа замечаний: Нет ПАД (Частные)','Нет ПАД','Частные' ]
-    ,['13 группа замечаний: Нет дневниковых записей (Стац.)','Нет дневниковых записей','Стационарная']
-    ,['13 группа замечаний: Нет дневниковых записей (Амб.)','Нет дневниковых записей','Амбулаторная']
-    ,['13 группа замечаний: Нет дневниковых записей (Частные)','Нет дневниковых записей','Частные']
+    ,['4 группа замечаний: Без амбулаторного этапа (Амб.)','Нет амбулаторного этапа','Амбулаторная', False]
+    ,['4 группа замечаний: Без амбулаторного этапа (Частные)','Нет амбулаторного этапа','Частные', False]
+    ,['5 группа замечаний: Без исхода заболевания больше 30 дней (Стац.)','Без исхода заболевания больше 45 дней','Стационарная', False]
+    ,['5 группа замечаний: Без исхода заболевания больше 30 дней (Амб.)','Без исхода заболевания больше 45 дней','Амбулаторная', False]
+    ,['5 группа замечаний: Без исхода заболевания больше 30 дней (Частные)','Без исхода заболевания больше 45 дней','Частные', False]
+    ,['8 группа замечаний: Неправильный тип лечения (Стац.)', 'Неверный вид лечения', 'Стационарная', False]
+    ,['8 группа замечаний: Неправильный тип лечения (Амб.)', 'Неверный вид лечения', 'Амбулаторная',  False]
+    ,['8 группа замечаний: Неправильный тип лечения (Частные)', 'Неверный вид лечения', 'Частные', False]
+    ,['11 группа замечаний: Количество дублированных  УНРЗ в одном МО (Стац.)', 'Количество дублей','Стационарная', False]
+    ,['11 группа замечаний: Количество дублированных  УНРЗ в одном МО (Амб.)', 'Количество дублей','Амбулаторная' , False]
+    ,['11 группа замечаний: Количество дублированных  УНРЗ в одном МО (Частные)', 'Количество дублей','Частные'   , False]
+    ,['12 группа замечаний: Нет ПАД (Стац.)','Нет ПАД','Стационарная', False]
+    ,['12 группа замечаний: Нет ПАД (Амб.)','Нет ПАД','Амбулаторная' , False]
+    ,['12 группа замечаний: Нет ПАД (Частные)','Нет ПАД','Частные'   , False]
+    ,['13 группа замечаний: Нет дневниковых записей (Стац.)','Нет дневниковых записей','Стационарная', False]
+    ,['13 группа замечаний: Нет дневниковых записей (Амб.)','Нет дневниковых записей','Амбулаторная' , False]
+    ,['13 группа замечаний: Нет дневниковых записей (Частные)','Нет дневниковых записей','Частные'   , False]
+    ,['14 группа замечаний: Зависшие в статусе перевода (Стац.)'  ,'Пациенты зависшие по МО','Стационарная', False]
+    ,['14 группа замечаний: Зависшие в статусе перевода (Амб.)'   ,'Пациенты зависшие по МО','Амбулаторная' , False]
+    ,['14 группа замечаний: Зависшие в статусе перевода (Частные)','Пациенты зависшие по МО','Частные'   , False]
+    ,['15 группа замечаний: Зависшие в статусе перевода без МО прикрепления (Стац.)'  ,'Пациенты зависшие без МО','Стационарная', False]
+    ,['15 группа замечаний: Зависшие в статусе перевода без МО прикрепления (Амб.)'   ,'Пациенты зависшие без МО','Амбулаторная' , False]
+    ,['15 группа замечаний: Зависшие в статусе перевода без МО прикрепления (Частные)','Пациенты зависшие без МО','Частные'   , False]
 ]
 
 
 
 def generate_pptx(date):
-    def create_slide(title,type_error,type_org,date_start,date_end):
+    def create_slide(title,type_error,type_org,date_start,date_end,dynamic):
         if type_org == 'Частные':
             chastn = 'in'
             type_org = 'Амбулаторная'
         else:
             chastn = 'not in'
-
-        sql = f"""
-        select distinct case when d1.[Медицинская организация] is null then d2.[Медицинская организация]
+        
+        sql = f"""select distinct case when d1.[Медицинская организация] is null then d2.[Медицинская организация]
                              when d2.[Медицинская организация] is null then d1.[Медицинская организация]
                              else  d1.[Медицинская организация] 
                              end as "Медицинская организация"
-        ,d1.eror1  , d2.eror2 
-                    , d2.eror2 -  d1.eror1  as 'Динамика'           
+                            ,d1.eror1  , d2.eror2 
+                            , d2.eror2 -  d1.eror1  as 'Динамика'           
             from (
         SELECT [Медицинская организация]
               , isnull([{type_error}],0) as 'eror1'
@@ -74,22 +79,28 @@ def generate_pptx(date):
           and d1.[Медицинская организация] {chastn} ('ООО "ЛАХТА КЛИНИКА"','ООО «Городские поликлиники»', 'ООО "Современная медицина"',
                                                      'ООО «Медицентр ЮЗ»','АНО "Медицинский центр "Двадцать первый век"', 'ООО "ЦСМ "21 ВЕК"',
                                                      'ООО Ава-Петер','ЧУЗ «КБ «РЖД-МЕДИЦИНА» Г. С-ПЕТЕРБУРГ"','ООО «ММЦ «СОГАЗ»')
-          order by  [Динамика] DESC, d1.eror1 DESC
-        """
+          order by  [Динамика] DESC, d1.eror1 DESC"""
+        
         #send('',sql)
-        frame = pd.read_sql(sql,con)
-        frame.fillna(0,inplace=True)
-        frame ['Динамика'] = pd.to_numeric(frame['Динамика'])
-        df = frame
-        df.loc[(df!=0).any(1)]
-        #df = df.loc[(df['Динамика'] != 0)  & (df['eror1']) != 0 & (df['eror2'] != 0) ]
-        if len(df) > 16:
-            df = df.head(8).append(df.tail(8))
+
+        df = pd.read_sql(sql,con)
+        df.fillna(0,inplace=True)
+       
+        if dynamic:
+            df ['Динамика'] = pd.to_numeric(df ['Динамика'])
+            df.loc[(df!=0).any(1)]
             df.index = range(len(df))
         else:
-            df.index = range(len(df))
-        sum_err1 = frame['eror1'].sum()
-        sum_err2 = frame['eror2'].sum()
+            df = df.sort_values(by=['eror2'],ascending=False)
+            df = df.loc[df['eror2'] != 0 ]
+            df.loc[(df!=0).any(1)]
+            df.index = range(len(df)) 
+        
+        if not len(df):
+            return 1
+ 
+        sum_err1 = df['eror1'].sum()
+        sum_err2 = df['eror2'].sum()
         title_only_slide_layout = prs.slide_layouts[5]
         slide = prs.slides.add_slide(title_only_slide_layout)
         shapes = slide.shapes
@@ -115,8 +126,24 @@ def generate_pptx(date):
         p.font.color.rgb = RGBColor(20,20,20)
         p.font.size = Pt(18)
         
-        rows = len(df) + 1
-        cols = 5
+        # Первая таблица  
+        if dynamic:
+            if len(df.loc[df['Динамика'] > 0]) > 16:
+                rows = 17
+            else:
+                rows = len(df.loc[df['Динамика'] > 0]) + 1
+        else:
+            #send('', type_error + str(len(df)))
+            if len(df) > 16:
+                rows = 17
+            else:
+                rows = len(df) + 1
+
+
+        if dynamic:
+            cols = 5
+        else:
+            cols = 3
         left = Inches(0.5)
         top = Inches(2)
         width = Inches(5)
@@ -130,27 +157,127 @@ def generate_pptx(date):
 
         # set column widths
         table.columns[0].width = Inches(0.5)
-        table.columns[1].width = Inches(4.0)
+        table.columns[1].width = Inches(3.5)
         table.columns[2].width = Inches(1.5)
-        table.columns[3].width = Inches(1.5)
-        table.columns[4].width = Inches(1.5)
+        if dynamic:
+            table.columns[1].width = Inches(2.5)
+            table.columns[3].width = Inches(1.5)
+            table.columns[4].width = Inches(1.5)
         # write column headings
         table.cell(0, 0).text = '№'
         table.cell(0, 1).text = 'Медицинская организация'
-        table.cell(0, 2).text = date_start
-        table.cell(0, 3).text = date_end
-        table.cell(0, 4).text = 'Динамика'
-        for i in range(len(df)):
-            table.cell(i+1, 0).text = str(i+1) 
-            table.cell(i+1, 0).text_frame.paragraphs[0].font.size = Pt(12)
-            table.cell(i+1, 1).text = df.at[i,'Медицинская организация']
-            table.cell(i+1, 1).text_frame.paragraphs[0].font.size = Pt(10) 
-            table.cell(i+1, 2).text = str(df.at[i,'eror1']).replace('.0','')
-            table.cell(i+1, 2).text_frame.paragraphs[0].font.size = Pt(12)
-            table.cell(i+1, 3).text = str(df.at[i,'eror2']).replace('.0','')
-            table.cell(i+1, 3).text_frame.paragraphs[0].font.size = Pt(12)
-            table.cell(i+1, 4).text = str(df.at[i,'Динамика']).replace('.0','')
-            table.cell(i+1, 4).text_frame.paragraphs[0].font.size = Pt(12)
+        if dynamic:
+            table.cell(0, 2).text = date_start
+            table.cell(0, 3).text = date_end
+            table.cell(0, 4).text = 'Динамика'
+        else:
+            table.cell(0, 2).text = date_end
+
+        k = 0
+        if dynamic:
+            if len(df.loc[df['Динамика'] > 0]):
+                for i in df.loc[df['Динамика'] > 0].head(16).index:
+                    table.cell(k+1, 0).text = str(i+1) 
+                    table.cell(k+1, 0).text_frame.paragraphs[0].font.size = Pt(12)
+                    table.cell(k+1, 1).text = df.at[i,'Медицинская организация']
+                    table.cell(k+1, 1).text_frame.paragraphs[0].font.size = Pt(10) 
+                    table.cell(k+1, 2).text = str(df.at[i,'eror1']).replace('.0','')
+                    table.cell(k+1, 2).text_frame.paragraphs[0].font.size = Pt(12)
+                    table.cell(k+1, 3).text = str(df.at[i,'eror2']).replace('.0','')
+                    table.cell(k+1, 3).text_frame.paragraphs[0].font.size = Pt(12)
+                    table.cell(k+1, 4).text = str(df.at[i,'Динамика']).replace('.0','')
+                    table.cell(k+1, 4).text_frame.paragraphs[0].font.size = Pt(12)
+                    k += 1
+                    if k > 16:
+                        break
+        else:
+            for i in df.head(16).index:
+                table.cell(k+1, 0).text = str(k+1)
+                table.cell(k+1, 0).text_frame.paragraphs[0].font.size = Pt(12)
+                table.cell(k+1, 1).text = df.at[i,'Медицинская организация']
+                table.cell(k+1, 1).text_frame.paragraphs[0].font.size = Pt(10)
+                table.cell(k+1, 2).text = str(df.at[i,'eror2']).replace('.0','')
+                table.cell(k+1, 2).text_frame.paragraphs[0].font.size = Pt(12)
+                df.drop(i,inplace=True)
+                k += 1
+
+        # Вторая таблица  
+        if dynamic:
+            if len(df.loc[df['Динамика'] > 0]) > 16:
+                rows = 17
+            else:
+                rows = len(df.loc[df['Динамика'] > 0]) + 1
+        else:
+            #send('','2' +  type_error + str(len(df)))
+            if len(df) > 16:
+                rows = 17
+            else:
+                rows = len(df) + 1
+                if rows < 2:
+                    #send('', str(df.head()))
+                    return 1
+
+
+        if dynamic:
+            cols = 5
+        else:
+            cols = 3
+        left = Inches(8.25)
+        top = Inches(2)
+        width = Inches(5)
+        height = Inches(0.1)
+
+        shape = shapes.add_table(rows, cols, left, top, width, height)
+        table = shape.table
+        tbl = shape._element.graphic.graphicData.tbl
+        style_id = '{9DCAF9ED-07DC-4A11-8D7F-57B35C25682E}'
+        tbl[0][-1].text = style_id
+
+        # set column widths
+        table.columns[0].width = Inches(0.5)
+        table.columns[1].width = Inches(3.5)
+        table.columns[2].width = Inches(1.5)
+        if dynamic:
+            table.columns[1].width = Inches(2.5)
+            table.columns[3].width = Inches(1.5)
+            table.columns[4].width = Inches(1.5)
+        # write column headings
+        table.cell(0, 0).text = '№'
+        table.cell(0, 1).text = 'Медицинская организация'
+        if dynamic:
+            table.cell(0, 2).text = date_start 
+            table.cell(0, 3).text = date_end
+            table.cell(0, 4).text = 'Динамика'
+        else:
+            table.cell(0, 2).text = date_end
+
+        k = 0
+        if dynamic:
+            if len(df.loc[df['Динамика'] < 0]):
+                for i in df.loc[df['Динамика'] < 0].sort_values(by=['Динамика']).head(16).index:
+                    table.cell(k+1, 0).text = str(i+1) 
+                    table.cell(k+1, 0).text_frame.paragraphs[0].font.size = Pt(12)
+                    table.cell(k+1, 1).text = df.at[i,'Медицинская организация']
+                    table.cell(k+1, 1).text_frame.paragraphs[0].font.size = Pt(10) 
+                    table.cell(k+1, 2).text = str(df.at[i,'eror1']).replace('.0','')
+                    table.cell(k+1, 2).text_frame.paragraphs[0].font.size = Pt(12)
+                    table.cell(k+1, 3).text = str(df.at[i,'eror2']).replace('.0','')
+                    table.cell(k+1, 3).text_frame.paragraphs[0].font.size = Pt(12)
+                    table.cell(k+1, 4).text = str(df.at[i,'Динамика']).replace('.0','')
+                    table.cell(k+1, 4).text_frame.paragraphs[0].font.size = Pt(12)
+                    k += 1
+                    if k > 16:
+                        break
+        else:
+            for i in df.head(16).index:
+                table.cell(k+1, 0).text = str(k+17)
+                table.cell(k+1, 0).text_frame.paragraphs[0].font.size = Pt(12)
+                table.cell(k+1, 1).text = df.at[i,'Медицинская организация']
+                table.cell(k+1, 1).text_frame.paragraphs[0].font.size = Pt(10)
+                table.cell(k+1, 2).text = str(df.at[i,'eror2']).replace('.0','')
+                table.cell(k+1, 2).text_frame.paragraphs[0].font.size = Pt(12)
+                k += 1
+
     date1 = date.split(',')[0]
     date2 = date.split(',')[1]
     date_start_sql = date1
@@ -158,6 +285,10 @@ def generate_pptx(date):
     date_start = pd.to_datetime(date1).strftime("%d.%m.%Y")
     date_end = pd.to_datetime(date2).strftime("%d.%m.%Y")
     prs = Presentation()
+    
+    prs.slide_height = Inches(9)
+    prs.slide_width = Inches(16)
+
     title_slide_layout = prs.slide_layouts[0]
     slide = prs.slides.add_slide(title_slide_layout)
     title = slide.shapes.title
@@ -266,8 +397,11 @@ def generate_pptx(date):
     p.text = 'Срок создания регистровой записи (УНРЗ) не соответствует дате установки диагноза: разница более 7 дней после даты установки диагноза, количество взято за последний месяц'
     p.font.size = Pt(20)
 
-    for title,type_error,type_org in valume:
-        create_slide(title,type_error,type_org,date_start_sql,date_end_sql)
+    for title,type_error,type_org,dynamic in valume:
+        try:
+            create_slide(title,type_error,type_org,date_start_sql,date_end_sql,dynamic)
+        except Exception as e:
+            send('', type_error +'\n'+ type_org +'\n'+ str(e))
 
     pptx_file = get_dir('temp') + '/dynamic.pptx' 
     prs.save(pptx_file)

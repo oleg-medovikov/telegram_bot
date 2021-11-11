@@ -357,8 +357,11 @@ def sbor_death_week_svod(a):
     list_=[]
     for excel in glob.glob(path):
         chast = pd.read_excel(excel)
+        chast ['file'] = excel.rsplit('/',1)[1]
         list_.append(chast)
     df = pd.concat(list_)
+    df_file = get_dir('temp') + '/df_file.xlsx'
+    df.to_excel(df_file) 
     #send('',str(len(df)) + ' , ' + str(len(glob.glob(path))))
     df = df.loc[~df['Медицинская организация'].isnull()]
     df['Ndays'] = (pd.to_datetime(df['Дата госпитализации'],errors='coerce') - pd.to_datetime(df['Дата начала заболевания'],errors='coerce')).dt.days
@@ -368,7 +371,7 @@ def sbor_death_week_svod(a):
     
     sql = """select c.*,fr.[Посмертный диагноз] as 'Посмертный диагноз новый' from (
     select * from tmp.cheak_diagnoz ) as c
-    left join (select * from dbo.cv_fedreg where [Исход заболевания] = 'Смерть') as fr
+    left join (select * from robo.v_FedReg where [Исход заболевания] = 'Смерть') as fr
     on (c.[ФИО] = fr.[ФИО] and c.[Дата рождения] = fr.[Дата рождения])
     where  c.[Посмертный диагноз] <> fr.[Посмертный диагноз]
     order by [index]
@@ -670,7 +673,7 @@ def sbor_death_week_svod(a):
     
     empty = ''
     for i in df.loc[df['Район проживания'].isnull()].index:
-        empty += 'Пустой район в ' + str(df.at[i,'Медицинская организация'])
+        empty += 'Пустой район в ' + str(df.at[i,'Медицинская организация']) + '\n'
 
     if len(empty):
         send('epid', empty)
@@ -698,7 +701,7 @@ def sbor_death_week_svod(a):
         shutil.copyfile(file_svod,new_path + '/свод.xlsx')
     except:
         pass
-    return file_svod
+    return file_svod +';'+ df_file
 
 def patient_amb_stac(a):
     sql =  open('sql/covid/patient_amb_stac.sql','r').read()

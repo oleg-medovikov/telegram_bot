@@ -224,6 +224,10 @@ def slojit_fr(a):
             & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
             & (svod['Вид лечения'].isin(['Стационарное лечение']))])
 
+    NumberFor7 = len(svod.loc[(svod['Исход заболевания'].str.contains('Выздоровление')) \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']) ) \
+            & ( pd.to_datetime(svod['Дата исхода заболевания'], format='%d.%m.%Y', errors='ignore' )  > (datetime.datetime.now() - datetime.timedelta(days=181) ) ) ] )
+    
     otvet = 'По цифрам\n' \
             + 'На стационарном лечении: ' + str(NumberForMG) + '\n' \
             + 'Всего заболело: ' + str(NumberFor1) +'\n' \
@@ -231,7 +235,8 @@ def slojit_fr(a):
             + 'Всего выздоровело за ' + str(day) + ' : '+ str(NumberFor3) + '\n'\
             + 'Сейчас на стационаром лечении: ' + str(NumberFor4) + '\n' \
             + 'Сейчас на стационаром лечении старше 60: ' + str(NumberFor5) + '\n' \
-            + 'Сейчас на стационаром лечении старше 70: ' + str(NumberFor6) 
+            + 'Сейчас на стационаром лечении старше 70: ' + str(NumberFor6)  + '\n' \
+            + 'Всего выздоровело от ковида за последние 180 дней: ' + str(NumberFor7)
     
     send('epid',otvet)
     send('epid','Начинаю записывать файлы')

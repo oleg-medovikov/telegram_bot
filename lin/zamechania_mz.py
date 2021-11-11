@@ -159,11 +159,21 @@ def net_dnevnik(a):
     return get_dir('temp') + '/' + 'отчёт по разложению нет дневниковых записей.xlsx'
 
 def zavishie_statusy(a):
-    sql = open('sql/zam/zavishie_status.sql','r').read()
+    #sql = open('sql/zam/zavishie_status.sql','r').read()
+    #df = pd.read_sql(sql,con)
+    #put_svod(df,'зависшие статусы',None)
+    #put_excel_for_mo(df,'зависшие статусы',None)
+    #return get_dir('temp') + '/' + 'отчёт по разложению зависшие статусы.xlsx'
+    sql = open('sql/zam/bez_ambulat_level_amb.sql','r').read()
     df = pd.read_sql(sql,con)
     put_svod(df,'зависшие статусы',None)
     put_excel_for_mo(df,'зависшие статусы',None)
-    return get_dir('temp') + '/' + 'отчёт по разложению зависшие статусы.xlsx'
+    sql = open('sql/zam/bez_ambulat_level_noMO.sql','r').read()
+    df = pd.read_sql(sql,con)
+    put_svod(df,'зависшие статусы без МО прикрепления',None)
+    put_excel_for_mo(df,'зависшие статусы без МО прикрепления',None)
+    return get_dir('temp') + '/' + 'отчёт по разложению зависшие статусы.xlsx' +';'+ get_dir('temp') +'/'+ 'зависшие статусы без МО прикрепления.xlsx'
+
 
 def delete_old_files(date):
     path = get_dir('covid')+ f"/EPID.COVID.*/EPID.COVID.*/Замечания Мин. Здравоохранения/{date.strftime('%Y-%m-%d')}*.xlsx"
@@ -381,8 +391,10 @@ def zamechania_mz(a):
              ['net_dnevnik.sql','Нет дневниковых записей'],
              ['net_pad.sql', 'Нет ПАД'],
              ['neverni_vid_lecenia.sql','Неверный вид лечения'],
-             ['bez_ambulat_level.sql', 'Нет амбулаторного этапа']]
-    
+             ['bez_ambulat_level.sql', 'Нет амбулаторного этапа'],
+             ['bez_ambulat_level_amb.sql', 'Пациенты зависшие по МО'],
+             ['bez_ambulat_level_noMO.sql', 'Пациенты зависшие без МО']]
+     
     for file,name in names:
         sql = open('sql/zam/' + file, 'r').read()
         part = pd.read_sql(sql,con)
