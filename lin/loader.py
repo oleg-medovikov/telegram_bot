@@ -215,29 +215,29 @@ def slojit_fr(a):
     # расчет людей на стационарном лечении
     svod['Возраст'] = (pd.to_datetime(svod['Диагноз установлен'], format="%d.%m.%Y") - pd.to_datetime(svod['Дата рождения'], format="%d.%m.%Y")) / numpy.timedelta64(1, 'Y')
     NumberFor4_1 = len(svod.loc[(svod['Исход заболевания'].isnull()) \
-            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1[2-8]') ) \
             & (svod['Вид лечения'].isin(['Стационарное лечение']))])
     NumberFor4_2 = len(svod.loc[(svod['Исход заболевания'].isnull()) & ( svod['Возраст'] < 18) \
-            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1[2-8]') ) \
             & (svod['Вид лечения'].isin(['Стационарное лечение']))])
     NumberFor4_3 = len(svod.loc[(svod['Исход заболевания'].isnull()) & ( svod['Возраст'] >= 60) \
-            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1[2-8]') ) \
             & (svod['Вид лечения'].isin(['Стационарное лечение']))])
     NumberFor4_4 = len(svod.loc[(svod['Исход заболевания'].isnull()) & ( svod['Возраст'] >= 70) \
-            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1[2-8]') ) \
             & (svod['Вид лечения'].isin(['Стационарное лечение']))])
 
     NumberFor5_1 = len(svod.loc[(svod['Исход заболевания'].isnull()) \
-            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1[2-8]') ) \
             & (svod['Вид лечения'].isin(['Амбулаторное лечение']))])
     NumberFor5_2 = len(svod.loc[(svod['Исход заболевания'].isnull()) & ( svod['Возраст'] < 18) \
-            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1[2-8]') ) \
             & (svod['Вид лечения'].isin(['Амбулаторное лечение']))])
     NumberFor5_3 = len(svod.loc[(svod['Исход заболевания'].isnull()) & ( svod['Возраст'] >= 60) \
-            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1[2-8]') ) \
             & (svod['Вид лечения'].isin(['Амбулаторное лечение']))])
     NumberFor5_4 = len(svod.loc[(svod['Исход заболевания'].isnull()) & ( svod['Возраст'] >= 70) \
-            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1') ) \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']) | svod['Диагноз'].str.contains('J1[2-8]') ) \
             & (svod['Вид лечения'].isin(['Амбулаторное лечение']))])
 
     NumberFor7 = len(svod.loc[(svod['Исход заболевания'].str.contains('Выздоровление')) \
@@ -321,7 +321,7 @@ def load_fr(a):
         report.loc[1,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
         report.loc[1,'value_name'] = 'Всего на амбулаторном лечении от COVID'
         report.loc[1,'value_count'] = len(pd.loc[(pd['Исход заболевания'].isnull()) \
-                & (pd['Диагноз'].isin(['U07.1','U07.2']) | pd['Диагноз'].str.contains('J1') ) \
+                & (pd['Диагноз'].isin(['U07.1','U07.2']) | pd['Диагноз'].str.contains('J1[2-8]') ) \
                 & (pd['Вид лечения'].isin(['Амбулаторное лечение']))] )
 
         report.to_sql('values',con,schema='robo',index=False,if_exists='append')
