@@ -245,7 +245,7 @@ def slojit_fr(a):
             & ( pd.to_datetime(svod['Дата исхода заболевания'], format='%d.%m.%Y', errors='ignore' )  > (datetime.datetime.now() - datetime.timedelta(days=181) ) ) ] )
     
     otvet = 'По цифрам\n' \
-            + 'На стационарном лечении: ' + str(NumberForMG) + '\n' \
+            + 'На стационарном лечении (U07.1): ' + str(NumberForMG) + '\n' \
             + 'Всего заболело: ' + str(NumberFor1) +'\n' \
             + 'Всего умерло: '+ str(NumberFor2) + '\n' \
             + 'Всего выздоровело за ' + str(day) + ' : '+ str(NumberFor3) + '\n'\
@@ -320,11 +320,11 @@ def load_fr(a):
 
         report.loc[1,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
         report.loc[1,'value_name'] = 'Всего на амбулаторном лечении от COVID'
-        report.loc[1,'value_count'] = len(pd.loc[(pd['Исход заболевания'].isnull()) \
-                & (pd['Диагноз'].isin(['U07.1','U07.2']) | pd['Диагноз'].str.contains('J1[2-8]') ) \
-                & (pd['Вид лечения'].isin(['Амбулаторное лечение']))] )
+        report.loc[1,'value_count'] = len(df.loc[(df['Исход заболевания'] == '' ) \
+                & (df['Диагноз'].isin(['U07.1','U07.2']) | df['Диагноз'].str.contains('J1[2-8]') ) \
+                & (df['Вид лечения'].isin(['Амбулаторное лечение']))] )
 
-        report.to_sql('values',con,schema='robo',index=False,if_exists='append')
+    report.to_sql('values',con,schema='robo',index=False,if_exists='append')
         # ============================================
         send('admin','Файл в памяти, количество строк: ' + str(len(df)) )
         sql_execute('TRUNCATE TABLE [dbo].[cv_input_fr]')
