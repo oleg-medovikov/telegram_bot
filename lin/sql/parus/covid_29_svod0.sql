@@ -12,7 +12,8 @@ SELECT  DAY, pok_01, nvl(cast(pok_02 as int),0) pok_02,
     nvl(cast(pok_50 as float),0) pok_50,nvl(cast(pok_51 as float),0) pok_51,nvl(cast(pok_52 as float),0) pok_52,
     nvl(cast(pok_53 as float),0) pok_53,nvl(cast(pok_54 as float),0) pok_54,nvl(cast(pok_55 as float),0) pok_55,
     nvl(cast(pok_62 as float),0) pok_62,nvl(cast(pok_63 as float),0) pok_63,nvl(cast(pok_64 as float),0) pok_64,nvl(cast(pok_65 as float),0) pok_65,
-    nvl(cast(pok_66 as float),0) pok_66,nvl(cast(pok_67 as float),0) pok_67
+    nvl(cast(pok_66 as float),0) pok_66,nvl(cast(pok_67 as float),0) pok_67,nvl(cast(pok_68 as float),0) pok_68,nvl(cast(pok_69 as float),0) pok_69,
+    nvl(cast(pok_70 as float),0) pok_70,nvl(cast(pok_71 as float),0) pok_71,nvl(cast(pok_72 as float),0) pok_72,nvl(cast(pok_73 as float),0) pok_73
     FROM (
     SELECT 
             to_char(r.BDATE, 'DD.MM.YYYY')  day,
@@ -57,7 +58,8 @@ SELECT  DAY, pok_01, nvl(cast(pok_02 as int),0) pok_02,
     '29_covid_049' pok_49,'29_covid_050' pok_50,'29_covid_051' pok_51,'29_covid_052' pok_52,
     '29_covid_053' pok_53,'29_covid_054' pok_54,'29_covid_055' pok_55,
     '29_covid_062' pok_62,'29_covid_063' pok_63,'29_covid_064' pok_64,'29_covid_065' pok_65
-    ,'29_covid_066' pok_66,'29_covid_067' pok_67)
+    ,'29_covid_066' pok_66,'29_covid_067' pok_67,'29_covid_068' pok_68,'29_covid_069' pok_69
+    ,'29_covid_070' pok_70,'29_covid_071' pok_71,'29_covid_072' pok_72,'29_covid_073' pok_73)
     )
     WHERE POK_01 IS NOT NULL 
     ORDER BY POK_01

@@ -297,7 +297,13 @@ def razlojit_death_week(a):
                 pass
             otchet = df[df['Медицинская организация'] == MO]
             del otchet['Gid']
-            file = directory+'Умершие за неделю' + '/умершие с '+ str(date_start) + ' по ' + str(date_end) + '.xlsx'
+            if '(стац)' in MO:
+                file = directory+'Умершие за неделю' + '/умершие (стац) с '+ str(date_start) + ' по ' + str(date_end) + '.xlsx'
+            elif '(амб.)' in MO:
+                file = directory+'Умершие за неделю' + '/умершие (амб.) с '+ str(date_start) + ' по ' + str(date_end) + '.xlsx'
+            else:
+                file = directory+'Умершие за неделю' + '/умершие с '+ str(date_start) + ' по ' + str(date_end) + '.xlsx'
+
             print(MO+';'+file)
 #            with pd.ExcelWriter(file) as writer:
 #                otchet.to_excel(writer,index=False)

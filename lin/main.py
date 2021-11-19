@@ -21,6 +21,7 @@ from parus import cvod_33_covid,cvod_36_covid,cvod_37_covid,cvod_38_covid,cvod_2
 from parus import no_save_50, svod_50_cov_19,cvod_51_covid,cvod_27_smal,cvod_52_covid,cvod_28_covid,cvod_41_covid,cvod_42_covid
 from parus import cvod_4_3_covid,cvod_49_covid
 from geocoder import search_coordinats
+from squares import paint_otchet_vachin
 #from send_ODLI import send_bundle_to_ODLI
 import telebot_calendar
 from telebot_calendar import CallbackData
