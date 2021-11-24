@@ -266,6 +266,15 @@ def regiz_load_to_base(a):
                                               'mis'          : org_mis(file.split('/')[5]),
                                               'DateLoadFile' : datetime.datetime.now(),
                                               'InOrOut'      : 'IN'}, ignore_index=True)
+            elif str(exc) == "Excel file format cannot be determined, you must specify an engine manually.":
+                stat = stat.append({'MOName'       : organization,
+                                              'NameFile'     : file,
+                                              'CountRows'    : 0,
+                                              'TextError'    : 'Файл HTMl не удалось распарсить',
+                                              'OtherFiles'   : other_files,
+                                              'mis'          : org_mis(file.split('/')[5]),
+                                              'DateLoadFile' : datetime.datetime.now(),
+                                              'InOrOut'      : 'IN'}, ignore_index=True)
             else:
                 try:
                     df = pd.read_excel(file, usecols=names_new,dtype=str)

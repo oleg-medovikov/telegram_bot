@@ -187,7 +187,13 @@ def shedule():
         df = pd.read_sql(sql,con)
         return df
     
-    df = read_tasks()
+    try:
+        df = read_tasks()
+    except Exception as e:
+        send('','Проблема с чтением заданий шедулера \n' + str(e))
+    else:
+        pass
+    
     starttime=time.time()
     delta = 60 - time.time() % 60
     time.sleep(delta)
@@ -196,19 +202,29 @@ def shedule():
         if time_now.minute == 30:
             df = read_tasks()
         
+
         for i in df.loc[( (df['Time_hour'] == time_now.hour) & (df['Time_minute'] == time_now.minute) ) \
-                        | ( ( df['Time_hour'].isnull() )  & (time_now.minute % df['Time_minute'] == 0)  )
-                       ].index:
-            
-            my_thread = threading.Thread(target=create_tred_task, args=(df.at[i, 'name_job'],df.at[i, 'Procedure' ],df.at[i,'argument']))
-            my_thread.start()
+                | ( ( df['Time_hour'].isnull()  )  & (time_now.minute % df['Time_minute'] == 0)  ) ].index:
+            try:
+                my_thread = threading.Thread(target=create_tred_task, args=(df.at[i, 'name_job'],df.at[i, 'Procedure' ],df.at[i,'argument']))
+            except Exception as e:
+                send('', 'Ошибка при запуске задания\n' + str(e))
+            try:
+                my_thread.start()
+            except Exception as e:
+                send('', 'Ошибка при запуске задания\n' + str(e))
         
         delta = 60 - time.time() % 60
         time.sleep(delta)
+
     
-    
-t = threading.Thread(target=shedule, name="Расписание работ")
-t.start()
+try:
+    t = threading.Thread(target=shedule, name="Расписание работ")
+    t.start()
+except Exception as e:
+    send('', 'Не удалось запустить шедулер\n' + str(e))
+else:
+    send('','Шедулер успешно запущен')
 # ========= Маленькая процедурка для определения периода суток
 
 def get_hello_start():

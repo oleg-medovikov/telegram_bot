@@ -93,7 +93,10 @@ def check_file(file,category):
     names_found = []
     num_colum = 0
     try:
-        file =  pd.read_csv(file,header=None, delimiter=';', engine='python')
+        if category == 'fr':
+            file =  pd.read_csv(file,header=None, delimiter=';', engine='python',encoding = 'cp1250')
+        else:
+            file =  pd.read_csv(file,header=None, delimiter=';', engine='python')
     except:
         return [False,'Файл не читается','',0]
     for head in range(len(file)):
@@ -139,12 +142,12 @@ def load_vaccina(a):
     df.columns = cols
     send('admin',str(df.columns))
     send('admin','Файл в памяти, количество строк: ' + str(len(df)) )
-    sql_execute('TRUNCATE TABLE [tmp].[FedRegVakcin]')
-    send('admin','Очистил FedRegVakcin')
+    sql_execute('TRUNCATE TABLE [dbo].[cv_fedRegVakcin]')
+    send('admin','Очистил cv_fedRegVakcin')
 
     with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@{server}/{dbase}",pool_pre_ping=True).connect() as con:
-        df.to_sql('FedRegVakcin',con,schema='tmp',if_exists='replace',index=False)
-    if check_table('FedRegVakcin'):
+        df.to_sql('cv_fedRegVakcin',con,schema='dbo',if_exists='replace',index=False)
+    if check_table('fedRegVakcin'):
         send('admin','Федеральный регистр успешно загружен')
         return 1
     else:
@@ -184,10 +187,10 @@ def slojit_fr(a):
     svod["п/н"] = range(1, len(svod)+1)
     tumorow = (datetime.datetime.today() + datetime.timedelta(days=1)).strftime("%Y_%m_%d")
     
-    new_fedreg      = get_dir('robot') +'/'+ tumorow + '/Федеральный регистр лиц, больных - ' + date + '.xlsx'
-    new_fedreg_temp = get_dir('temp') + '/Федеральный регистр лиц, больных - ' + date + '.xlsx'
-    new_iach        = get_dir('covid_iac2') + '/Федеральный регистр лиц, больных - ' + date + '_ИАЦ.xlsx'
-    new_iach_temp   = get_dir('temp') + '/Федеральный регистр лиц, больных - ' + date + '_ИАЦ.xlsx'
+    new_fedreg      = get_dir('robot') +'/'+ tumorow + '/Федеральный регистр лиц, больных - ' + date + '.csv'
+    new_fedreg_temp = get_dir('temp') + '/Федеральный регистр лиц, больных - ' + date + '.csv'
+    new_iach        = get_dir('covid_iac2') + '/Федеральный регистр лиц, больных - ' + date + '_ИАЦ.csv'
+    new_iach_temp   = get_dir('temp') + '/Федеральный регистр лиц, больных - ' + date + '_ИАЦ.csv'
     otchet_9        = glob.glob(get_dir('robot') +'/'+ tumorow +'/9. Отчет по пациентам COVID-центр*.xlsx' )
     if len(otchet_9):
         otchet_9_new = get_dir('covid_iac2') +'/'+ otchet_9[0].rsplit('/',1)[1]
@@ -208,7 +211,8 @@ def slojit_fr(a):
     day = pd.to_datetime(svod['Дата изменения РЗ'], format='%d.%m.%Y').max().date()
     count_vizd_old = pd.read_sql ("""SELECT [value_count] FROM [robo].[values]
                 where id = (select max(id) from [robo].[values] where [value_name] = 'Всего выздоровело от COVID' 
-                and date_rows = (select max(date_rows) from [robo].[values] where [value_name] = 'Всего выздоровело от COVID'  and  date_rows != cast(getdate() as date) ) )""",con).iat[0,0]
+                and date_rows = (select max(date_rows) from [robo].[values] where [value_name] = 'Всего выздоровело от COVID'
+                and  date_rows != cast(getdate() as date) ) )""",con).iat[0,0]
     count_vizd_new = len(svod[svod['Исход заболевания'].isin(['Выздоровление']) & svod['Диагноз'].isin(['U07.1']) ])
 
     NumberFor3 = count_vizd_new - count_vizd_old
@@ -245,25 +249,27 @@ def slojit_fr(a):
             & ( pd.to_datetime(svod['Дата исхода заболевания'], format='%d.%m.%Y', errors='ignore' )  > (datetime.datetime.now() - datetime.timedelta(days=181) ) ) ] )
     
     otvet = 'По цифрам\n' \
-            + 'На стационарном лечении (U07.1): ' + str(NumberForMG) + '\n' \
-            + 'Всего заболело: ' + str(NumberFor1) +'\n' \
-            + 'Всего умерло: '+ str(NumberFor2) + '\n' \
-            + 'Всего выздоровело за ' + str(day) + ' : '+ str(NumberFor3) + '\n'\
-            + 'Сейчас на стационаром лечении: ' + str(NumberFor4_1) + '\n' \
-            + 'Сейчас на стационаром лечении младше 18: ' + str(NumberFor4_2) + '\n' \
-            + 'Сейчас на стационаром лечении старше 60: ' + str(NumberFor4_3) + '\n' \
-            + 'Сейчас на стационаром лечении старше 70: ' + str(NumberFor4_4)  + '\n' \
-            + 'Сейчас на амбулаторном лечении: ' + str(NumberFor5_1) + '\n' \
-            + 'Сейчас на амбулаторном лечении младше 18: ' + str(NumberFor5_2) + '\n' \
-            + 'Сейчас на амбулаторном лечении старше 60: ' + str(NumberFor5_3) + '\n' \
-            + 'Сейчас на амбулаторном лечении старше 70: ' + str(NumberFor5_4)  + '\n' \
-            + 'Всего выздоровело от ковида за последние 180 дней: ' + str(NumberFor7)
+            + 'На стационарном лечении (U07.1): ' + format(NumberForMG,'n') + '\n' \
+            + 'Всего заболело: ' + format(NumberFor1,'n') +'\n' \
+            + 'Всего умерло: '+ format(NumberFor2,'n') + '\n' \
+            + 'Всего выздоровело за ' + str(day) + ' : '+ format(NumberFor3, 'n') + '\n'\
+            + 'Сейчас на стационаром лечении: ' + format(NumberFor4_1, 'n') + '\n' \
+            + 'Сейчас на стационаром лечении младше 18: ' + format(NumberFor4_2, 'n') + '\n' \
+            + 'Сейчас на стационаром лечении старше 60: ' + format(NumberFor4_3, 'n') + '\n' \
+            + 'Сейчас на стационаром лечении старше 70: ' + format(NumberFor4_4, 'n')  + '\n' \
+            + 'Сейчас на амбулаторном лечении: ' + format(NumberFor5_1, 'n') + '\n' \
+            + 'Сейчас на амбулаторном лечении младше 18: ' + format(NumberFor5_2, 'n') + '\n' \
+            + 'Сейчас на амбулаторном лечении старше 60: ' + format(NumberFor5_3, 'n') + '\n' \
+            + 'Сейчас на амбулаторном лечении старше 70: ' + format(NumberFor5_4, 'n')  + '\n' \
+            + 'Всего выздоровело от ковида за последние 180 дней: ' + format(NumberFor7, 'n')
     
     send('epid',otvet)
     send('epid','Начинаю записывать файлы')
 
-    with pd.ExcelWriter(new_fedreg_temp) as writer:
-        svod.to_excel(writer,index=False)
+    #with pd.ExcelWriter(new_fedreg_temp) as writer:
+    #    svod.to_excel(writer,index=False)
+
+    svod.to_csv(new_fedreg_temp,index=False,sep=";",encoding='cp1251')
     try:
         shutil.move(new_fedreg_temp,new_fedreg)
     except:
@@ -273,13 +279,15 @@ def slojit_fr(a):
 
     del svod['СНИЛС']
     del svod['ФИО']
-    with pd.ExcelWriter(new_iach_temp) as writer:
-        svod.to_excel(writer,index=False)
+
+    #with pd.ExcelWriter(new_iach_temp) as writer:
+    #    svod.to_excel(writer,index=False)
+
+    svod.to_csv(new_iach_temp,index=False,sep=";",encoding='cp1251')
+
     shutil.move(new_iach_temp,new_iach)
     send('epid','Записан файл иац')
     
-    
-
     return 'Фух, закончил'
 
 def excel_to_csv_old(file_excel):
@@ -348,7 +356,7 @@ def load_fr(a):
         check = check_file(search[2],'fr')
         if check[0]:
             send('admin','Файл прошёл проверку, начинаю грузить в память')
-            df = pd.read_csv(search[2],header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
+            df = pd.read_csv(search[2],header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python',encoding = 'cp1251')
             print(df.head(3))
             fr_to_sql(df)
             return 1
@@ -363,7 +371,7 @@ def load_fr(a):
             check = check_file(file_csv,'fr')
             if check[0]:
                 send('admin','Файл прошёл проверку, начинаю грузить в память')
-                df = pd.read_csv(file_csv,header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python')
+                df = pd.read_csv(file_csv,header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python',encoding = 'cp1251')
                 fr_to_sql(df)
                 return 0
             else:

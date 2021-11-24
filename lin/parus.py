@@ -449,8 +449,9 @@ def cvod_27_smal(a):
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
 
-    with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@miacbase3/MIAC_DS", pool_pre_ping=True).connect() as c:
-        df.to_sql('covid_27',c,schema='Pds',index=False,if_exists='append')
+    if len(df):
+        with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@miacbase3/MIAC_DS", pool_pre_ping=True).connect() as c:
+            df.to_sql('covid_27',c,schema='Pds',index=False,if_exists='replace')
     return 1
 
 def cvod_27_covid(a):

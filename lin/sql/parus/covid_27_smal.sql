@@ -23,5 +23,5 @@ on(pf.PRN = rf.RN)
 INNER JOIN PARUS.BALANCEINDEXES bi 
 on(d.BALANCEINDEX = bi.RN)
 WHERE rf.CODE = '27 COVID19' 
-and r.BDATE =  trunc(SYSDATE) - 1
+and r.BDATE between  to_date('2021-01-01','yyyy-mm-dd') AND  trunc(SYSDATE) - 1
 and bi.CODE IN ('labCOVID_17','labCOVID_18','labCOVID_19','labCOVID_18_21_1','labCOVID_18_21')

@@ -437,6 +437,7 @@ def zamechania_mz_file(a):
     #con.execute(sql)
     df.fillna(0, inplace=True)
     del df['Уникальных пациентов']
+    df = df.loc[~(df['Медицинская организация'] == 'МО другого региона') ]
     df.index = range(len(df))    
     
     file = get_dir("temp") + "/Замечания_за_" +date.iat[0,0] +".xlsx"
