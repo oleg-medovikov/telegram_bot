@@ -38,7 +38,7 @@ and r.BDATE = ( SELECT max(r.BDATE) FROM PARUS.BLTBLVALUES v
 				on(r.BLREPFORMED = rd.RN)
 				INNER JOIN PARUS.BLREPFORM rf
 				on(rd.PRN = rf.RN)
-				WHERE rf.code = '4.3 COVID 19 Стац.' AND r.BDATE < trunc(SYSDATE) + 3)
+				WHERE rf.code = '4.3 COVID 19 Стац.' AND r.BDATE < trunc(SYSDATE))
 --and bi.CODE IN ('4.3_1_01','4.3_2_01','4.3_3_01','4.3_4_01','4.3_5_01','4.3_6_01','4.3_7_01','4.3_8_01')
 order by  d.BALANCEINDEX 
 )

@@ -227,14 +227,15 @@ def IVL(a):
     except:
         raise my_except('Не найден Мониторинг_ВП.xlsx')
     try:
-        file_fr = glob.glob(path + '/[!~]*едеральный*15-00.xlsx')[0]
+        file_fr = glob.glob(path + '/[!~]*едеральный*15-00.csv')[0]
     except:
         raise my_except('Не найден трёхчасовой федеральный регистр')
 
     send('epid', 'Использую \n' + file_vp.rsplit('/',1)[-1] + '\n' + file_fr.rsplit('/',1)[-1])
 
     names = ['Дата изменения РЗ','Медицинская организация','Исход заболевания','ИВЛ','Вид лечения','Субъект РФ','Диагноз']
-    fr = pd.read_excel(file_fr, usecols=names,dtype=str)
+    fr = pd.read_csv(file_fr, usecols = names, sep=';', engine='python',encoding='utf-8')
+    #fr = pd.read_excel(file_fr, usecols=names,dtype=str)
     date_otch =  str(pd.to_datetime(fr['Дата изменения РЗ'],format='%d.%m.%Y').max().date())
     del fr['Дата изменения РЗ']
     names = ['mo','vp_zan','vp_ivl','cov_zan','cov_ivl']

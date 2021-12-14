@@ -43,7 +43,7 @@ def sort_death_mg(a):
     cols = ['№ п/п','Возраст','Субъект','Улица смерти','Дом смерти','Краткое наименование','Место смерти']
     df = pd.read_excel(excel[0],header=1, usecols = cols )
     df = df[(df['№ п/п'].notnull() ) & ( df['№ п/п'] != 0 ) ]
-    df.index = range(len(df))
+    df.index = aange(len(df))
     mo = namedtuple('mo',['Name_MO','Street','House'])
     sql = """
     SELECT  [Name_MO],[Street],[House]
@@ -784,17 +784,17 @@ def svod_unique_patient(date_global):
         human = namedtuple('hunan',['fio','birthday','number_row','dubl_row'])
         for i in range(len(svod_1)):
             svod_list.append(human(
-                        svod_1.at[i,'Фио'].lower(),
+                        str(svod_1.at[i,'Фио']).lower(),
                         svod_1.at[i,'дата рождения'].strftime('%d.%m.%Y'),
                         svod_1.at[i,'№п/п'],
                         -1
                         ))
         for i in range(len(rpn_1)):
             rpn_list.append(human(
-                        rpn_1.at[i,'фио'].lower(),
+                        str(rpn_1.at[i,'фио']).lower(),
                         rpn_1.at[i,'Дата рождения '].strftime('%d.%m.%Y'),
                         rpn_1.at[i,'Unnamed: 0'],
-                        search(rpn_1.at[i,'фио'].lower(),rpn_1.at[i,'Дата рождения '].strftime('%d.%m.%Y'))
+                        search(str(rpn_1.at[i,'фио']).lower(),rpn_1.at[i,'Дата рождения '].strftime('%d.%m.%Y'))
                         ))
         dubli = pd.DataFrame()
 
@@ -831,13 +831,31 @@ def get_il_stopcorona(a):
 
     data = requests.get(url).json()
     df = pd.DataFrame.from_dict(data)
-    value = int(df.at[0,'sick']) - int(df.at[1,'sick'])
-
+    for i in range(len(df) -1):
+        df.loc[i, 'value'] = int(df.at[i,'sick']) - int(df.at[i+1,'sick'])
+    
+    df = df.loc[~df.value.isnull()]
+       
     report = pd.DataFrame()
-    report.loc[0,'date_rows'] = pd.to_datetime(df['date'],format='%d.%m.%Y').max().date()
-    report.loc[0,'value_name'] = 'Новые заболевшие за сутки согласно СТОПКАРОНОВИРУС'
-    report.loc[0,'value_count'] = value
+    for i in range(len(df)):
+        report.loc[i,'date_rows'] = pd.to_datetime(df.at[i,'date'],format='%d.%m.%Y').date()
+        report.loc[i,'value_name'] = 'Новые заболевшие за сутки согласно СТОПКАРОНОВИРУС'
+        report.loc[i,'value_count'] = df.at[i,'value']
+    
+    dates = '('
+    for date in report.date_rows.unique():
+        dates +="'" + str(date) + "',"
+    
+    dates = dates[:-1]
+    dates +=')'
+    
+    sql = f"DELETE FROM Pds.stopcorona where date_rows in {dates}"
+
+    with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@miacbase3/MIAC_DS", pool_pre_ping=True).connect() as c:
+        c.execute(sql)
+
     with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@miacbase3/MIAC_DS", pool_pre_ping=True).connect() as c:
         report.to_sql('stopcorona',c,schema='Pds',index=False,if_exists='append')
     report.to_sql('values',con,schema='robo',index=False,if_exists='append')
-    return value
+
+    return df.at[0,'value']

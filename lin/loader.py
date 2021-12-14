@@ -94,7 +94,7 @@ def check_file(file,category):
     num_colum = 0
     try:
         if category == 'fr':
-            file =  pd.read_csv(file,header=None, delimiter=';', engine='python',encoding = 'cp1250')
+            file =  pd.read_csv(file,header=None, delimiter=';', engine='python', encoding='utf-8') #,encoding = 'cp1250')
         else:
             file =  pd.read_csv(file,header=None, delimiter=';', engine='python')
     except:
@@ -129,14 +129,25 @@ def load_vaccina(a):
     if not len(files):
         raise my_except('В папке нет файлов!')
     names = [
-    'п/н', 'Дата создания РЗ', 'Дата обновления РЗ', 'УНРЗ', 'СНИЛС', 'ФИО', 'Пол', 'Дата рождения', 'Вакцина','Дата вакцинации', 'Субъект РФ', 'Медицинская организация', 'Ведомственная принадлежность', 'Структурное подразделение', 'Статус иммунизации', 'Дневник самонаблюдения', 'Сведения об осложнениях', 'Наличие пациента в Регистре COVID'      
+    'п/н', 'Дата создания РЗ', 'Дата обновления РЗ', 'УНРЗ', 'СНИЛС', 'ФИО', 'Пол', 'Дата рождения', 'Вакцина','Дата вакцинации', 'Субъект РФ', 'Медицинская организация', 'Ведомственная принадлежность', 'Структурное подразделение', 'СНИЛС медицинского работника','Статус иммунизации', 'Дневник самонаблюдения', 'Сведения об осложнениях', 'Наличие пациента в Регистре COVID'      
         ]
-    cols = ['number','Data_sozdaniya_RZ','Data_obnovleniya_RZ','UNRZ','SNILS','FIO','Pol','Data_rozhdeniya','Vaktsina','Data_vaktsinatsii','Subyekt_RF','Meditsinskaya_organizatsiya','Vedomstvennaya_prinadlezhnost','Strukturnoye_podrazdeleniye','Status_immunizatsii','Dnevnik_samonablyudeniya','Ob_informatsii_oslozhneniyakh','Nalichiye_patsiyenta_v_Registre_COVID']
+    cols = ['number','Data_sozdaniya_RZ','Data_obnovleniya_RZ','UNRZ','SNILS','FIO','Pol','Data_rozhdeniya','Vaktsina','Data_vaktsinatsii','Subyekt_RF','Meditsinskaya_organizatsiya','Vedomstvennaya_prinadlezhnost','Strukturnoye_podrazdeleniye','SNILS_MO_employee','Status_immunizatsii','Dnevnik_samonablyudeniya','Ob_informatsii_oslozhneniyakh','Nalichiye_patsiyenta_v_Registre_COVID']
     list_ = []
     for file in files:
-        part = pd.read_excel(file, usecols=names,  header=1,skipfooter=1 )
-        send('admin','Я прочёл ' + file.rsplit('/',1)[-1])
-        list_.append(part)
+        part = pd.DataFrame()
+        try:
+            part = pd.read_excel(file, usecols=names,  header=0,skipfooter=1 )
+        except:
+            try:
+                part = pd.read_excel(file, usecols=names,  header=1,skiprows = 1, skipfooter=1 )
+            except Exception as e:
+                send('admin', file.rsplit('/',1)[-1] +'\n'+ str(e) )
+        
+        if len(part):
+            send('admin','Я прочёл ' + file.rsplit('/',1)[-1])
+            list_.append(part)
+        else:
+            send('admin','Я не смог прочитать ' + file.rsplit('/',1)[-1])
 
     df = pd.concat(list_)
     df.columns = cols
@@ -269,7 +280,7 @@ def slojit_fr(a):
     #with pd.ExcelWriter(new_fedreg_temp) as writer:
     #    svod.to_excel(writer,index=False)
 
-    svod.to_csv(new_fedreg_temp,index=False,sep=";",encoding='cp1251')
+    svod.to_csv(new_fedreg_temp,index=False,sep=";", encoding='utf-8')#encoding='cp1251')
     try:
         shutil.move(new_fedreg_temp,new_fedreg)
     except:
@@ -283,7 +294,7 @@ def slojit_fr(a):
     #with pd.ExcelWriter(new_iach_temp) as writer:
     #    svod.to_excel(writer,index=False)
 
-    svod.to_csv(new_iach_temp,index=False,sep=";",encoding='cp1251')
+    svod.to_csv(new_iach_temp,index=False,sep=";",encoding='cp1251')#,encoding='cp1251')
 
     shutil.move(new_iach_temp,new_iach)
     send('epid','Записан файл иац')
@@ -356,7 +367,7 @@ def load_fr(a):
         check = check_file(search[2],'fr')
         if check[0]:
             send('admin','Файл прошёл проверку, начинаю грузить в память')
-            df = pd.read_csv(search[2],header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python',encoding = 'cp1251')
+            df = pd.read_csv(search[2],header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python',encoding = 'utf-8')
             print(df.head(3))
             fr_to_sql(df)
             return 1
@@ -371,7 +382,7 @@ def load_fr(a):
             check = check_file(file_csv,'fr')
             if check[0]:
                 send('admin','Файл прошёл проверку, начинаю грузить в память')
-                df = pd.read_csv(file_csv,header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python',encoding = 'cp1251')
+                df = pd.read_csv(file_csv,header = check[3], usecols = check[2], na_filter = False, dtype = str, delimiter=';', engine='python',encoding = 'utf-8')
                 fr_to_sql(df)
                 return 0
             else:

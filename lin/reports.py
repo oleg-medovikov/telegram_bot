@@ -31,14 +31,17 @@ def sql_execute(sql):
     session.close()
 
 def fr_deti(a):
-    sql_week = 'exec [dbo].[Proc_Report_Children_by_week]'
-    sql_month = 'exec [dbo].[Proc_Report_Children_by_month]'
+    sql_week    = 'exec [dbo].[Proc_Report_Children_by_week]'
+    sql_month   = 'exec [dbo].[Proc_Report_Children_by_month]'
+    sql_diagnoz = 'exec [dbo].[Proc_Report_Children_by_diagnoz]'
     file = get_dir('temp') + '/otchet_deti.xlsx'
     week = pd.read_sql(sql_week,con)
     month = pd.read_sql(sql_month,con)
+    diagnoz = pd.read_sql(sql_diagnoz,con)
     with pd.ExcelWriter(file) as writer:
         week.to_excel(writer,sheet_name='week',index=False) 
         month.to_excel(writer,sheet_name='month',index=False) 
+        diagnoz.to_excel(writer,sheet_name='diagnoz',index=False) 
     return file
 
 def short_report(textsql):
