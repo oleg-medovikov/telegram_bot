@@ -7,6 +7,7 @@ from dateutil import relativedelta
 from collections import namedtuple
 from loader import get_dir
 from sending import send
+from sqlalchemy.orm import sessionmaker
 
 server  = os.getenv('server')
 user    = os.getenv('mysqldomain') + '\\' + os.getenv('mysqluser')
@@ -43,7 +44,7 @@ def sort_death_mg(a):
     cols = ['№ п/п','Возраст','Субъект','Улица смерти','Дом смерти','Краткое наименование','Место смерти']
     df = pd.read_excel(excel[0],header=1, usecols = cols )
     df = df[(df['№ п/п'].notnull() ) & ( df['№ п/п'] != 0 ) ]
-    df.index = aange(len(df))
+    df.index = range(len(df))
     mo = namedtuple('mo',['Name_MO','Street','House'])
     sql = """
     SELECT  [Name_MO],[Street],[House]
@@ -850,9 +851,15 @@ def get_il_stopcorona(a):
     dates +=')'
     
     sql = f"DELETE FROM Pds.stopcorona where date_rows in {dates}"
-
+    
+    #send ("", sql)
     with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@miacbase3/MIAC_DS", pool_pre_ping=True).connect() as c:
-        c.execute(sql)
+        Session = sessionmaker(bind=c)
+        session = Session()
+        session.execute(sql)
+        session.commit()
+        session.close()
+
 
     with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@miacbase3/MIAC_DS", pool_pre_ping=True).connect() as c:
         report.to_sql('stopcorona',c,schema='Pds',index=False,if_exists='append')
