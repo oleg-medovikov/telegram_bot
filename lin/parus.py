@@ -962,6 +962,44 @@ def cvod_4_3_covid(a):
 
     return file
 
+def medical_waste(a):
+    sql= open('sql/parus/medical_waste.sql','r').read()
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql,con)
+
+    for col in df.columns:
+        try:
+            df[col] = pd.to_numeric(df[col], errors='ignore')
+        except:
+            pass
+    new_name = datetime.datetime.now().strftime('%d_%m_%Y') + '_медицинские_отходы.xlsx'
+    shablon_path = get_dir('help')
+
+    shutil.copyfile(shablon_path + '/medical_waste.xlsx', shablon_path  + '/' + new_name)
+ 
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    ws = wb['SVOD']
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    
+    dolg = set(df.loc[df['YEAR'] == datetime.datetime.now().year -1 , 'ORGANIZATION' ].unique()) \
+            -  set(df.loc[df['YEAR'] == datetime.datetime.now().year, 'ORGANIZATION' ].unique())
+    
+    dolg = pd.DataFrame(dolg)    
+
+    ws = wb['DOLG']
+    rows = dataframe_to_rows(dolg,index=False, header=False)
+    for r_idx, row in enumerate(rows,2):
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    
+    wb.save( shablon_path  + '/' + new_name)
+    
+    return shablon_path  + '/' + new_name
+
 
 
 

@@ -79,6 +79,7 @@ def generate_pptx(date):
           and d1.[Медицинская организация] {chastn} ('ООО "ЛАХТА КЛИНИКА"','ООО «Городские поликлиники»', 'ООО "Современная медицина"',
                                                      'ООО «Медицентр ЮЗ»','АНО "Медицинский центр "Двадцать первый век"', 'ООО "ЦСМ "21 ВЕК"',
                                                      'ООО Ава-Петер','ЧУЗ «КБ «РЖД-МЕДИЦИНА» Г. С-ПЕТЕРБУРГ"','ООО «ММЦ «СОГАЗ»')
+          and  d1.[Медицинская организация] <> 'МО другого региона'
           order by  [Динамика] DESC, d1.eror1 DESC"""
         
         #send('',sql)
@@ -128,10 +129,10 @@ def generate_pptx(date):
         
         # Первая таблица  
         if dynamic:
-            if len(df.loc[df['Динамика'] > 0]) > 16:
+            if len(df.loc[~(df['Динамика'] < 0)]) > 16:
                 rows = 17
             else:
-                rows = len(df.loc[df['Динамика'] > 0]) + 1
+                rows = len(df.loc[~(df['Динамика'] < 0)]) + 1
         else:
             #send('', type_error + str(len(df)))
             if len(df) > 16:
@@ -175,8 +176,8 @@ def generate_pptx(date):
 
         k = 0
         if dynamic:
-            if len(df.loc[df['Динамика'] > 0]):
-                for i in df.loc[df['Динамика'] > 0].head(16).index:
+            if len(df.loc[~(df['Динамика'] < 0)]):
+                for i in df.loc[~(df['Динамика'] < 0)].head(16).index:
                     table.cell(k+1, 0).text = str(i+1) 
                     table.cell(k+1, 0).text_frame.paragraphs[0].font.size = Pt(12)
                     table.cell(k+1, 1).text = df.at[i,'Медицинская организация']
@@ -203,10 +204,10 @@ def generate_pptx(date):
 
         # Вторая таблица  
         if dynamic:
-            if len(df.loc[df['Динамика'] > 0]) > 16:
+            if len(df.loc[df['Динамика'] < 0]) > 16:
                 rows = 17
             else:
-                rows = len(df.loc[df['Динамика'] > 0]) + 1
+                rows = len(df.loc[df['Динамика'] < 0]) + 1
         else:
             #send('','2' +  type_error + str(len(df)))
             if len(df) > 16:

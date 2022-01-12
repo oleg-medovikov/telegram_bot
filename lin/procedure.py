@@ -252,8 +252,10 @@ def svod_vachine_dates(a):
     return excel
 
 def razlojit_death_week(a):
-    date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
-    date_start = date_end - datetime.timedelta(days=6) 
+    date_end   = '2022-01-05'
+    date_start = '2021-12-23'
+    #date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
+    #date_start = date_end - datetime.timedelta(days=6) 
 
     sql = f"""
     select dbo.get_Gid(idPatient) as 'Gid',[Медицинская организация],[ФИО],[Дата рождения]
@@ -262,7 +264,7 @@ def razlojit_death_week(a):
     from robo.v_FedReg
       where [Исход заболевания] = 'Смерть'
       and [Дата исхода заболевания]  BETWEEN '{date_start}' AND '{date_end}'
-      and YEAR([Дата исхода заболевания]) = YEAR(getdate())
+     -- and YEAR([Дата исхода заболевания]) = YEAR(getdate())
       and ([Посмертный диагноз]  in ('U07.1','U07.2')
            or [Посмертный диагноз] like 'J1[2-8]%' ) 
       and [Субъект РФ] = 'г. Санкт-Петербург'
@@ -338,8 +340,10 @@ def razlojit_death_week(a):
     return report_file
 
 def sbor_death_week_files(a): 
-    date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
-    date_start = date_end - datetime.timedelta(days=6) 
+    date_end   = '2022-01-05'
+    date_start = '2021-12-23'
+    #date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
+    #date_start = date_end - datetime.timedelta(days=6) 
 
     path     = get_dir('covid') + f'/EPID.COVID.*/EPID.COVID.*/Умершие за неделю/*{date_start} по {date_end}*.xlsx'
     new_path = get_dir('death_week') + f'/с {date_start} по {date_end}'
@@ -355,8 +359,10 @@ def sbor_death_week_files(a):
     return f'Файлы с {date_start} по {date_end} собраны в папку'
 
 def sbor_death_week_svod(a):
-    date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
-    date_start = date_end - datetime.timedelta(days=6) 
+    date_end   = '2022-01-05'
+    date_start = '2021-12-23'
+    #date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
+    #date_start = date_end - datetime.timedelta(days=6) 
 
     path     = get_dir('death_week') + f'/с {date_start} по {date_end}/[!~]*[!вод]*.xlsx'
     send('', path)
@@ -597,8 +603,6 @@ def sbor_death_week_svod(a):
         ,svod['Количество пациентов, умерших от U07.2, обращавшихся за медицинской помощью на амбулаторном этапе'].sum()
         ,svod['Количество пациентов, умерших от внебольничной пневмонии, обращавшихся за медицинской помощью на амбулаторном этапе'].sum()
     )
-
-
 
     add_stroka_free (
         'Получавшие бесплатную лекарственную терапию'
