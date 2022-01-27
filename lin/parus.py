@@ -1000,7 +1000,40 @@ def medical_waste(a):
     
     return shablon_path  + '/' + new_name
 
+def covid_53_svod(a):
+    sql = open('sql/parus/covid_53_svod.sql', 'r').read()
 
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql,con)
+    
+    date = df['DAY'].unique()[0]
+    del df['DAY']
 
+    sm = df.groupby(by="ORGANIZATION",as_index=False).sum()
+    sm ['TYPE'] = 'Медицинская организация'
 
+    for i in range(len(sm)):
+        k = len(df)
+        for col in df.columns:
+            try:
+                df.loc[k,col] = sm.at[i,col]
+            except:
+                pass
 
+    df = df.sort_values(by=["ORGANIZATION", "POK02"],na_position='first',ignore_index=True).fillna('')
+
+    new_name = '53_COVID_БОТКИНА_' + date + '.xlsx'
+    shablon_path = get_dir('help')
+    shutil.copyfile(shablon_path + '/53_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    ws = wb['Для заполнения(Спутник-М)']
+
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    wb.save( shablon_path  + '/' + new_name)
+
+    return shablon_path  + '/' + new_name
