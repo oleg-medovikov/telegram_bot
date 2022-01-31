@@ -278,7 +278,7 @@ def slojit_fr(a):
     count_deti_ill   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) ] )
     count_deti_rec   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) \
             & (svod['Исход заболевания'].str.contains('Выздоровление')) ])
-    count_deti_death = len(svod.lo[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  \
+    count_deti_death = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  \
             & (svod['Исход заболевания'].isin(['Смерть']) ) ]) 
 
     count_deti_amb   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) \
