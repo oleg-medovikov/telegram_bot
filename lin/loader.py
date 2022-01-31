@@ -275,6 +275,28 @@ def slojit_fr(a):
             + 'Всего выздоровело от ковида за последние 180 дней: ' + format(NumberFor7, 'n')
     
     send('epid',otvet)
+    count_deti_ill   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) ] )
+    count_deti_rec   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) \
+            & (svod['Исход заболевания'].str.contains('Выздоровление')) ])
+    count_deti_death = len(svod.lo[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  \
+            & (svod['Исход заболевания'].isin(['Смерть']) ) ]) 
+
+    count_deti_amb   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) \
+            & (svod['Вид лечения'].isin(['Амбулаторное лечение']) ) & (svod['Исход заболевания'].isnull()) ] )
+
+    count_deti_stach = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) \
+            & (svod['Вид лечения'].isin(['Стационарное лечение']) ) & (svod['Исход заболевания'].isnull()) ] )
+
+    otvet2 = "Отдельно по детям:\n" \
+            + 'Всего детей заболело COVID-19: ' +  format(count_deti_ill,'n') +'\n' \
+            + 'Всего детей выздоровело от COVID-19: ' +  format(count_deti_rec,'n') +'\n' \
+            + 'Всего детей умерло от COVID-19: ' +  format(count_deti_death,'n') +'\n' \
+            + 'Всего детей с COVID-19 на амбулаторном: ' +  format(count_deti_amb,'n') +'\n' \
+            + 'Всего детей с COVID-19 на стационарном: ' +  format(count_deti_stach,'n')
+
+    send('epid', otvet2)
+    
+
     send('epid','Начинаю записывать файлы')
 
     #with pd.ExcelWriter(new_fedreg_temp) as writer:
@@ -342,6 +364,20 @@ def load_fr(a):
         report.loc[1,'value_count'] = len(df.loc[(df['Исход заболевания'] == '' ) \
                 & (df['Диагноз'].isin(['U07.1','U07.2']) | df['Диагноз'].str.contains('J1[2-8]') ) \
                 & (df['Вид лечения'].isin(['Амбулаторное лечение']))] )
+
+        report.loc[2,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
+        report.loc[2,'value_name'] = 'Всего детей заболело от COVID'
+        report.loc[2,'value_count'] = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) ] )
+
+        report.loc[3,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
+        report.loc[3,'value_name'] = 'Всего детей выздоровело от COVID'
+        report.loc[3,'value_count'] =  len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) \
+                & (svod['Исход заболевания'].str.contains('Выздоровление')) ])
+
+        report.loc[4,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
+        report.loc[4,'value_name'] = 'Всего детей выздоровело от COVID'
+        report.loc[4,'value_count'] = len(svod.lo[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  \
+            & (svod['Исход заболевания'].isin(['Смерть']) ) ]) 
 
         report.to_sql('values',con,schema='robo',index=False,if_exists='append')
         # ============================================
