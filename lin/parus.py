@@ -1050,8 +1050,11 @@ def covid_53_svod(a):
 
 
     new_name = '53_COVID_БОТКИНА_' + date + '.xlsx'
+    new_name2 = '53_COVID_БОТКИНА_' + date + '_основной.xlsx'
+
     shablon_path = get_dir('help')
     shutil.copyfile(shablon_path + '/53_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
+    shutil.copyfile(shablon_path + '/53_COVID_19.xlsx', shablon_path  + '/' + new_name2)
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
     ws = wb['Спутник-М']
@@ -1070,4 +1073,14 @@ def covid_53_svod(a):
 
     wb.save( shablon_path  + '/' + new_name)
 
-    return shablon_path  + '/' + new_name
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name2)
+    ws = wb['Спутник-М']
+
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    wb.save( shablon_path  + '/' + new_name2)
+
+    return shablon_path  + '/' + new_name +';' + shablon_path  + '/' + new_name2
