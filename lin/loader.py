@@ -376,7 +376,7 @@ def load_fr(a):
 
         report.loc[4,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
         report.loc[4,'value_name'] = 'Всего детей выздоровело от COVID'
-        report.loc[4,'value_count'] = len(svod.lo[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  \
+        report.loc[4,'value_count'] = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  \
             & (svod['Исход заболевания'].isin(['Смерть']) ) ]) 
 
         report.to_sql('values',con,schema='robo',index=False,if_exists='append')
