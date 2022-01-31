@@ -278,7 +278,7 @@ def slojit_fr(a):
     count_deti_ill   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) ] )
     count_deti_rec   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) \
             & (svod['Исход заболевания'].str.contains('Выздоровление')) ])
-    count_deti_death = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  \
+    count_deti_death = len(svod.loc[ (svod['Посмертный диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  \
             & (svod['Исход заболевания'].isin(['Смерть']) ) ]) 
 
     count_deti_amb   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) \
@@ -287,10 +287,28 @@ def slojit_fr(a):
     count_deti_stach = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) \
             & (svod['Вид лечения'].isin(['Стационарное лечение']) ) & (svod['Исход заболевания'].isnull()) ] )
 
-    otvet2 = "Отдельно по детям:\n" \
-            + 'Всего детей заболело COVID-19: ' +  format(count_deti_ill,'n') +'\n' \
-            + 'Всего детей выздоровело от COVID-19: ' +  format(count_deti_rec,'n') +'\n' \
-            + 'Всего детей умерло от COVID-19: ' +  format(count_deti_death,'n') +'\n' \
+    count_deti_ill_old = pd.read_sql ("""SELECT [value_count] FROM [robo].[values]
+                where id = (select max(id) from [robo].[values] where [value_name] = 'Всего детей заболело от COVID' 
+                and date_rows = (select max(date_rows) from [robo].[values] where [value_name] = 'Всего детей заболело от COVID'
+                and  date_rows != cast(getdate() as date) ) )""",con).iat[0,0]
+    
+    count_deti_rec_old = pd.read_sql ("""SELECT [value_count] FROM [robo].[values]
+                where id = (select max(id) from [robo].[values] where [value_name] = 'Всего детей выздоровело от COVID' 
+                and date_rows = (select max(date_rows) from [robo].[values] where [value_name] = 'Всего детей выздоровело от COVID'
+                and  date_rows != cast(getdate() as date) ) )""",con).iat[0,0]
+
+    count_deti_death_old = pd.read_sql ("""SELECT [value_count] FROM [robo].[values]
+                where id = (select max(id) from [robo].[values] where [value_name] = 'Всего детей умерло от COVID' 
+                and date_rows = (select max(date_rows) from [robo].[values] where [value_name] = 'Всего детей умерло от COVID'
+                and  date_rows != cast(getdate() as date) ) )""",con).iat[0,0]
+
+    otvet2 = "Отдельно по детям, больным COVID-19:\n" \
+            + 'Всего детей заболело: ' +  format(count_deti_ill,'n') +'\n' \
+            + 'Всего детей заболело за день: ' +  format(count_deti_ill - count_deti_ill_old,'n') +'\n' \
+            + 'Всего детей выздоровело: ' +  format(count_deti_rec,'n') +'\n' \
+            + 'Всего детей выздоровело за день: ' +  format(count_deti_rec - count_deti_rec_old,'n') +'\n' \
+            + 'Всего детей умерло: ' +  format(count_deti_death,'n') +'\n' \
+            + 'Всего детей умерло за день: ' +  format(count_deti_death - count_deti_death_old,'n') +'\n' \
             + 'Всего детей с COVID-19 на амбулаторном: ' +  format(count_deti_amb,'n') +'\n' \
             + 'Всего детей с COVID-19 на стационарном: ' +  format(count_deti_stach,'n')
 
@@ -375,8 +393,8 @@ def load_fr(a):
                 & (svod['Исход заболевания'].str.contains('Выздоровление')) ])
 
         report.loc[4,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
-        report.loc[4,'value_name'] = 'Всего детей выздоровело от COVID'
-        report.loc[4,'value_count'] = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  \
+        report.loc[4,'value_name'] = 'Всего детей умерло от COVID'
+        report.loc[4,'value_count'] = len(svod.loc[ (svod['Посмертный диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  \
             & (svod['Исход заболевания'].isin(['Смерть']) ) ]) 
 
         report.to_sql('values',con,schema='robo',index=False,if_exists='append')
