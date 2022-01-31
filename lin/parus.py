@@ -1001,17 +1001,22 @@ def medical_waste(a):
     return shablon_path  + '/' + new_name
 
 def covid_53_svod(a):
-    sql = open('sql/parus/covid_53_svod.sql', 'r').read()
+    sql1 = open('sql/parus/covid_53_svod.sql', 'r').read()
+    sql2 = open('sql/parus/covid_53_svod_old.sql', 'r').read()
 
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
-        df = pd.read_sql(sql,con)
+        df = pd.read_sql(sql1,con)
     
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        old = pd.read_sql(sql2,con)
+
     date = df['DAY'].unique()[0]
     del df['DAY']
 
     sm = df.groupby(by="ORGANIZATION",as_index=False).sum()
+    sm['POK03'] = sm ['ORGANIZATION']
     sm ['TYPE'] = 'Медицинская организация'
-
+    
     for i in range(len(sm)):
         k = len(df)
         for col in df.columns:
@@ -1021,15 +1026,44 @@ def covid_53_svod(a):
                 pass
 
     df = df.sort_values(by=["ORGANIZATION", "POK02"],na_position='first',ignore_index=True).fillna('')
+    
+    del df ['ORGANIZATION']
+    # вчерашнее 
+    del old['DAY']
+
+    sm = old.groupby(by="ORGANIZATION",as_index=False).sum()
+    sm['POK03'] = sm ['ORGANIZATION']
+    sm ['TYPE'] = 'Медицинская организация'
+    
+    for i in range(len(sm)):
+        k = len(old)
+        for col in old.columns:
+            try:
+                old.loc[k,col] = sm.at[i,col]
+            except:
+                pass
+
+    old = old.sort_values(by=["ORGANIZATION", "POK02"],na_position='first',ignore_index=True).fillna('')
+    
+    del old ['ORGANIZATION']
+    # ====
+
 
     new_name = '53_COVID_БОТКИНА_' + date + '.xlsx'
     shablon_path = get_dir('help')
     shutil.copyfile(shablon_path + '/53_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
-    ws = wb['Для заполнения(Спутник-М)']
+    ws = wb['Спутник-М']
 
     rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,5):
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['Вчера_Спутник-М']
+
+    rows = dataframe_to_rows(old,index=False, header=False)
     for r_idx, row in enumerate(rows,5):
         for c_idx, value in enumerate(row, 2):
             ws.cell(row=r_idx, column=c_idx, value=value)

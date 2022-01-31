@@ -33,7 +33,7 @@ FROM (
         INNER JOIN PARUS.BLREPFORM rf
         on(rd.PRN = rf.RN)
         WHERE rf.code = '53 COVID 19'
-        and r.BDATE =  trunc(SYSDATE-1)
+        and r.BDATE =  trunc(SYSDATE-2)
         and i.CODE in  ('vac_det_01','vac_det_02','vac_det_03','vac_det_04','vac_det_05','vac_det_07','vac_det_49',
         				'vac_det_51','vac_det_16','vac_det_18','vac_det_37','vac_det_39','vac_det_52','vac_det_54',
         				'vac_det_40','vac_det_42','vac_det_43','vac_det_45','vac_det_47','vac_det_48')
