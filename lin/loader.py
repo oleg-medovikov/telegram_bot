@@ -313,7 +313,46 @@ def slojit_fr(a):
             + 'Всего детей с COVID-19 на стационарном: ' +  format(count_deti_stach,'n')
 
     send('epid', otvet2)
+    # считаю школьников
+    count_deti_ill   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) & ( svod['Возраст'] > 6) ] )
+    count_deti_rec   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) & ( svod['Возраст'] > 6)\
+            & (svod['Исход заболевания'].str.contains('Выздоровление')) ])
+    count_deti_death = len(svod.loc[ (svod['Посмертный диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) & ( svod['Возраст'] > 6) \
+            & (svod['Исход заболевания'].isin(['Смерть']) ) ]) 
+
+    count_deti_amb   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) & ( svod['Возраст'] > 6)\
+            & (svod['Вид лечения'].isin(['Амбулаторное лечение']) ) & (svod['Исход заболевания'].isnull()) ] )
+
+    count_deti_stach = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) & ( svod['Возраст'] > 6)\
+            & (svod['Вид лечения'].isin(['Стационарное лечение']) ) & (svod['Исход заболевания'].isnull()) ] )
+
+    count_deti_ill_old = pd.read_sql ("""SELECT [value_count] FROM [robo].[values]
+                where id = (select max(id) from [robo].[values] where [value_name] = 'Всего школьников заболело от COVID' 
+                and date_rows = (select max(date_rows) from [robo].[values] where [value_name] = 'Всего школьников заболело от COVID'
+                and  date_rows != cast(getdate() as date) ) )""",con).iat[0,0]
     
+    count_deti_rec_old = pd.read_sql ("""SELECT [value_count] FROM [robo].[values]
+                where id = (select max(id) from [robo].[values] where [value_name] = 'Всего школьников выздоровело от COVID' 
+                and date_rows = (select max(date_rows) from [robo].[values] where [value_name] = 'Всего школьников выздоровело от COVID'
+                and  date_rows != cast(getdate() as date) ) )""",con).iat[0,0]
+
+    count_deti_death_old = pd.read_sql ("""SELECT [value_count] FROM [robo].[values]
+                where id = (select max(id) from [robo].[values] where [value_name] = 'Всего школьников умерло от COVID' 
+                and date_rows = (select max(date_rows) from [robo].[values] where [value_name] = 'Всего школьников умерло от COVID'
+                and  date_rows != cast(getdate() as date) ) )""",con).iat[0,0]
+
+    otvet3 = "Отдельно по школьникам, больным COVID-19:\n" \
+            + 'Всего заболело: ' +  format(count_deti_ill,'n') +'\n' \
+            + 'Всего заболело за день: ' +  format(count_deti_ill - count_deti_ill_old,'n') +'\n' \
+            + 'Всего выздоровело: ' +  format(count_deti_rec,'n') +'\n' \
+            + 'Всего выздоровело за день: ' +  format(count_deti_rec - count_deti_rec_old,'n') +'\n' \
+            + 'Всего умерло: ' +  format(count_deti_death,'n') +'\n' \
+            + 'Всего умерло за день: ' +  format(count_deti_death - count_deti_death_old,'n') +'\n' \
+            + 'Всего с COVID-19 на амбулаторном: ' +  format(count_deti_amb,'n') +'\n' \
+            + 'Всего с COVID-19 на стационарном: ' +  format(count_deti_stach,'n')
+
+    send('epid', otvet3)
+
 
     send('epid','Начинаю записывать файлы')
 
@@ -371,6 +410,10 @@ def load_fr(a):
         df  = df[df['Дата создания РЗ'] != '']
         del df ['Ведомственная принадлежность']
         del df ['Осложнение основного диагноза']
+
+        df ['Возраст'] = (pd.to_datetime(df['Диагноз установлен'], format='%d.%m.%Y') \
+                - pd.to_datetime(df['Дата рождения'], format='%d.%m.%Y' ))/ numpy.timedelta64(1, 'Y') 
+
         # ==== Репорт о количестве выздоровевших =====
         report = pd.DataFrame()
         report.loc[0,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
@@ -385,18 +428,33 @@ def load_fr(a):
 
         report.loc[2,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
         report.loc[2,'value_name'] = 'Всего детей заболело от COVID'
-        report.loc[2,'value_count'] = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) ] )
+        report.loc[2,'value_count'] = len(df.loc[ (df['Диагноз'].isin(['U07.1','U07.2'])) & ( df['Возраст'] < 18) ] )
 
         report.loc[3,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
         report.loc[3,'value_name'] = 'Всего детей выздоровело от COVID'
-        report.loc[3,'value_count'] =  len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) \
-                & (svod['Исход заболевания'].str.contains('Выздоровление')) ])
+        report.loc[3,'value_count'] =  len(df.loc[ (df['Диагноз'].isin(['U07.1','U07.2'])) & ( df['Возраст'] < 18) \
+                & (df['Исход заболевания'].str.contains('Выздоровление')) ])
 
         report.loc[4,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
         report.loc[4,'value_name'] = 'Всего детей умерло от COVID'
-        report.loc[4,'value_count'] = len(svod.loc[ (svod['Посмертный диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  \
-            & (svod['Исход заболевания'].isin(['Смерть']) ) ]) 
+        report.loc[4,'value_count'] = len(df.loc[ (df['Посмертный диагноз'].isin(['U07.1','U07.2'])) & ( df['Возраст'] < 18)  \
+            & (df['Исход заболевания'].isin(['Смерть']) ) ]) 
 
+        report.loc[5,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
+        report.loc[5,'value_name'] = 'Всего школьников заболело от COVID'
+        report.loc[5,'value_count'] = len(df.loc[ (df['Диагноз'].isin(['U07.1','U07.2'])) & ( df['Возраст'] < 18) & (df['Возраст'] > 6 ) ] )
+
+        report.loc[6,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
+        report.loc[6,'value_name'] = 'Всего школьников выздоровело от COVID'
+        report.loc[6,'value_count'] =  len(df.loc[ (df['Диагноз'].isin(['U07.1','U07.2'])) & ( df['Возраст'] < 18) & (df['Возраст'] > 6 ) \
+                & (df['Исход заболевания'].str.contains('Выздоровление')) ])
+
+        report.loc[7,'date_rows'] = pd.to_datetime(df['Дата создания РЗ'],format='%d.%m.%Y').max().date()
+        report.loc[7,'value_name'] = 'Всего школьников умерло от COVID'
+        report.loc[7,'value_count'] = len(df.loc[ (df['Посмертный диагноз'].isin(['U07.1','U07.2'])) & ( df['Возраст'] < 18) & (df['Возраст'] > 6) \
+            & (df['Исход заболевания'].isin(['Смерть']) ) ]) 
+        
+        del df['Возраст']
         report.to_sql('values',con,schema='robo',index=False,if_exists='append')
         # ============================================
         send('admin','Файл в памяти, количество строк: ' + str(len(df)) )
