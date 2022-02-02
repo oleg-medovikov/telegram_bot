@@ -822,11 +822,41 @@ def svod_unique_patient(date_global):
             if human.dubl_row != None:
                 rpn = rpn[rpn['Unnamed: 0']!=human.number_row]
 
-        file = get_dir('cov_list') + '/Автосвод ' + date_global.strftime("%Y-%m-%d") +'.xlsx'
-        with pd.ExcelWriter(file) as writer:
-            svod.to_excel(writer,index=False, sheet_name='Свод')
-            rpn.to_excel(writer,index=False, sheet_name='РПН')
-            dubli.to_excel(writer,index=False, sheet_name='Дубли')
+        
+        rpn = rpn[['фио','Дата рождения ', 'м/ж', 'Учреждение зарегистрировавшее диагноз']]
+        
+        svod = svod[['Дата п','Роспотребнадзор','Фио', 'дата рождения', 'адрес', 'Направил материал']]
+        rpn.columns = ['Фио', 'дата рождения', 'адрес', 'Направил материал']
+        rpn['Дата п'] =  date_global.strftime("%Y-%m-%d")
+        rpn['Роспотребнадзор'] = 'Роспотребнадзор'
+
+        rpn.index = range(len(rpn))
+
+        send('', str(len(rpn)))
+
+        svod.index = range(len(svod))
+        
+
+        svod = svod.append(rpn, ignore_index=True)
+        #for i  in range(len(rpn)):
+        #    k = len(svod)
+        #    for col in rpn.columns:
+        #        try:
+        #            svod.loc[k,col] = rpn.at[i,col]
+        #        except:
+        #            continue
+
+        send('', 'test1')
+        svod.index = range(len(svod))
+        send('', 'test2')
+
+        file = get_dir('cov_list') + '/Автосвод ' + date_global.strftime("%Y-%m-%d") +'.csv'
+        svod.to_csv(file,index=False,sep=";",encoding='cp1251',errors="replace")
+
+        #with pd.ExcelWriter(file) as writer:
+        #    svod.to_excel(writer,index=False, sheet_name='Свод')
+        #    rpn.to_excel(writer,index=False, sheet_name='РПН')
+        #    dubli.to_excel(writer,index=False, sheet_name='Дубли')
         return 'Свод сделан!'
     else:
         return 'Не буду я работать по выходным дням!'
