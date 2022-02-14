@@ -1084,3 +1084,75 @@ def covid_53_svod(a):
     wb.save( shablon_path  + '/' + new_name2)
 
     return shablon_path  + '/' + new_name +';' + shablon_path  + '/' + new_name2
+
+ 
+def covid_54_svod(a):
+    sql1 = open('sql/parus/covid_54_svod.sql', 'r').read()
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql1,con)
+
+    date = df['DAY'].unique()[0]
+    del df['DAY']
+
+    new_name = '54_COVID_19_' + date + '.xlsx'
+
+    shablon_path = get_dir('help')
+    shutil.copyfile(shablon_path + '/54_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    
+    ws = wb['svod']
+
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,4):
+        for c_idx, value in enumerate(row, 3):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    wb.save( shablon_path  + '/' + new_name)
+
+    return shablon_path + '/' + new_name
+  
+def extra_izv(a):
+    sql1 = open('sql/parus/extra_izv.sql', 'r').read()
+    sql2 = open('sql/parus/extra_izv_dolg.sql', 'r').read()
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql1,con)
+    
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        old = pd.read_sql(sql2,con)
+
+    date = df['DAY'].unique()[0]
+    del df['DAY']
+
+    dolg = pd.DataFrame(columns=["ORGANIZATION"])
+
+    for org in old["ORGANIZATION"].unique():
+        if not org in df["POK01"].unique():
+            dolg.loc[len(dolg), "ORGANIZATION"] = org
+
+
+    new_name = 'Экстренные_извещения_' + date + '.xlsx'
+
+    shablon_path = get_dir('help')
+    shutil.copyfile(shablon_path + '/extra_izv.xlsx', shablon_path  + '/' + new_name)
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    
+    ws = wb['svod']
+
+    rows = dataframe_to_rows(df,index=False, header=False)
+    for r_idx, row in enumerate(rows,3):
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    rows = dataframe_to_rows(dolg,index=False, header=False)
+    for r_idx, row in enumerate(rows,3):
+        for c_idx, value in enumerate(row, 6):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    wb.save( shablon_path  + '/' + new_name)
+
+    return shablon_path + '/' + new_name
+     

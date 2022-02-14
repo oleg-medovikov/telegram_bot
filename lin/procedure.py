@@ -744,7 +744,10 @@ def svod_unique_patient(date_global):
         return None
     if date_global.weekday() in [1,2,3,4]:
         date_svod = (date_global - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-        svod = pd.read_excel(get_dir('cov_list') + '/Автосвод ' + date_svod +'.xlsx', sheet_name = 'Свод',dtype = str)
+        
+        #svod = pd.read_excel(get_dir('cov_list') + '/Автосвод ' + date_svod +'.xlsx', sheet_name = 'Свод',dtype = str)
+        svod = pd.read_csv(get_dir('cov_list') + '/Автосвод ' + date_svod +'.csv',na_filter =False,dtype = str, delimiter=';', engine='python',encoding = 'utf-8')
+        
         list_ = []
         date_rpn = date_global.strftime("%d.%m.%Y")
         file  = get_dir('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
@@ -755,9 +758,13 @@ def svod_unique_patient(date_global):
             rpn = pd.read_excel(file2,dtype = str)
         rpn['Дата отчета'] = date_rpn
 
+        svod.index = range(len(svod))
+
     if date_global.weekday() in [0]:
         date_svod = (date_global - datetime.timedelta(days=3)).strftime("%Y-%m-%d")
-        svod = pd.read_excel(get_dir('cov_list') + '/Автосвод ' + date_svod +'.xlsx', sheet_name = 'Свод',dtype = str)
+        #svod = pd.read_excel(get_dir('cov_list') + '/Автосвод ' + date_svod +'.xlsx', sheet_name = 'Свод',dtype = str)
+        
+        svod = pd.read_csv(get_dir('cov_list') + '/Автосвод ' + date_svod +'.csv',na_filter =False,dtype = str, delimiter=';', engine='python',encoding = 'utf-8')
         list_ = []
         for i in range(3):
             date_rpn = (date_global - datetime.timedelta(days=i)).strftime("%d.%m.%Y")
@@ -772,7 +779,10 @@ def svod_unique_patient(date_global):
         rpn = pd.DataFrame
         rpn = pd.concat(list_)
         rpn['Unnamed: 0'] = range(len(rpn))
-
+        rpn.index = range(len(rpn))
+        svod.index = range(len(svod))
+        
+    send('epid', str(svod.columns) + str(rpn.columns))
     if date_global.weekday() in [0,1,2,3,4]:
         svod_1 = svod
         svod_1['дата рождения'] = pd.to_datetime(svod_1['дата рождения'],errors='coerce')
@@ -784,6 +794,9 @@ def svod_unique_patient(date_global):
         rpn_1 = rpn_1[rpn_1['Дата рождения '].notnull()]
         rpn_1.index = range(len(rpn_1))
         rpn_1['Номер строки'] = range(len(rpn_1))
+        rpn_1.index = range(len(rpn_1))
+
+        send('epid','cobral')
         svod_list = []
         rpn_list  = []
         human = namedtuple('hunan',['fio','birthday','number_row','dubl_row'])
@@ -791,14 +804,15 @@ def svod_unique_patient(date_global):
             svod_list.append(human(
                         str(svod_1.at[i,'Фио']).lower(),
                         svod_1.at[i,'дата рождения'].strftime('%d.%m.%Y'),
-                        svod_1.at[i,'№п/п'],
+                        i,
                         -1
                         ))
+        send('epid','unique rpn')
         for i in range(len(rpn_1)):
             rpn_list.append(human(
                         str(rpn_1.at[i,'фио']).lower(),
                         rpn_1.at[i,'Дата рождения '].strftime('%d.%m.%Y'),
-                        rpn_1.at[i,'Unnamed: 0'],
+                        i,
                         search(str(rpn_1.at[i,'фио']).lower(),rpn_1.at[i,'Дата рождения '].strftime('%d.%m.%Y'))
                         ))
         dubli = pd.DataFrame()
@@ -811,47 +825,54 @@ def svod_unique_patient(date_global):
                 dubli.loc[k,'Дата рождения']        = human.birthday
                 dubli.loc[k,'Номер строки в своде'] = human.dubl_row
 
+        send('epid','dubli cheak')
+        """
         for human in rpn_list:
             if human.dubl_row != None:
                 svod.loc[svod['№п/п']==human.dubl_row,'Дата занесения в базу'] = \
                     str(svod.loc[svod['№п/п'] == human.dubl_row,'Дата занесения в базу'].unique()[0] ) \
                     + " , " \
                     +  rpn.loc[rpn['Unnamed: 0'] == human.number_row, 'Дата отчета'].unique()[0]
+        """
 
         for human in rpn_list:
             if human.dubl_row != None:
-                rpn = rpn[rpn['Unnamed: 0']!=human.number_row]
+                svod.loc[human.dubl_row,'Дата занесения в базу'] = \
+                    str(svod.at[human.dubl_row,'Дата занесения в базу'] ) \
+                    + " , " \
+                    +  rpn.at[human.number_row, 'Дата отчета']
+        
+        
+        send('epid','changes dates')
+        for human in rpn_list:
+            if human.dubl_row != None:
+                rpn = rpn.drop(human.number_row)
+                #rpn = rpn[rpn['Unnamed: 0']!=human.number_row]
 
+        send('epid','zakonchil dubli')
         
         rpn = rpn[['фио','Дата рождения ', 'м/ж', 'Учреждение зарегистрировавшее диагноз']]
         
-        svod = svod[['Дата п','Роспотребнадзор','Фио', 'дата рождения', 'адрес', 'Направил материал']]
+        svod = svod[['Дата занесения в базу','Роспотребнадзор','Фио', 'дата рождения', 'адрес', 'Направил материал']]
         rpn.columns = ['Фио', 'дата рождения', 'адрес', 'Направил материал']
-        rpn['Дата п'] =  date_global.strftime("%Y-%m-%d")
+        rpn['Дата занесения в базу'] =  date_global.strftime("%Y-%m-%d")
         rpn['Роспотребнадзор'] = 'Роспотребнадзор'
 
         rpn.index = range(len(rpn))
 
-        send('', str(len(rpn)))
+        send('epid', 'new row = ' + str(len(rpn)))
 
         svod.index = range(len(svod))
         
 
         svod = svod.append(rpn, ignore_index=True)
-        #for i  in range(len(rpn)):
-        #    k = len(svod)
-        #    for col in rpn.columns:
-        #        try:
-        #            svod.loc[k,col] = rpn.at[i,col]
-        #        except:
-        #            continue
 
-        send('', 'test1')
-        svod.index = range(len(svod))
-        send('', 'test2')
+        send('epid', 'file save')
 
         file = get_dir('cov_list') + '/Автосвод ' + date_global.strftime("%Y-%m-%d") +'.csv'
-        svod.to_csv(file,index=False,sep=";",encoding='cp1251',errors="replace")
+        
+        #svod.to_csv(file,index=False,sep=";",encoding='cp1251',errors="replace")
+        svod.to_csv(file,index=False,sep=";",encoding='utf-8',errors="replace")
 
         #with pd.ExcelWriter(file) as writer:
         #    svod.to_excel(writer,index=False, sheet_name='Свод')
