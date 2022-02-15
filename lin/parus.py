@@ -1155,4 +1155,52 @@ def extra_izv(a):
     wb.save( shablon_path  + '/' + new_name)
 
     return shablon_path + '/' + new_name
+
+def distant_consult(a):
+    sql1 = open('sql/parus/distant_svod.sql', 'r').read()
+    sql2 = open('sql/parus/distant_organization.sql', 'r').read()
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        df = pd.read_sql(sql1,con)
+    
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        old = pd.read_sql(sql2,con)
+
+    date = df['DAY'].unique()[0]
+    del df['DAY']
+
+    dolg = pd.DataFrame(columns=["ORGANIZATION"])
+
+    for org in old["ORGANIZATION"].unique():
+        if not org in df["ORGANIZATION"].unique():
+            dolg.loc[len(dolg), "ORGANIZATION"] = org
+    
+    del df ['ORGANIZATION']
+
+    new_name = 'Дистанц_Консультации_' + date + '.xlsx'
+
+    shablon_path = get_dir('help')
+    shutil.copyfile(shablon_path + '/distant_consult.xlsx', shablon_path  + '/' + new_name)
+
+    wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
+    
+    ws = wb['svod']
+
+    rows = dataframe_to_rows(df,index=False, header=False)
+    #index_col = [0,1,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34]
+    index_col = [1,2,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35]
+    for r_idx, row in enumerate(rows,2):
+        for c_idx, value in enumerate(row, 0):
+            ws.cell(row=r_idx, column=index_col[c_idx], value=value)
+
+    ws = wb['dolg']
+    
+    rows = dataframe_to_rows(dolg,index=False, header=False)
+    for r_idx, row in enumerate(rows,3):
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
+    wb.save( shablon_path  + '/' + new_name)
+
+    return shablon_path + '/' + new_name
      

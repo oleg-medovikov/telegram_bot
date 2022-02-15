@@ -8,6 +8,7 @@ from reports import short_report
 from multiprocessing import Process
 from multiprocessing.pool import ThreadPool
 from reports import short_report
+import openpyxl
 #from pyexcelerate import Workbook
 
 warnings.filterwarnings('ignore')
@@ -187,8 +188,8 @@ def slojit_fr(a):
     for excel in files:
         try:
             df = pd.read_excel(excel,  header= 1, usecols=names,  engine='xlrd',skipfooter=1 )
-        except:
-            raise my_except('Какой-то непонятный файл ' + excel.rsplit('/',1)[-1])
+        except Exception as e:
+            raise my_except('Какой-то непонятный файл ' + excel.rsplit('/',1)[-1] + '\n' + str(e))
         send('epid','прочтён файл ' + excel.rsplit('/',1)[-1])
         _list.append(df)
     
