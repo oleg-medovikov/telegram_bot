@@ -17,3 +17,4 @@ SELECT DISTINCT a.AGNNAME organization
         INNER JOIN PARUS.BLREPFORM rf
         on(rd.PRN = rf.RN)
         WHERE rf.code = 'ДистанцКонсультации'
+	and r.BDATE =  trunc(SYSDATE - 2)

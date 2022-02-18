@@ -357,13 +357,20 @@ def regiz_load_to_base(a):
         send_file('info',svod_file)
         return svod_file
     else:
+        svod = svod.drop_duplicates()
         svod.index = range(1,len(svod)+1)
         svod = svod.apply(lambda x: x.loc[::].str[:255] )
-        svod.to_sql('TempTableFromMO',con,schema='dbo',if_exists='append',index=False)
+        if len(svod) < 10^6:
+            svod.to_sql('TempTableFromMO',con,schema='dbo',if_exists='append',index=False)
+        else:
+            svod.index = range(len(svod))
+            svod.loc[svod.index < int(len(svod)/2)].to_sql('TempTableFromMO',con,schema='dbo',if_exists='append',index=False)
+            svod.loc[svod.index >= int(len(svod)/2)].to_sql('TempTableFromMO',con,schema='dbo',if_exists='append',index=False)
+
         sql_execute('EXEC [dbo].[Insert_Table_FileMO]')
         svod_file = get_dir('regiz_svod') + '/' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') +' свод номеров для проверки.xlsx'
         with pd.ExcelWriter(svod_file) as writer:
-            svod.to_excel(writer,sheet_name='номера',index=False)
+            svod.loc[svod.index < 1048576].to_excel(writer,sheet_name='номера',index=False)
             stat.to_excel(writer,sheet_name='статистика',index=False)
     
         send_file('info',svod_file)
