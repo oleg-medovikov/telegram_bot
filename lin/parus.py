@@ -171,8 +171,8 @@ def svod_40_cov_19(a):
 
     # основной отчёт
     del sput[sput.columns[-1]]
-    del sput[sput.columns[-1]]
-    del sput[sput.columns[-1]]
+    #del sput[sput.columns[-1]]
+    #del sput[sput.columns[-1]]
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name_osn)
     ws = wb['Спутник-V']
@@ -182,8 +182,8 @@ def svod_40_cov_19(a):
             ws.cell(row=r_idx, column=c_idx, value=value)
 
     del epivak[epivak.columns[-1]]
-    del epivak[epivak.columns[-1]]
-    del epivak[epivak.columns[-1]]
+    #del epivak[epivak.columns[-1]]
+    #del epivak[epivak.columns[-1]]
     
     ws = wb['ЭпиВакКорона']
     rows = dataframe_to_rows(epivak,index=False, header=False)
@@ -192,8 +192,8 @@ def svod_40_cov_19(a):
             ws.cell(row=r_idx, column=c_idx, value=value)
 
     del covivak[covivak.columns[-1]]
-    del covivak[covivak.columns[-1]]
-    del covivak[covivak.columns[-1]]
+    #del covivak[covivak.columns[-1]]
+    #del covivak[covivak.columns[-1]]
 
     ws = wb['КовиВак']
     rows = dataframe_to_rows(covivak,index=False, header=False)
@@ -203,8 +203,8 @@ def svod_40_cov_19(a):
     
 
     del light[light.columns[-1]]
-    del light[light.columns[-1]]
-    del light[light.columns[-1]]
+    #del light[light.columns[-1]]
+    #del light[light.columns[-1]]
 
     ws = wb['Спутник Лайт']
     rows = dataframe_to_rows(light,index=False, header=False)
@@ -446,12 +446,15 @@ def cvod_26_covid(a):
 def cvod_27_smal(a):
     sql = open('sql/parus/covid_27_smal.sql','r').read()
 
+    #send('', 'начинаю грузить для плотниковой')
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql,con)
-
     if len(df):
         with sqlalchemy.create_engine(f"mssql+pymssql://{user}:{passwd}@miacbase3/MIAC_DS", pool_pre_ping=True).connect() as c:
             df.to_sql('covid_27',c,schema='Pds',index=False,if_exists='replace')
+
+    #send('', 'Для плотниковой загрузил')
+    
     return 1
 
 def cvod_27_covid(a):
@@ -557,7 +560,7 @@ def cvod_27_covid(a):
 
 def cvod_27_regiz(a):
     url = os.getenv('url845').replace('845','870')
-    data = requests.get(url).json()
+    data = requests.get(url, verify=False).json()
     regiz = pd.DataFrame.from_dict(data)
     columns = ['orderresponse_assign_organization_level1_key', 'ShortNameMO','Кол-во тестов',
                'Кол-во ПЦР тестов','Кол-во положительных ПЦР тестов','Кол-во тестов на антитела',
@@ -1158,30 +1161,35 @@ def extra_izv(a):
 
 def distant_consult(a):
     sql1 = open('sql/parus/distant_svod.sql', 'r').read()
-    sql2 = open('sql/parus/distant_organization.sql', 'r').read()
+    #sql2 = open('sql/parus/distant_organization.sql', 'r').read()
 
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql1,con)
     
-    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
-        old = pd.read_sql(sql2,con)
+    #with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+    #    old = pd.read_sql(sql2,con)
 
     date = df['DAY'].unique()[0]
     del df['DAY']
-
-    dolg = pd.DataFrame(columns=["ORGANIZATION"])
-
-    for org in old["ORGANIZATION"].unique():
-        if not org in df["ORGANIZATION"].unique():
-            dolg.loc[len(dolg), "ORGANIZATION"] = org
     
-    del df ['ORGANIZATION']
-
     new_name = 'Дистанц_Консультации_' + date + '.xlsx'
 
     shablon_path = get_dir('help')
     shutil.copyfile(shablon_path + '/distant_consult.xlsx', shablon_path  + '/' + new_name)
     
+    old = pd.read_excel(shablon_path + '/distant_consult.xlsx', sheet_name = 'эталон')
+    
+    dolg = pd.DataFrame(columns=["ORGANIZATION"])
+
+    for i in range(len(old)):
+        org = old.at[i, 'Полное наименование МО (из ФРМО)']
+        if not org in df["POK02"].unique():
+            dolg.loc[len(dolg), "ORGANIZATION"] = old.at[i,'Краткое наименование МО (для вывода должников)']
+    
+    
+    del df ['ORGANIZATION']
+
+   
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
     
@@ -1237,7 +1245,7 @@ def covid_4_2_svod(a):
     shutil.copyfile(shablon_path + '/4.2_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
 
     names = [
-            'region','ORGANIZATION','MIAC_COVID4.2_MO','MIAC_COVID4.2_vrach','MIAC_COVID4.2_telefo',
+            'region','ORGANIZATION','FULLNAME','MIAC_COVID4.2_vrach','MIAC_COVID4.2_telefo',
             'MIAC_COVID4.2_gl','MIAC_COVID4.2_kl','MIAC_COVID4.2_rez','MIAC_COVID4.2_tipmo','MIAC_COVID4.2spm_vs',
             'MIAC_COVID4.2spm_ivs','MIAC_COVID4.2spm_11','MIAC_COVID4.2spm_12','MIAC_COVID4.2spm_13','MIAC_COVID4.2spm_14',
             'MIAC_COVID4.2spm_15','MIAC_COVID4.2spm_16','voditel','MIAC_COVID4.2spm_18','MIAC_COVID4.2pol_101',
@@ -1265,6 +1273,7 @@ def covid_4_2_svod(a):
     ot = pd.DataFrame(columns=names)
 
     ot['ORGANIZATION'] = pd.Series(df['ORGANIZATION'].unique())
+    ot['FULLNAME'] = ot['ORGANIZATION']
 
     for i in range(len(df)):
         if df.at[i,'POKAZATEL'] in names:

@@ -742,145 +742,123 @@ def svod_unique_patient(date_global):
                 if fio ==  svod_list[i].fio:
                     return  svod_list[i].number_row
         return None
-    if date_global.weekday() in [1,2,3,4]:
-        date_svod = (date_global - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-        
-        #svod = pd.read_excel(get_dir('cov_list') + '/Автосвод ' + date_svod +'.xlsx', sheet_name = 'Свод',dtype = str)
-        svod = pd.read_csv(get_dir('cov_list') + '/Автосвод ' + date_svod +'.csv',na_filter =False,dtype = str, delimiter=';', engine='python',encoding = 'utf-8')
-        
-        list_ = []
-        date_rpn = date_global.strftime("%d.%m.%Y")
-        file  = get_dir('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
-        file2 = get_dir('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xls'
-        try:
-            rpn = pd.read_excel(file,dtype = str)
-        except:
-            rpn = pd.read_excel(file2,dtype = str)
-        rpn['Дата отчета'] = date_rpn
 
-        svod.index = range(len(svod))
+    date_svod = (date_global - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+    
+    #svod = pd.read_excel(get_dir('cov_list') + '/Автосвод ' + date_svod +'.xlsx', sheet_name = 'Свод',dtype = str)
+    svod = pd.read_csv(get_dir('cov_list') + '/Автосвод ' + date_svod +'.csv',na_filter =False,dtype = str, delimiter=';', engine='python',encoding = 'utf-8')
+    
+    list_ = []
+    date_rpn = date_global.strftime("%d.%m.%Y")
+    file  = get_dir('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
+    file2 = get_dir('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xls'
+    try:
+        rpn = pd.read_excel(file,dtype = str)
+    except:
+        rpn = pd.read_excel(file2,dtype = str)
+    rpn['Дата отчета'] = date_rpn
 
-    if date_global.weekday() in [0]:
-        date_svod = (date_global - datetime.timedelta(days=3)).strftime("%Y-%m-%d")
-        #svod = pd.read_excel(get_dir('cov_list') + '/Автосвод ' + date_svod +'.xlsx', sheet_name = 'Свод',dtype = str)
-        
-        svod = pd.read_csv(get_dir('cov_list') + '/Автосвод ' + date_svod +'.csv',na_filter =False,dtype = str, delimiter=';', engine='python',encoding = 'utf-8')
-        list_ = []
-        for i in range(3):
-            date_rpn = (date_global - datetime.timedelta(days=i)).strftime("%d.%m.%Y")
-            file  = get_dir('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xlsx'
-            file2 = get_dir('covid') + '/EPID.COVID.RPN/Заболевшие covid в ФС за ' + date_rpn +'.xls'
-            try:
-               excel = pd.read_excel(file,dtype = str)
-            except:
-               excel = pd.read_excel(file2,dtype = str)
-            excel['Дата отчета'] = date_rpn
-            list_.append(excel)
-        rpn = pd.DataFrame
-        rpn = pd.concat(list_)
-        rpn['Unnamed: 0'] = range(len(rpn))
-        rpn.index = range(len(rpn))
-        svod.index = range(len(svod))
-        
+    svod.index = range(len(svod))
+
+       
     send('epid', str(svod.columns) + str(rpn.columns))
-    if date_global.weekday() in [0,1,2,3,4]:
-        svod_1 = svod
-        svod_1['дата рождения'] = pd.to_datetime(svod_1['дата рождения'],errors='coerce')
-        svod_1 = svod_1[svod_1['дата рождения'].notnull()]
-        svod_1.index = range(len(svod_1))
+    
 
-        rpn_1 = rpn
-        rpn_1['Дата рождения '] = pd.to_datetime(rpn_1['Дата рождения '],errors='coerce')
-        rpn_1 = rpn_1[rpn_1['Дата рождения '].notnull()]
-        rpn_1.index = range(len(rpn_1))
-        rpn_1['Номер строки'] = range(len(rpn_1))
-        rpn_1.index = range(len(rpn_1))
+    svod_1 = svod
+    svod_1['дата рождения'] = pd.to_datetime(svod_1['дата рождения'],errors='coerce')
+    svod_1 = svod_1[svod_1['дата рождения'].notnull()]
+    svod_1.index = range(len(svod_1))
 
-        send('epid','cobral')
-        svod_list = []
-        rpn_list  = []
-        human = namedtuple('hunan',['fio','birthday','number_row','dubl_row'])
-        for i in range(len(svod_1)):
-            svod_list.append(human(
-                        str(svod_1.at[i,'Фио']).lower(),
-                        svod_1.at[i,'дата рождения'].strftime('%d.%m.%Y'),
-                        i,
-                        -1
-                        ))
-        send('epid','unique rpn')
-        for i in range(len(rpn_1)):
-            rpn_list.append(human(
-                        str(rpn_1.at[i,'фио']).lower(),
-                        rpn_1.at[i,'Дата рождения '].strftime('%d.%m.%Y'),
-                        i,
-                        search(str(rpn_1.at[i,'фио']).lower(),rpn_1.at[i,'Дата рождения '].strftime('%d.%m.%Y'))
-                        ))
-        dubli = pd.DataFrame()
+    rpn_1 = rpn
+    rpn_1['Дата рождения '] = pd.to_datetime(rpn_1['Дата рождения '],errors='coerce')
+    rpn_1 = rpn_1[rpn_1['Дата рождения '].notnull()]
+    rpn_1.index = range(len(rpn_1))
+    rpn_1['Номер строки'] = range(len(rpn_1))
+    rpn_1.index = range(len(rpn_1))
 
-        for human in rpn_list:
-            if human.dubl_row != None:
-                k = len(dubli)
-                dubli.loc[k,'Номер строки']         = human.number_row
-                dubli.loc[k,'Фио']                  = human.fio
-                dubli.loc[k,'Дата рождения']        = human.birthday
-                dubli.loc[k,'Номер строки в своде'] = human.dubl_row
+    send('epid','cobral')
+    svod_list = []
+    rpn_list  = []
+    human = namedtuple('hunan',['fio','birthday','number_row','dubl_row'])
+    for i in range(len(svod_1)):
+        svod_list.append(human(
+                    str(svod_1.at[i,'Фио']).lower(),
+                    svod_1.at[i,'дата рождения'].strftime('%d.%m.%Y'),
+                    i,
+                    -1
+                    ))
+    send('epid','unique rpn')
+    for i in range(len(rpn_1)):
+        rpn_list.append(human(
+                    str(rpn_1.at[i,'фио']).lower(),
+                    rpn_1.at[i,'Дата рождения '].strftime('%d.%m.%Y'),
+                    i,
+                    search(str(rpn_1.at[i,'фио']).lower(),rpn_1.at[i,'Дата рождения '].strftime('%d.%m.%Y'))
+                    ))
+    dubli = pd.DataFrame()
 
-        send('epid','dubli cheak')
-        """
-        for human in rpn_list:
-            if human.dubl_row != None:
-                svod.loc[svod['№п/п']==human.dubl_row,'Дата занесения в базу'] = \
-                    str(svod.loc[svod['№п/п'] == human.dubl_row,'Дата занесения в базу'].unique()[0] ) \
-                    + " , " \
-                    +  rpn.loc[rpn['Unnamed: 0'] == human.number_row, 'Дата отчета'].unique()[0]
-        """
+    for human in rpn_list:
+        if human.dubl_row != None:
+            k = len(dubli)
+            dubli.loc[k,'Номер строки']         = human.number_row
+            dubli.loc[k,'Фио']                  = human.fio
+            dubli.loc[k,'Дата рождения']        = human.birthday
+            dubli.loc[k,'Номер строки в своде'] = human.dubl_row
 
-        for human in rpn_list:
-            if human.dubl_row != None:
-                svod.loc[human.dubl_row,'Дата занесения в базу'] = \
-                    str(svod.at[human.dubl_row,'Дата занесения в базу'] ) \
-                    + " , " \
-                    +  rpn.at[human.number_row, 'Дата отчета']
-        
-        
-        send('epid','changes dates')
-        for human in rpn_list:
-            if human.dubl_row != None:
-                rpn = rpn.drop(human.number_row)
-                #rpn = rpn[rpn['Unnamed: 0']!=human.number_row]
+    send('epid','dubli cheak')
+    """
+    for human in rpn_list:
+        if human.dubl_row != None:
+            svod.loc[svod['№п/п']==human.dubl_row,'Дата занесения в базу'] = \
+                str(svod.loc[svod['№п/п'] == human.dubl_row,'Дата занесения в базу'].unique()[0] ) \
+                + " , " \
+                +  rpn.loc[rpn['Unnamed: 0'] == human.number_row, 'Дата отчета'].unique()[0]
+    """
 
-        send('epid','zakonchil dubli')
-        
-        rpn = rpn[['фио','Дата рождения ', 'м/ж', 'Учреждение зарегистрировавшее диагноз']]
-        
-        svod = svod[['Дата занесения в базу','Роспотребнадзор','Фио', 'дата рождения', 'адрес', 'Направил материал']]
-        rpn.columns = ['Фио', 'дата рождения', 'адрес', 'Направил материал']
-        rpn['Дата занесения в базу'] =  date_global.strftime("%Y-%m-%d")
-        rpn['Роспотребнадзор'] = 'Роспотребнадзор'
+    for human in rpn_list:
+        if human.dubl_row != None:
+            svod.loc[human.dubl_row,'Дата занесения в базу'] = \
+                str(svod.at[human.dubl_row,'Дата занесения в базу'] ) \
+                + " , " \
+                +  rpn.at[human.number_row, 'Дата отчета']
+    
+    
+    send('epid','changes dates')
+    for human in rpn_list:
+        if human.dubl_row != None:
+            rpn = rpn.drop(human.number_row)
+            #rpn = rpn[rpn['Unnamed: 0']!=human.number_row]
 
-        rpn.index = range(len(rpn))
+    send('epid','zakonchil dubli')
+    
+    rpn = rpn[['фио','Дата рождения ', 'м/ж', 'Учреждение зарегистрировавшее диагноз']]
+    
+    svod = svod[['Дата занесения в базу','Роспотребнадзор','Фио', 'дата рождения', 'адрес', 'Направил материал']]
+    rpn.columns = ['Фио', 'дата рождения', 'адрес', 'Направил материал']
+    rpn['Дата занесения в базу'] =  date_global.strftime("%Y-%m-%d")
+    rpn['Роспотребнадзор'] = 'Роспотребнадзор'
 
-        send('epid', 'new row = ' + str(len(rpn)))
+    rpn.index = range(len(rpn))
 
-        svod.index = range(len(svod))
-        
+    send('epid', 'new row = ' + str(len(rpn)))
 
-        svod = svod.append(rpn, ignore_index=True)
+    svod.index = range(len(svod))
+    
 
-        send('epid', 'file save')
+    svod = svod.append(rpn, ignore_index=True)
 
-        file = get_dir('cov_list') + '/Автосвод ' + date_global.strftime("%Y-%m-%d") +'.csv'
-        
-        #svod.to_csv(file,index=False,sep=";",encoding='cp1251',errors="replace")
-        svod.to_csv(file,index=False,sep=";",encoding='utf-8',errors="replace")
+    send('epid', 'file save')
 
-        #with pd.ExcelWriter(file) as writer:
-        #    svod.to_excel(writer,index=False, sheet_name='Свод')
-        #    rpn.to_excel(writer,index=False, sheet_name='РПН')
-        #    dubli.to_excel(writer,index=False, sheet_name='Дубли')
-        return 'Свод сделан!'
-    else:
-        return 'Не буду я работать по выходным дням!'
+    file = get_dir('cov_list') + '/Автосвод ' + date_global.strftime("%Y-%m-%d") +'.csv'
+    
+    #svod.to_csv(file,index=False,sep=";",encoding='cp1251',errors="replace")
+    svod.to_csv(file,index=False,sep=";",encoding='utf-8',errors="replace")
+
+    #with pd.ExcelWriter(file) as writer:
+    #    svod.to_excel(writer,index=False, sheet_name='Свод')
+    #    rpn.to_excel(writer,index=False, sheet_name='РПН')
+    #    dubli.to_excel(writer,index=False, sheet_name='Дубли')
+    return 'Свод сделан!'
 
 def get_il_stopcorona(a):
     url = "https://xn--80aesfpebagmfblc0a.xn--p1ai/covid_data.json?do=region_stats&code=RU-SPE"

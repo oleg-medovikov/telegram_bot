@@ -221,6 +221,11 @@ def slojit_fr(a):
                         & svod['Исход заболевания'].isin(['Смерть'])])
 
     day = pd.to_datetime(svod['Дата изменения РЗ'], format='%d.%m.%Y').max().date()
+
+    svod ['Диагноз устан'] = pd.to_datetime(svod['Диагноз установлен'], format='%d.%m.%Y')
+    svod ['Дата исхода'] = pd.to_datetime(svod['Дата исхода заболевания'], format='%d.%m.%Y', errors='ignore')
+    
+
     count_vizd_old = pd.read_sql ("""SELECT [value_count] FROM [robo].[values]
                 where id = (select max(id) from [robo].[values] where [value_name] = 'Всего выздоровело от COVID' 
                 and date_rows = (select max(date_rows) from [robo].[values] where [value_name] = 'Всего выздоровело от COVID'
@@ -353,8 +358,22 @@ def slojit_fr(a):
             + 'Всего с COVID-19 на стационарном: ' +  format(count_deti_stach,'n')
 
     send('epid', otvet3)
-
-
+    # Считаю детей с 01.01.2022
+    count_deti_ill   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) & (svod['Диагноз устан'] >= '2022-01-01') ] )
+    count_deti_rec   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) & (svod['Диагноз устан'] >= '2022-01-01') \
+            & (svod['Исход заболевания'].str.contains('Выздоровление')) ])
+    count_deti_death = len(svod.loc[ (svod['Посмертный диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) & (svod['Дата исхода'] >= '2022-01-01') \
+            & (svod['Исход заболевания'].isin(['Смерть']) ) ])
+    
+    otvet4 = f"""Отдельно по детям, заболевшим с 01-01-2022
+    Заболевшие дети: {format(count_deti_ill,'n')} 
+    Выздовевшие дети: {format(count_deti_rec,'n')}
+    Умершие дети: {format(count_deti_death,'n')}
+    """
+    send('epid', otvet4)
+    del svod['Диагноз устан']
+    del svod['Дата исхода']
+    
     send('epid','Начинаю записывать файлы')
 
     #with pd.ExcelWriter(new_fedreg_temp) as writer:

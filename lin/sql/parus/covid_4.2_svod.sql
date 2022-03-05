@@ -1,6 +1,6 @@
  SELECT
     to_char(r.BDATE, 'DD.MM.YYYY') day,
-    a.AGNNAME ORGANIZATION ,
+    a.FULLNAME ORGANIZATION ,
     rf.CODE  otchet,
     bi.CODE  pokazatel,
     CASE WHEN STRVAL IS NOT NULL THEN STRVAL

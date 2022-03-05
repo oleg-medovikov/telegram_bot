@@ -156,7 +156,7 @@ def create_tred_task(work,func,arg):
         future = executor.submit(globals()[func],arg)
         try:
             return_value = future.result()
-            send('admin', 'Выполнил ' + work)
+            #send('admin', 'Выполнил ' + work)
         except:
             send('admin', 'При выполнении ' + work + 'что-то произошло\n' )
         

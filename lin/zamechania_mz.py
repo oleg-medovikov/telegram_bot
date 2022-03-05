@@ -441,7 +441,7 @@ def zamechania_mz_file(a):
     df = df.loc[~(df['Медицинская организация'] == 'МО другого региона') ]
     df.index = range(len(df))    
     
-    file = get_dir("temp") + "/Замечания_за_" +date.iat[0,0] +".xlsx"
+    file = get_dir("temp") + "/Замечания_за_" + str(date.iat[0,0]) + ".xlsx"
     shutil.copyfile(get_dir('help') + '/Zamechania.xlsx',  file)
     
     wb= openpyxl.load_workbook( file)

@@ -83,6 +83,8 @@ def send_Debtors(argument):
             sql   = open('sql/dolg/covid_38.sql','r').read()
         elif id_cov == 51:
             sql   = open('sql/dolg/covid_51.sql','r').read()
+        elif id_cov == 155:
+            sql   = open('sql/dolg/dist_cons.sql','r').read()
         else:
             return 1
         with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
@@ -104,7 +106,11 @@ def send_Debtors(argument):
     except:
         raise my_except('Не найден id чата парус')
     else:
-        monitoring = str(id_cov) + ' COVID 19'
+        if id_cov == 155:
+            monitoring = 'ДистанцКонсультации'
+        else:
+            monitoring = str(id_cov) + ' COVID 19'
+
         sql = f"SELECT Distinct [NameMOParus] FROM [COVID].[robo].[DebtorsReport] WHERE [Report] = '{monitoring}' AND [IsAction] = 1"
         base = pd.read_sql(sql,con)
         organization = spisok_mo(id_cov)
