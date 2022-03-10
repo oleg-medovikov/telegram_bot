@@ -1,4 +1,4 @@
-import datetime,glob,os,shutil,sqlalchemy,openpyxl,requests
+import datetime,glob,os,shutil,sqlalchemy,openpyxl,requests,time
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 import numpy as np
@@ -359,8 +359,8 @@ def sbor_death_week_files(a):
     return f'Файлы с {date_start} по {date_end} собраны в папку'
 
 def sbor_death_week_svod(a):
-    #date_end   = '2022-01-05'
-    #date_start = '2021-12-23'
+    #date_end   = '2022-03-02'
+    #date_start = '2022-02-24'
     date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
     date_start = date_end - datetime.timedelta(days=6) 
 
@@ -899,3 +899,94 @@ def get_il_stopcorona(a):
     report.to_sql('values',con,schema='robo',index=False,if_exists='append')
 
     return df.at[0,'value']
+
+def vigruzka_death_5_oclock(a):
+    path ='/mnt/COVID-списки/Covi/' + datetime.datetime.now().strftime("%Y_%m_%d")
+    while True:
+        file = glob.glob(path + '/*УМСРС*.xlsx')
+        if len(file):
+            print('Файл найден!')
+            break
+        else:
+            print('Файл не найден!')
+            time.sleep(60)
+
+    names =['№ п/п', 'Номер свидетельства о смерти', 'Дата выдачи', 'Взамен', 'Категория МС', 'Фамилия', 'Имя', 'Отчество', 'Пол', 'Дата рождения',
+         'Дата смерти', 'Возраст', 'Страна', 'Субъект', 'Район', 'Город', 'Населенный пункт', 'Элемент планировочной структуры',
+         'Район СПБ', 'Улица', 'Дом', 'Корпус', 'Строение', 'Квартира', 'Страна смерти',  'Субъект смерти', 'Район смерти',
+         'Город смерти', 'Населенный пункт смерти', 'Элемент планировочной структуры смерти', 'Район СПБ смерти', 'Улица смерти', 'Дом смерти',
+         'Корпус смерти', 'Строение смерти', 'Квартира смерти', 'Место смерти', 'Код МКБ-10 а', 'Болезнь или состояние, непосред приведшее к смерти',
+         'Код МКБ-10 б', 'Патол. состояние, кот. привело к указанной причине', 'Код МКБ-10 в', 'Первоначальная причина смерти', 'Код МКБ-10 г',
+         'Внешняя причина при травмах и отравлениях', 'Код II-1', 'Прочие важные состояния', 'Код МКБ-10 а(д)', 'Основное заболевание плода или ребенка',
+         'Код МКБ-10 б(д)', 'Другие заболевания плода или ребенка', 'Код МКБ-10 в(д)', 'Основное заболевание матери', 'Код МКБ-10 г(д)',
+         'Другие заболевания матери', 'Код МКБ-10 д(д)', 'Другие обстоятельства мертворождения', 'Установил причины смерти',
+         'Адрес МО', 'Краткое наименование', 'Осмотр трупа', 'Записи в мед.док.', 'Предшествующего наблюдения',
+         'Вскрытие', 'Статус МС', 'Дубликат', 'Испорченное', 'Напечатано', 'в случае смерти результате ДТП'
+        ]
+    
+    sheetname = 'COVID_оснв'
+
+    try:
+        fr = pd.read_excel(file[0],sheet_name = sheetname, header = 10, usecols=names, dtype=str)
+    except Exception as e:
+        return str(e)
+    else:
+        fr.to_sql(
+                'cv_input_umsrs_now_day',
+                con,
+                schema='dbo',
+                if_exists='replace',
+                index = False 
+                )
+
+    Sesson = sessionmaker(bind=con)
+    session = Session()
+    session.execute('EXEC [dbo].[Insert_Table_cv_umsrs_now_day_2]')
+    session.commit()
+    session.close()
+
+    sverka1 = pdread_sql('select * from dbo.v_Report_for_KZ_and_MO_Dead_Compare_At_All', con)
+    sverka2 = pd.read_sql('select * from dbo.v_Report_for_KZ_and_MO_Dead_Compare_At_All_2', con)
+    sverka3 = pd.read_sql('select * from v_Report_for_MO_Dead_Compare_At_All', con)
+
+    path = '/mnt/COVID-списки/Covi/Programm_Reports_with_Covid'
+
+    date = (datetime.datetime.today() + datetime.timedelta(days=1)).strftime("%Y.%m.%d")
+
+    files = glob.glob(path + '/[!Копия]*.xlsx')
+
+    for file in files:
+        try:
+            os.remove(file)
+        except PermissionError:
+            pass
+
+    with pd.ExcelWriter(path + '/' + date + '_Сверка_с_ФР.xlsx') as writer:
+        sverka1.to_excel(writer,index=False)
+    with pd.ExcelWriter(path + '/' + date + '_COVID_Умершие.xlsx') as writer:
+        sverka2.to_excel(writer,index=False)
+
+    MOs = sverka3['Наименование МО'].unique()
+
+    for mo in MOs:
+        otchet = sverka3[sverka3['Наименование МО'] == mo ]
+        otchet.index = range(len(otchet))
+    
+    with pd.ExcelWriter(path+ '/' + date + '_COVID_Умершие_' + mo.replace('"','') + '.xlsx') as writer:
+        otchet.to_excel(writer,index=False)
+
+    dirs = pd.red_sql('select user,[Наименование в ФР] from robo.directory', con)
+    root = get_dir('covid')
+
+    for mo in MOs:
+        try:
+            user = dirs.loc[dirs['Наименование в ФР'] == mo, 'user'].values[0]
+        except IndexError:
+            pass
+        else:
+            try:
+                shutil.move(path+ '/'+ date + '_COVID_Умершие_' + mo.replace('"','') + '.xlsx',  root + user +  date + '_COVID_Умершие_' + mo.replace('"','') + '.xlsx')
+            except PermissionError:
+                pass
+
+    return "Успешно выполнил"
