@@ -286,6 +286,17 @@ def slojit_fr(a):
             & (svod['Исход заболевания'].str.contains('Выздоровление')) ])
     count_deti_death = len(svod.loc[ (svod['Посмертный диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  \
             & (svod['Исход заболевания'].isin(['Смерть']) ) ]) 
+    
+    count_deti_death_else = len(svod.loc[ ~(svod['Посмертный диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']))
+            & (svod['Исход заболевания'].isin(['Смерть']) ) ])
+
+    count_deti_else  = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) \
+            & (svod['Исход заболевания'].isin(['Диагноз не подтвержден',
+                                               'Отказ пациента от лечения',
+                                               'Перевод пациента в другую МО',
+                                               'Перевод пациента на амбулаторное лечение',
+                                               'Перевод пациента на стационарное лечение' ])) ])
 
     count_deti_amb   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) \
             & (svod['Вид лечения'].isin(['Амбулаторное лечение']) ) & (svod['Исход заболевания'].isnull()) ] )
@@ -309,12 +320,14 @@ def slojit_fr(a):
                 and  date_rows != cast(getdate() as date) ) )""",con).iat[0,0]
 
     otvet2 = "Отдельно по детям, больным COVID-19:\n" \
-            + 'Всего детей заболело: ' +  format(count_deti_ill,'n') +'\n' \
-            + 'Всего детей заболело за день: ' +  format(count_deti_ill - count_deti_ill_old,'n') +'\n' \
-            + 'Всего детей выздоровело: ' +  format(count_deti_rec,'n') +'\n' \
-            + 'Всего детей выздоровело за день: ' +  format(count_deti_rec - count_deti_rec_old,'n') +'\n' \
-            + 'Всего детей умерло: ' +  format(count_deti_death,'n') +'\n' \
-            + 'Всего детей умерло за день: ' +  format(count_deti_death - count_deti_death_old,'n') +'\n' \
+            + 'Заболело: ' +  format(count_deti_ill,'n') +'\n' \
+            + 'Заболело за день: ' +  format(count_deti_ill - count_deti_ill_old,'n') +'\n' \
+            + 'Выздоровело: ' +  format(count_deti_rec,'n') +'\n' \
+            + 'Выздоровело за день: ' +  format(count_deti_rec - count_deti_rec_old,'n') +'\n' \
+            + 'Умерло: ' +  format(count_deti_death,'n') +'\n' \
+            + 'Умерло за день: ' +  format(count_deti_death - count_deti_death_old,'n') +'\n' \
+            + 'Умерло не от COVID-19: ' +  format(count_deti_death_else,'n') +'\n' \
+            + 'Другой исход: ' +  format(count_deti_else,'n') +'\n' \
             + 'Всего детей с COVID-19 на амбулаторном: ' +  format(count_deti_amb,'n') +'\n' \
             + 'Всего детей с COVID-19 на стационарном: ' +  format(count_deti_stach,'n')
 
@@ -325,6 +338,18 @@ def slojit_fr(a):
             & (svod['Исход заболевания'].str.contains('Выздоровление')) ])
     count_deti_death = len(svod.loc[ (svod['Посмертный диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) & ( svod['Возраст'] > 6) \
             & (svod['Исход заболевания'].isin(['Смерть']) ) ]) 
+
+    count_deti_death_else = len(svod.loc[ ~(svod['Посмертный диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  & ( svod['Возраст'] > 6) \
+            & (svod['Диагноз'].isin(['U07.1','U07.2']))
+            & (svod['Исход заболевания'].isin(['Смерть']) ) ])
+
+    count_deti_else  = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18)  & ( svod['Возраст'] > 6) \
+            & (svod['Исход заболевания'].isin(['Диагноз не подтвержден',
+                                               'Отказ пациента от лечения',
+                                               'Перевод пациента в другую МО',
+                                               'Перевод пациента на амбулаторное лечение',
+                                               'Перевод пациента на стационарное лечение' ])) ])
+
 
     count_deti_amb   = len(svod.loc[ (svod['Диагноз'].isin(['U07.1','U07.2'])) & ( svod['Возраст'] < 18) & ( svod['Возраст'] > 6)\
             & (svod['Вид лечения'].isin(['Амбулаторное лечение']) ) & (svod['Исход заболевания'].isnull()) ] )
@@ -348,12 +373,14 @@ def slojit_fr(a):
                 and  date_rows != cast(getdate() as date) ) )""",con).iat[0,0]
 
     otvet3 = "Отдельно по школьникам, больным COVID-19:\n" \
-            + 'Всего заболело: ' +  format(count_deti_ill,'n') +'\n' \
-            + 'Всего заболело за день: ' +  format(count_deti_ill - count_deti_ill_old,'n') +'\n' \
-            + 'Всего выздоровело: ' +  format(count_deti_rec,'n') +'\n' \
-            + 'Всего выздоровело за день: ' +  format(count_deti_rec - count_deti_rec_old,'n') +'\n' \
-            + 'Всего умерло: ' +  format(count_deti_death,'n') +'\n' \
-            + 'Всего умерло за день: ' +  format(count_deti_death - count_deti_death_old,'n') +'\n' \
+            + 'Заболело: ' +  format(count_deti_ill,'n') +'\n' \
+            + 'Заболело за день: ' +  format(count_deti_ill - count_deti_ill_old,'n') +'\n' \
+            + 'Выздоровело: ' +  format(count_deti_rec,'n') +'\n' \
+            + 'Выздоровело за день: ' +  format(count_deti_rec - count_deti_rec_old,'n') +'\n' \
+            + 'Умерло: ' +  format(count_deti_death,'n') +'\n' \
+            + 'Умерло за день: ' +  format(count_deti_death - count_deti_death_old,'n') +'\n' \
+            + 'Умерло не от COVID-19: ' +  format(count_deti_death_else,'n') +'\n' \
+            + 'Другой исход: ' +  format(count_deti_else,'n') +'\n' \
             + 'Всего с COVID-19 на амбулаторном: ' +  format(count_deti_amb,'n') +'\n' \
             + 'Всего с COVID-19 на стационарном: ' +  format(count_deti_stach,'n')
 

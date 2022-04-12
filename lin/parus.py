@@ -1186,17 +1186,14 @@ def distant_consult(a):
         if not org in df["POK02"].unique():
             dolg.loc[len(dolg), "ORGANIZATION"] = old.at[i,'Краткое наименование МО (для вывода должников)']
     
-    
     del df ['ORGANIZATION']
-
-   
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
     
     ws = wb['svod']
 
     rows = dataframe_to_rows(df,index=False, header=False)
-    index_col = [1,2,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37]
+    index_col = [1,2,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38]
     for r_idx, row in enumerate(rows,2):
         for c_idx, value in enumerate(row, 0):
             ws.cell(row=r_idx, column=index_col[c_idx], value=value)
@@ -1209,7 +1206,6 @@ def distant_consult(a):
             ws.cell(row=r_idx, column=c_idx, value=value)
 
     wb.save( shablon_path  + '/' + new_name)
-
     
     csv = pd.read_csv(shablon_path + '/dist_cons.csv', sep=';' )
     csv = csv.drop(0) 
