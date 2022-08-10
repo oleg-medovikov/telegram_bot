@@ -155,6 +155,23 @@ def vacine_talon(a):
         
     file = get_dir('temp') + '/map_light.html'
     m.save(file)
+    # добавляем скрипт обновления
+    html = open(file,'r').read()
+
+    html = html.rsplit('</script>',1)[0]
+    
+    html +="""
+            setTimeout(function(){
+            location.reload();
+        }, 300000);
+
+
+
+    </script>
+
+    """
+    with open(file, 'w') as f:
+        f.write(html)
 
     command = f"/usr/bin/scp {file} vacmap@miacsitenew:/home/vacmap/vacmap/vacmap.html"
     os.system(command)
