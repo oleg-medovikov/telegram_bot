@@ -410,11 +410,16 @@ def cvod_26_covid(a):
         old = pd.DataFrame()
     else:
         old = old.loc[~(old[2].isnull() & old[3].isnull() & old[5].isnull() ) ].fillna(value=values)
+        old [7]  = 0 
+        old [9]  = 0
+        old [11] = 0
+        old [13] = 0
         del old [0]
         del old [14]
         old ['type'] = 'file' 
     if len(old.columns) == len(df.columns):    
         old.columns = df.columns
+    
 
     old_file = get_dir('punct_zabor') +'/'+  datetime.datetime.now().strftime('%d.%m.%Y') + ' Пункты отбора.xlsx'
     new_df = pd.concat([df,old], ignore_index=True).drop_duplicates(subset=['LAB_UTR_MO', 'ADDR_PZ', 'LAB_UTR_02'])
@@ -874,20 +879,27 @@ def cvod_42_covid(a):
 
 def cvod_49_covid(a):
     sql1= open('sql/parus/covid_49_svod.sql','r').read()
-    sql2= open('sql/parus/covid_49_dolg.sql','r').read()
+    #sql2= open('sql/parus/covid_49_dolg.sql','r').read()
 
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql1,con)
     
-    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
-        dolg = pd.read_sql(sql2,con)
- 
+    #with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+    #    dolg = pd.read_sql(sql2,con)
+    
+    spisok_mo = pd.read_excel( get_dir('help')+ '/svod_49_spisok_mo.xlsx')
+
+    for i in range(len(spisok_mo)):
+        if spisok_mo.at[i, 'медицинская организация'] in df['ORGANIZATION'].unique():
+            spisok_mo = spisok_mo.drop([i])
  
     date = str(df['DAY'].unique()[0])
     del df ['DAY']
+    del df ['ORGANIZATION']
 
     new_name = date + '_49_COVID_19.xlsx'
     shablon_path = get_dir('help')
+    
 
     shutil.copyfile(shablon_path + '/49_COVID_19_svod.xlsx', shablon_path  + '/' + new_name)
  
@@ -898,7 +910,7 @@ def cvod_49_covid(a):
         for c_idx, value in enumerate(row, 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
     
-    rows = dataframe_to_rows(dolg,index=False, header=False)
+    rows = dataframe_to_rows(spisok_mo,index=False, header=False)
     for r_idx, row in enumerate(rows,5):
         for c_idx, value in enumerate(row, 9):
             ws.cell(row=r_idx, column=c_idx, value=value)
@@ -1091,9 +1103,15 @@ def covid_53_svod(a):
  
 def covid_54_svod(a):
     sql1 = open('sql/parus/covid_54_svod.sql', 'r').read()
+    sql2 = open('sql/parus/covid_54_error.sql', 'r').read()
 
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql1,con)
+
+    with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
+        error = pd.read_sql(sql2,con)
+
+    del error['SUM(OSTATOK)']
 
     date = df['DAY'].unique()[0]
     del df['DAY']
@@ -1111,6 +1129,14 @@ def covid_54_svod(a):
     for r_idx, row in enumerate(rows,4):
         for c_idx, value in enumerate(row, 3):
             ws.cell(row=r_idx, column=c_idx, value=value)
+
+    ws = wb['ошибки с остатком']
+
+    rows = dataframe_to_rows(error,index=False, header=False)
+    for r_idx, row in enumerate(rows,2):
+        for c_idx, value in enumerate(row, 2):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+
 
     wb.save( shablon_path  + '/' + new_name)
 

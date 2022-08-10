@@ -203,11 +203,19 @@ def slojit_fr(a):
     new_fedreg_temp = get_dir('temp') + '/Федеральный регистр лиц, больных - ' + date + '.csv'
     new_iach        = get_dir('covid_iac2') + '/Федеральный регистр лиц, больных - ' + date + '_ИАЦ.csv'
     new_iach_temp   = get_dir('temp') + '/Федеральный регистр лиц, больных - ' + date + '_ИАЦ.csv'
-    otchet_9        = glob.glob(get_dir('robot') +'/'+ tumorow +'/9. Отчет по пациентам COVID-центр*.xlsx' )
+    try:
+        otchet_9        = glob.glob(get_dir('robot') +'/'+ tumorow +'/9. Отчет по пациентам COVID-центр*.xlsx' )
+    except Exception as e:
+        otchet_9 = []
+
     if len(otchet_9):
         otchet_9_new = get_dir('covid_iac2') +'/'+ otchet_9[0].rsplit('/',1)[1]
-        shutil.copyfile(otchet_9[0],otchet_9_new)
-        send('epid','Отчет №9 скопирован в папку иац')
+        try:
+            shutil.copyfile(otchet_9[0],otchet_9_new)
+        except Exception as e:
+            send('epid', str(e))
+        else:
+            send('epid','Отчет №9 скопирован в папку иац')
     else:
         send('epid','Не удалось найти отчет №9')
     
@@ -733,7 +741,8 @@ def load_report_vp_and_cv(a):
     df = df.set_axis(['vp_03_Power_Count_Departments','vp_04_Power_Count_Allocated_All','vp_05_Power_Count_Allocated','vp_06_Power_Count_Reanimation_All','vp_07_Power_Count_Reanimation','vp_08_Hospital_All','vp_09_Hospital_Day','vp_10_Hospital_Hard_All','vp_11_Hospital_Hard_Reaniamation','vp_12_Hospital_Hard_Ivl','vp_13_ReceivedAll','vp_14_ReceivedDay','vp_15_DischargedAll','vp_16_DischargedDay','vp_17_DiedAll','vp_18_DiedDay','cv_19_Power_Count_Departments','cv_20_Power_Count_Allocated_All','cv_21_Power_Count_Allocated','cv_22_Power_Count_Reanimation_All','cv_23_Power_Count_Reanimation','cv_24_Hospital_All','cv_25_Hospital_Day','cv_26_Hospital_Hard_All','cv_27_Hospital_Hard_Reaniamation','cv_28_Hospital_Hard_Ivl','cv_29_ReceivedAll','cv_30_ReceivedDay','cv_31_DischargedAll','cv_32_DischargedDay','cv_33_DiedAll','cv_34_DiedDay','nameMO'], axis=1, inplace=False)
     try:
         df.to_sql('HistoryFileMO',con,schema='mon_vp',index = False,if_exists='append')
-    except:
+    except Exception as e:
+        send('',str(e))
         raise my_except('не удалось загрузить в базу!')
     if check_data_table('mon_vp.v_DebtorsReport'):
         return short_report('SELECT * FROM mon_vp.v_DebtorsReport')

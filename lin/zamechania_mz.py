@@ -35,7 +35,10 @@ def get_path_mo(organization):
     except:
         return 0
     else:
-        return root + dir + papka
+        if not dir is None:
+            return root + dir + papka
+        else:
+            return root + '/anower mo'
 
 def put_excel_for_mo(df,name,date):
     if date is None:

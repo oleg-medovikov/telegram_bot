@@ -258,6 +258,7 @@ def logi(user_id,command_id,result):
 	       ,'{str(result[1]).replace("'","")}')
     """
     con.execute(sql)
+bot.get_updates(allowed_updates=['message', 'callback_query'])
 
 # ========== Главная процедура бота ===============
 @bot.message_handler(content_types=['text'])
@@ -339,6 +340,12 @@ def get_text_messages(message):
         bot.send_message(user.master(),str(message.from_user.id))
         bot.send_message(user.master(),str(message.from_user.username))
 
+
+
 #if __name__ == "__mane__":
 bot.remove_webhook()
-bot.polling(none_stop=True, timeout=60)
+while True:
+    try:
+        bot.polling(none_stop=True, timeout=60)
+    except:
+        time.sleep(5)

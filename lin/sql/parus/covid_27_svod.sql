@@ -1,4 +1,4 @@
-SElECT  ORGANIZATION,IDMO,
+SElECT  ORGANIZATION,RN,
 		nvl(cast(pok_01 as int),0) pok_01,nvl(cast(pok_02 as int),0) pok_02,nvl(cast(pok_03 as int),0) pok_03,
 		nvl(cast(pok_04 as int),0) pok_04,nvl(cast(pok_05 as int),0) pok_05,nvl(cast(pok_06 as int),0) pok_06,
 		nvl(cast(pok_07 as int),0) pok_07,nvl(cast(pok_08 as int),0) pok_08,nvl(cast(pok_09 as int),0) pok_09,
@@ -12,6 +12,7 @@ SElECT  ORGANIZATION,IDMO,
 				SELECT
 					to_char(r.BDATE, 'DD.MM.YYYY') day,
 					a.AGNNAME ORGANIZATION ,
+					a.RN RN,
 					rf.CODE  otchet,
 					bi.CODE  pokazatel,
 					CASE WHEN STRVAL IS NOT NULL THEN STRVAL 

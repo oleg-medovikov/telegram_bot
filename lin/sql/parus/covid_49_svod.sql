@@ -1,4 +1,4 @@
-SELECT  DAY,pok1,
+SELECT  DAY,ORGANIZATION,pok1,
 	    nvl(cast(pok2 as int),0) pok2,nvl(cast(pok3 as int),0) pok3,
 	    nvl(cast(pok4 as int),0) pok4,nvl(cast(pok5 as int),0) pok5,
 	    nvl(cast(pok6 as int),0) pok6,nvl(cast(pok7 as int),0) pok7

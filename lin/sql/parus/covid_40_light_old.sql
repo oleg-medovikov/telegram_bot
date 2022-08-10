@@ -130,7 +130,7 @@ SELECT ORGANIZATION, 'Медицинская организация' TYPE, REPLA
                                                 'light_12_s','light_13_s', 'light_14_s', 
                                                 'light_15_s', 'light_16_s','light_17_s', 'light_18_s',
                                                 'light_19_s', 'light_20_s', 'light_21_s',
-                                                'light_24_s', 'light_26_s', 'revac_20_05')
+                                                'light_24_s', 'light_26_s', 'revac_20_05_s')
                 )
                 pivot
                 (
@@ -142,7 +142,7 @@ SELECT ORGANIZATION, 'Медицинская организация' TYPE, REPLA
         'light_13_s'  light_13,'light_14_s'  light_14,'light_15_s'  light_15,
         'light_16_s'  light_16,'light_17_s'  light_17,'light_18_s'  light_18,
         'light_19_s'  light_19,'light_20_s'  light_20, 'light_21_s'  light_21,
-        'light_24_s'  light_24,'light_26_s'  light_26,'revac_20_05'  revac_20_05
+        'light_24_s'  light_24,'light_26_s'  light_26,'revac_20_05_s'  revac_20_05
         )
                 ) 
 ORDER BY ORGANIZATION,TYPE

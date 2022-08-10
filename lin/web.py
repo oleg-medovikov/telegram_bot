@@ -11,7 +11,11 @@ class my_except(Exception):
 def vacine_talon(a):
     url = os.getenv('url845').replace('845','852')
     data = requests.get(url, verify=False).json()
-    df = pd.DataFrame.from_dict(data)
+    df = pd.DataFrame(data=data)
+    
+    df = df.drop_duplicates()
+    df.index = range(len(df))
+
     if not len(df):
         raise my_except('Нет данных от нетрики')
 

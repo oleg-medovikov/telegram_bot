@@ -340,8 +340,8 @@ def razlojit_death_week(a):
     return report_file
 
 def sbor_death_week_files(a): 
-    #date_end   = '2022-01-05'
-    #date_start = '2021-12-23'
+    #date_start = '2022-06-09'
+    #date_end   = '2022-06-15'
     date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
     date_start = date_end - datetime.timedelta(days=6) 
 
@@ -359,8 +359,8 @@ def sbor_death_week_files(a):
     return f'Файлы с {date_start} по {date_end} собраны в папку'
 
 def sbor_death_week_svod(a):
-    #date_end   = '2022-03-02'
-    #date_start = '2022-02-24'
+    #date_start = '2022-07-21'
+    #date_end   = '2022-07-27'
     date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
     date_start = date_end - datetime.timedelta(days=6) 
 
@@ -690,8 +690,14 @@ def sbor_death_week_svod(a):
         send('epid', empty)
     df['Район проживания'] = df['Район проживания'].fillna('Пустое значение')
     df['Район проживания'] = df['Район проживания'].str.lower()
+    try:
+        df['Возраст'] = pd.to_numeric( df['Возраст'] )
+    except Exception as e:
+        send('', str(e))
+
     districts = df['Район проживания'].unique()
     zone = pd.DataFrame()
+
     for area in districts:
         k = len (zone)
         zone.loc[k,'Район проживания'] = area
