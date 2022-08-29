@@ -157,8 +157,8 @@ def create_tred_task(work,func,arg):
         try:
             return_value = future.result()
             #send('admin', 'Выполнил ' + work)
-        except:
-            send('admin', 'При выполнении ' + work + 'что-то произошло\n' )
+        except Exception as e:
+            send('admin', 'При выполнении ' + work + ' произошло\n' + str(e) )
         
         sql = f"""INSERT INTO [robo].[bot_logs]
 	            ([user],[task],[schedule],[success],[result])

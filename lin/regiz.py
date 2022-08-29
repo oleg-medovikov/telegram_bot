@@ -372,14 +372,14 @@ def regiz_load_to_base(a):
         with pd.ExcelWriter(svod_file) as writer:
             svod.loc[svod.index < 1048576].to_excel(writer,sheet_name='номера',index=False)
             stat.to_excel(writer,sheet_name='статистика',index=False)
-    
         send_file('info',svod_file)
         for file in remove_files:
             new_file = file.rsplit('/',2)[0] + '/Архив/время_' + datetime.datetime.now().strftime('%d.%m.%Y_%H-%M') + '_' + file.rsplit('/',1)[1]
             try:
                 os.replace(file,new_file)
             except:
-               pass
+               send('', file)
+
         return svod_file 
 
 def regiz_load_to_base_new_old(a):

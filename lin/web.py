@@ -10,9 +10,17 @@ class my_except(Exception):
 
 def vacine_talon(a):
     url = os.getenv('url845').replace('845','852')
-    data = requests.get(url, verify=False).json()
-    df = pd.DataFrame(data=data)
-    
+    req = requests.get(url, verify=False)
+    try:
+        data = req.json()
+    except:
+        raise my_except(req.text[:50] )
+
+    try:
+        df = pd.DataFrame(data=data)
+    except Exception as e:
+        raise my_except(str(e))
+
     df = df.drop_duplicates()
     df.index = range(len(df))
 
