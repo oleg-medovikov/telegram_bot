@@ -339,9 +339,9 @@ def razlojit_death_week(a):
     )
     return report_file
 
-def sbor_death_week_files(a): 
-    #date_start = '2022-06-09'
-    #date_end   = '2022-06-15'
+def sbor_death_week_files(a):
+    #date_start = '2022-11-24'
+    #date_end   = '2022-11-30'
     date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
     date_start = date_end - datetime.timedelta(days=6) 
 
@@ -352,15 +352,16 @@ def sbor_death_week_files(a):
         os.mkdir(new_path)
     except:
         pass
-    
+
     for file in glob.glob(path):
        shutil.copyfile(file, new_path +'/'+ file.split('/')[-1 -2] +' '+ file.split('/')[-1] )
 
     return f'Файлы с {date_start} по {date_end} собраны в папку'
 
+
 def sbor_death_week_svod(a):
-    #date_start = '2022-07-21'
-    #date_end   = '2022-07-27'
+    #date_start = '2022-12-08'
+    #date_end   = '2022-12-14'
     date_end   = (datetime.datetime.today() + relativedelta.relativedelta(weeks=-1,weekday=2)).date()
     date_start = date_end - datetime.timedelta(days=6) 
 

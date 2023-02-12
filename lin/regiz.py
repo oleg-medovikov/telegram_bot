@@ -26,7 +26,7 @@ def sql_execute(sql):
 
 def regiz_decomposition(a):
     # Создаем подключение
-    answer = pd.read_sql('SELECT * FROM [dbo].[v_Answer_MO]', con)
+    answer = pd.read_sql('SELECT DISTINCT * FROM [dbo].[v_Answer_MO]', con)
     if len(answer) > 0 :
         ftp_user = answer.ftp_user.unique()
         statistic = pd.DataFrame()
@@ -359,6 +359,7 @@ def regiz_load_to_base(a):
     else:
         svod = svod.drop_duplicates()
         svod.index = range(1,len(svod)+1)
+        svod['HistoryNumber'] = svod['HistoryNumber'].str.strip()
         svod = svod.apply(lambda x: x.loc[::].str[:255] )
         if len(svod) < 10^6:
             svod.to_sql('TempTableFromMO',con,schema='dbo',if_exists='append',index=False)

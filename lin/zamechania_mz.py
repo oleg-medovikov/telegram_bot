@@ -411,6 +411,13 @@ def zamechania_mz(a):
     con.execute(sql)
     df.fillna(0, inplace=True)
     df.to_sql('cv_Zamechania_fr',con,schema='robo',if_exists='append',index=False)
+    sql = """
+    delete from [robo].[cv_Zamechania_fr] where [Медицинская организация] in
+            ('ФКУЗ МСЧ № 78 ФСИН России', 'ФГБУ «НМИЦ ТО им. Р.Р. Вредена» Минздрава России',
+            'ФГБУ «КДЦ с поликлиникой»', 'ФКУ "Санкт-Петербургская ПБСТИН" Минздрава России',
+            'ООО "МЕДУЧРЕЖДЕНИЕ №2"', 'ФГБУ ДНКЦИБ ФМБА России') 
+    """
+    con.execute(sql)
     return 1
 def zamechania_mz_file(a):
     date = pd.read_sql("SELECT max([Дата изменения РЗ]) as 'дата отчета' from robo.v_FedReg",con)
