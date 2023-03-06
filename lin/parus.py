@@ -1191,31 +1191,31 @@ def distant_consult(a):
 
     with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
         df = pd.read_sql(sql1,con)
-    
+
     #with cx_Oracle.connect(userName, password, userbase,encoding="UTF-8") as con:
     #    old = pd.read_sql(sql2,con)
 
     date = df['DAY'].unique()[0]
     del df['DAY']
-    
+
     new_name = 'Дистанц_Консультации_' + date + '.xlsx'
 
     shablon_path = get_dir('help')
     shutil.copyfile(shablon_path + '/distant_consult.xlsx', shablon_path  + '/' + new_name)
-    
+
     old = pd.read_excel(shablon_path + '/distant_consult.xlsx', sheet_name = 'эталон')
-    
+
     dolg = pd.DataFrame(columns=["ORGANIZATION"])
 
     for i in range(len(old)):
         org = old.at[i, 'Полное наименование МО (из ФРМО)']
-        if not org in df["POK02"].unique():
-            dolg.loc[len(dolg), "ORGANIZATION"] = old.at[i,'Краткое наименование МО (для вывода должников)']
-    
-    del df ['ORGANIZATION']
+        if org not in df["POK02"].unique():
+            dolg.loc[len(dolg), "ORGANIZATION"] = old.at[i, 'Краткое наименование МО (для вывода должников)']
+
+    del df['ORGANIZATION']
 
     wb= openpyxl.load_workbook( shablon_path  + '/' + new_name)
-    
+
     ws = wb['svod']
 
     rows = dataframe_to_rows(df,index=False, header=False)
@@ -1225,17 +1225,17 @@ def distant_consult(a):
             ws.cell(row=r_idx, column=index_col[c_idx], value=value)
 
     ws = wb['dolg']
-    
+
     rows = dataframe_to_rows(dolg,index=False, header=False)
     for r_idx, row in enumerate(rows,3):
         for c_idx, value in enumerate(row, 2):
             ws.cell(row=r_idx, column=c_idx, value=value)
 
-    wb.save( shablon_path  + '/' + new_name)
-    
+    wb.save(shablon_path + '/' + new_name)
+
     csv = pd.read_csv(shablon_path + '/dist_cons.csv', sep=';' )
-    csv = csv.drop(0) 
-    
+    csv = csv.drop(0)
+
     k = 0
     for i in index_col:
         try:
