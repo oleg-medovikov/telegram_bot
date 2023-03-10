@@ -396,7 +396,7 @@ def zamechania_mz(a):
              ['net_pad.sql', 'Нет ПАД'],
              ['neverni_vid_lecenia.sql','Неверный вид лечения'],
              ['bez_ambulat_level.sql', 'Нет амбулаторного этапа'],
-             ['bez_ambulat_level_amb.sql', 'Пациенты зависшие по МО'],
+             ['zavishie_status.sql', 'Пациенты зависшие по МО'],
              ['bez_ambulat_level_noMO.sql', 'Пациенты зависшие без МО']]
      
     for file,name in names:
@@ -429,9 +429,9 @@ def zamechania_mz_file(a):
     names = [['no_snils.sql', 'Без СНИЛСа'],
              ['no_OMS.sql', 'Нет сведений ОМС'],
              ['bez_ishod.sql', 'Без исхода заболевания больше 30 дней'],
-             ['net_dnevnik.sql','Нет дневниковых записей'],
+             ['net_dnevnik.sql', 'Нет дневниковых записей'],
              ['net_pad.sql', 'Нет ПАД'],
-             ['neverni_vid_lecenia.sql','Неверный вид лечения'],
+             ['neverni_vid_lecenia.sql', 'Неверный вид лечения'],
              ['bez_ambulat_level.sql', 'Нет амбулаторного этапа'],
              ['bez_ambulat_level_amb.sql', 'Нет амбулаторного этапа (Амб.)'],
              ['bez_ambulat_level_noMO.sql', 'Нет амбулаторного этапа (Без МО)']]
