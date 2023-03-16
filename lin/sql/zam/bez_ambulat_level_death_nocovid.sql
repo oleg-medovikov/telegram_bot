@@ -14,6 +14,13 @@ select s.Gid,s.[УНРЗ],s.[ФИО],s.[Дата рождения],s.[СНИЛС
 	) as s
  left join ( select dbo.get_Gid(idPatient) as 'Gid', *  from cv_umsrs )as um
         on (s.Gid = um.Gid)
-		where um.Gid is not null 
+		where um.Gid is not null
+		and (
+                        (ISNULL(um.Kod_MKB_10_a, '') != 'U07.1'
+			and ISNULL(um.Kod_MKB_10_a, '') != 'U07.1'
+			and ISNULL(um.Kod_MKB_10_b, '') != 'U07.1'
+			and ISNULL(um.Kod_MKB_10_v, '')  != 'U07.1'
+			and ISNULL(um.Kod_MKB_10_g, '') != 'U07.1'
+			and ISNULL(um.Kod_II, '') != 'U07.1'))
 		and (um.Kod_MKB_10_a != 'U07.1' and um.Kod_MKB_10_a != 'U07.1' and um.Kod_MKB_10_b != 'U07.1' and um.Kod_MKB_10_v  != 'U07.1' and um.Kod_MKB_10_g != 'U07.1' and Kod_II != 'U07.1')
 order by s.[МО прикрепления] desc,s.[Дата исхода заболевания]
