@@ -1,20 +1,31 @@
 import requests
 import pandas as pd
-import folium,os
+import folium
+import os
 from folium.plugins import MarkerCluster
 
-from sending import send
 from loader import get_dir
+
+NO_WORD = [
+    'бокс', 'диспансеризация', 'углубленная', 'тест',
+    'выписки', 'мазки', 'профилактики', 'дежурный',
+    'профосмотр', 'кроме', 'фильтр', 'телемедицина',
+    'неотложной', 'после', 'офтальмолог', 'перенесших',
+    'диагн', 'первичный', 'переболевших', 'направление'
+        ]
+
+
 class my_except(Exception):
      pass
 
+
 def vacine_talon(a):
-    url = os.getenv('url845').replace('845','852')
+    url = os.getenv('url845').replace('845', '852')
     req = requests.get(url, verify=False)
     try:
         data = req.json()
     except:
-        raise my_except(req.text[:50] )
+        raise my_except(req.text[:50])
 
     try:
         df = pd.DataFrame(data=data)
@@ -22,6 +33,9 @@ def vacine_talon(a):
         raise my_except(str(e))
 
     df = df.drop_duplicates()
+
+    df = df.loc[~df['организация'].str.contains('|'.join(NO_WORD))]
+
     df.index = range(len(df))
 
     if not len(df):
@@ -30,14 +44,14 @@ def vacine_talon(a):
     mo = pd.read_json(get_dir('help') + '/mo64.json')
     log = ''
     for i in range(len(df)):
-        key = df.at[i,'moLev2_key']
+        key = df.at[i, 'moLev2_key']
         try:
-            df.loc[i,'Краткое стандартизованное наименование'] = mo.loc[mo['Код'] == key, 'Краткое стандартизованное наименование' ].unique()[0]
+            df.loc[i, 'Краткое стандартизованное наименование'] = mo.loc[mo['Код'] == key, 'Краткое стандартизованное наименование'].unique()[0]
         except:
             log += '\nне удалось найти название для: ' + key
         try:
-            df.loc[i,'Долгота'] = mo.loc[mo['Код'] == key, 'Долгота' ].unique()[0]       
-            df.loc[i,'Широта'] = mo.loc[mo['Код'] == key, 'Широта' ].unique()[0]
+            df.loc[i, 'Долгота'] = mo.loc[mo['Код'] == key, 'Долгота'].unique()[0]
+            df.loc[i, 'Широта'] = mo.loc[mo['Код'] == key, 'Широта'].unique()[0]
         except:
             log += '\nне удалось получить координаты для: ' + key
         try:
@@ -45,7 +59,7 @@ def vacine_talon(a):
             df.loc[i,'организация'] = mo.loc[mo['Код'] == orgid, 'Краткое стандартизованное наименование' ].unique()[0]
         except:
             log += '\nне удалось найти название организации: ' + key
-        
+
         try:
             df.loc[i,'link']  = mo.loc[mo['Код'] == key, 'link' ].unique()[0]
         except:
@@ -82,7 +96,7 @@ def vacine_talon(a):
                   )
     lgd_txt = '<span style="color: {col};">{txt}</span>'
     marker_cluster = MarkerCluster().add_to(m)
-    for lat, lon, elevation,org, name, cab,ndate, date,link in zip(lat, lon, elevation,org, name, cab,ndate, date,link):
+    for lat, lon, elevation, org, name, cab, ndate, date,link in zip(lat, lon, elevation, org, name, cab, ndate, date, link):
         html = """<style>
               .table {
               font-family: Helvetica, Arial, sans-serif;
@@ -160,7 +174,7 @@ def vacine_talon(a):
         except:
             pass
             #send('','не удалось')
-        
+
     file = get_dir('temp') + '/map_light.html'
     m.save(file)
     # добавляем скрипт обновления
